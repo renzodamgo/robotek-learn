@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "step": 1,
+      "title": "El coche (ejemplo)",
+      "questions": [
+        { "q": "¿Cuántas ruedas tiene un coche normal?", "options": ["Dos", "Tres", "Cuatro", "Seis"], "answer": 2, "why": "Un coche normal tiene cuatro ruedas.", "ref": "Paso 1, seccion Ruedas" },
+        { "q": "Que parte del coche gira las ruedas de delante para doblar?", "options": ["La bateria", "El servo de direccion", "El ventilador", "La camara"], "answer": 1, "why": "El servo mueve las ruedas de delante.", "ref": "Paso 1, seccion Direccion" },
+        { "q": "Que da energia al coche?", "options": ["La bateria", "El pasto", "El viento", "El cable de red"], "answer": 0, "why": "La bateria guarda la energia.", "ref": "Paso 1, seccion Bateria" },
+        { "q": "Que sensor mide la distancia con un laser?", "options": ["IMU", "Camara", "LiDAR", "Boton"], "answer": 2, "why": "El LiDAR manda luz y mide cuanto tarda en volver.", "ref": "Paso 1, seccion Sensores" },
+        { "q": "Cual de estos NO es un sensor?", "options": ["LiDAR", "Camara", "IMU", "Motor"], "answer": 3, "why": "El motor mueve el coche, no mide nada.", "ref": "Paso 1, seccion Sensores" }
+      ]
+    },
+    {
+      "step": 2,
+      "title": "El codigo (ejemplo)",
+      "questions": [
+        { "q": "En que idioma estan escritos los nombres del codigo del curso?", "options": ["Ingles", "Frances", "Aleman", "Latin"], "answer": 0, "why": "El codigo usa nombres en ingles y los textos van en espanol.", "ref": "Paso 2, seccion Estilo" }
+      ]
+    }
+  ]
+}
