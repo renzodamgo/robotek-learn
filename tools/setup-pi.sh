@@ -5,12 +5,14 @@
 #   bash tools/setup-pi.sh              # instala y compila (pide sudo cuando hace falta)
 #   bash tools/setup-pi.sh --check      # solo comprueba: no instala nada y no mueve nada
 #   bash tools/setup-pi.sh --dry-run    # muestra los comandos sin ejecutarlos
+#   bash tools/setup-pi.sh --with-reference   # además instala la estrategia de referencia (paso 9) como src/my_open
 #
 # Qué hace (se puede repetir: lo que ya está hecho se salta):
 #   1. comprueba el sistema (Ubuntu 24.04);
 #   2. instala ROS 2 Jazzy base, sin Gazebo ni RViz (tools/install-ubuntu.sh --no-gazebo) y los paquetes apt del coche;
 #   3. instala las reglas de udev (tools/99-robotek.rules) y te añade a los grupos dialout, video y gpio;
-#   4. compila todo: colcon build --symlink-install.
+#   4. (con --with-reference) extrae la estrategia terminada de la etiqueta step-9 a src/my_open (tools/get-reference.sh);
+#   5. compila todo: colcon build --symlink-install.
 #
 # SEGURIDAD: este script no arranca ningún nodo ni mueve el motor ni el servo. La primera vez que lances el coche
 # ponlo sobre soportes (ruedas en el aire). Ver src/robotek_hardware/README.md.
@@ -19,12 +21,14 @@ set -euo pipefail
 MODE=install
 DRY=0
 SKIP_BUILD=0
+WITH_REFERENCE=0
 for arg in "$@"; do
   case "$arg" in
     --check) MODE=check ;;
     --dry-run) DRY=1 ;;
     --skip-build) SKIP_BUILD=1 ;;
-    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
+    --with-reference) WITH_REFERENCE=1 ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
     *) echo "Opción desconocida: $arg (usa --help)" >&2; exit 2 ;;
   esac
 done
@@ -118,10 +122,16 @@ install_udev() {
 }
 
 # ---------------------------------------------------------------------------------------------------------------
+install_reference() {
+  if [ "$WITH_REFERENCE" = 0 ]; then return; fi
+  say "Estrategia de referencia (tools/get-reference.sh)"
+  run bash "$REPO/tools/get-reference.sh" --no-build
+}
+
 build_workspace() {
   if [ "$SKIP_BUILD" = 1 ]; then say "Salto la compilación (--skip-build)"; return; fi
   if [ ! -d "$REPO/src/my_open" ]; then
-    warn "Aún no existe src/my_open (tu estrategia). Compilo el resto; créala como dice el README (ros2 pkg create ... my_open)."
+    warn "Aún no existe src/my_open (tu estrategia). Compilo el resto. Para la de referencia: bash tools/get-reference.sh; o crea la tuya (README, ros2 pkg create ... my_open)."
   fi
   say "Compilando: colcon build --symlink-install (varios minutos en un Pi)"
   if [ "$DRY" = 1 ]; then
@@ -146,7 +156,7 @@ next_steps() {
     2. bash tools/setup-pi.sh --check          # placa, LiDAR, cámara y grupos
     3. source install/setup.bash
     4. PON EL COCHE SOBRE SOPORTES (ruedas en el aire) la primera vez.
-    5. ros2 launch robotek_course car.launch.py strategy:=my_open
+    5. ros2 launch robotek_course open_challenge.launch.py      # o: car.launch.py strategy:=<tu paquete>
        Los LED de la placa se ponen verdes cuando LiDAR, IMU y cámara dan datos; el botón de la placa es el Start.
 NEXT
 }
@@ -209,5 +219,6 @@ check_os
 install_ros
 install_apt
 install_udev
+install_reference
 build_workspace
 if [ "$DRY" = 1 ]; then say "Fin del --dry-run: no se ejecutó nada."; else next_steps; fi

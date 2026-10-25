@@ -16,6 +16,25 @@ tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_st
 Se lanza todo con `ros2 launch robotek_course car.launch.py strategy:=my_open` (ver
 [Lanzar](#lanzar-en-el-coche)). Para dejar el Pi listo: [Preparar el Pi](#preparar-el-pi-un-solo-comando).
 
+## Quiero que el coche haga la ronda ya
+
+En la rama `main` está el andamiaje (simulador, nodos del coche, drivers); tu estrategia, el paquete `src/my_open`, la
+escribes tú en la guía (git la ignora). La estrategia **terminada** de los pasos 2 a 9 se instala con
+`tools/get-reference.sh` (la extrae de la etiqueta `step-9`). Con un Raspberry Pi (Ubuntu 24.04) y el coche **sobre soportes**:
+
+```bash
+git clone https://github.com/renzodamgo/robotek-learn.git && cd robotek-learn
+bash tools/setup-pi.sh --with-reference        # ROS, dependencias, udev, grupos, estrategia del paso 9 y colcon build
+source install/setup.bash && ros2 launch robotek_course open_challenge.launch.py
+```
+
+Si el script te añadió a grupos nuevos (`dialout`, `video`, `gpio`), cierra la sesión y vuelve a entrar antes del último comando.
+Espera a que los LED de la placa se pongan **verdes** y pulsa el **botón de la placa una vez**: es el Start (`/start`) y el
+coche hace las tres vueltas de la ronda Open; una segunda pulsación lo detiene (`/robotek/stop`). Ver los límites de
+velocidad y por qué la primera vez conviene `motor_max_pct:=30`, más abajo. Para tu propia estrategia: crea tu paquete como en
+el paso 0 de la guía y lanza `car.launch.py strategy:=<tu paquete>`. Sin `src/my_open`, el launch lo dice y sale con
+código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de seguridad `src/my_open.bak-FECHA`) tu paquete por el de referencia.
+
 ## Nodos
 
 | Nodo | Qué hace |
@@ -125,20 +144,52 @@ regla de Hiwonder y de las mediciones del equipo) y `10c4:ea60` (LiDAR, de la re
 ```bash
 cd robotek-learn                   # la carpeta donde clonaste el repositorio
 source install/setup.bash
-ros2 launch robotek_course car.launch.py strategy:=my_open
+ros2 launch robotek_course open_challenge.launch.py      # = car.launch.py strategy:=my_open
 ```
 
 Espera a que los LED de la placa se pongan **verdes** (LiDAR, IMU y cámara reciben datos), pon el coche en la
 posición de salida y pulsa el botón una vez: es el Start (`/start`). Pulsa otra vez para parar: el motor queda
 en 0 hasta que lances de nuevo. Con las ruedas en el aire se pueden probar los nodos antes de poner el coche en
 la pista. `ros2 launch robotek_course car.launch.py --show-args` muestra las opciones (`battery_guard:=false`,
-`status_leds:=false`, `camera:=false`, `camera_driver:=usb_cam`, `video_device:=/dev/v4l/by-id/...`,
+`status_leds:=false`, `motor_max_pct:=30`, `camera:=false`, `camera_driver:=usb_cam`, `video_device:=/dev/v4l/by-id/...`,
 `lidar_package:=''`...).
 
 Si falta algún driver o algún aparato, el launch lo dice y sigue: se puede probar en un portátil sin hardware. Cada
 nodo avisa con un mensaje claro y reintenta, sin mover nada: la placa («RRC Lite board not found»), el motor
 («GPIO chip 4 not usable»), la cámara («Camara no encontrada»), el LiDAR (el driver del LD19 lo dice y termina; relanza
 cuando esté enchufado).
+
+### Qué velocidad se obtiene y por qué la primera vez `motor_max_pct:=30`
+
+La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo publica en `/cmd_vel_raw`: `linear.x` en m/s y
+`angular.z = v·tan(dirección)/0,1174` en rad/s). `base_adapter` lo convierte así:
+
+* **Motor**: `% = motor_min_pct + motor_pct_per_mps·v = 6,5 + 73·1,28 ≈ 100 %`, pero se recorta a `motor_max_pct`
+  (50 %). Con la calibración medida (`v = 0,0137·(% − 6,5)` m/s) 50 % da **≈ 0,6 m/s**, que es lo que el simulador
+  llama «el coche real llega a 0,6» (`real_speed(1.28)`). La estrategia cree que va a 1,28 m/s y lo mide con el LiDAR,
+  no con el mando. Esa calibración se midió con la batería baja y **solo hasta 30 %** (0,32 m/s): de 30 a 50 % es una
+  extrapolación, y con la batería cargada el coche irá más rápido.
+* **Aceleración**: `accel_limit` 1 m/s² (arranque suave); si se pide parar, `decel_limit` 0,6 m/s² y el motor frena en
+  rampa de 0,6 s.
+* **Dirección**: el ángulo de rueda del Twist pasa por la tabla `wheel_table_*` al servo (µs) y se limita a 17,6° (el
+  máximo que alcanzan las dos ruedas, igual que `STEER_LIMIT` de la estrategia). **Ojo: `servo_measured: false`**: el
+  centro, el signo y la tabla son los de la montura vieja del servo; mídelos (sección Calibración) antes de ponerlo en
+  el suelo. En cuanto la estrategia publica (aunque esté parada esperando el Start) el servo va al centro configurado.
+* **Primera vez**: con las ruedas en el aire y `motor_max_pct:=30` (`ros2 launch robotek_course open_challenge.launch.py
+  motor_max_pct:=30`, 0,32 m/s, el límite de lo medido). Comprueba que el motor gira hacia adelante, que la dirección
+  sigue al servo y que la segunda pulsación del botón lo para. Sube a 40 y a 50 % solo con el coche en la pista y con la
+  batería a la vista.
+
+### El camino del botón al motor
+
+`botón de la placa → rrc_driver (/rrc/button) → start_button → /start (Bool, QoS por defecto) → nodo strategy (drive.py)`.
+`strategy` imprime `Start` y su estado (`/robotek/state`, transient local, lo leen `status_leds`) pasa de `WAIT_START` a
+`CALIBRATE` y `DETECT_DIRECTION`. Los sensores llegan por las remapeos del launch (`/scan` → `/robotek/scan`, `/imu` →
+`/robotek/imu`, `/camera/image` → `/usb_cam/image_raw`) y el mando vuelve por `/cmd_vel_raw → base_adapter → servo
+(/rrc/acker_servo/set_state) + /motor_vel → motor_driver`. La segunda pulsación publica `/robotek/stop`: `strategy` pasa a
+`OPERATOR_STOP` y `base_adapter` y `motor_driver` dejan el motor en 0. El nodo usa el reloj del nodo (en el coche
+`use_sim_time` es falso, es reloj de pared), así que `CONTROL_RATE` = 50 Hz funciona igual que en Gazebo. Si el LiDAR (0,35 s)
+o el giroscopio (0,2 s) dejan de llegar, el log dice `A sensor went quiet: braking until it is back` y la velocidad es 0.
 
 ## Calibración
 

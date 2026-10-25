@@ -1,6 +1,7 @@
 """Your strategy on the real car: the hardware nodes of robotek_hardware and your node. No Gazebo, no simulated actuators.
 
     ros2 launch robotek_course car.launch.py strategy:=my_open
+    ros2 launch robotek_course open_challenge.launch.py      (the same, with the Open challenge strategy my_open)
     ros2 launch robotek_course car.launch.py strategy:=my_open battery_guard:=false status_leds:=false
 
 Your node (``strategy`` package, ``executable`` = drive) is the same one that runs in ``round.launch.py``. It reads /scan,
@@ -26,8 +27,10 @@ at 0 until you launch again. The parameters of the car (servo, motor, wheelbase,
 robotek_hardware/config/robot.yaml.
 """
 import os
+import sys
 
-from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
+import yaml
+from ament_index_python.packages import PackageNotFoundError, get_package_prefix, get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction
 from launch.conditions import IfCondition
@@ -46,6 +49,24 @@ def _share(package):
 
 def _arg(context, name):
     return LaunchConfiguration(name).perform(context)
+
+
+def _check_strategy(context):
+    """Before starting anything: is the strategy package built? If not, say how to get one and exit with code 1."""
+    package = _arg(context, 'strategy')
+    try:
+        get_package_prefix(package)
+    except PackageNotFoundError:
+        print('\n[car] No encuentro el paquete de la estrategia "%s" (strategy:=%s).\n'
+              '  Hay dos caminos:\n'
+              '    1) La estrategia de referencia (la terminada del paso 9):  bash tools/get-reference.sh\n'
+              '       y despues:  source install/setup.bash\n'
+              '    2) Tu propio paquete: crealo y compilalo como en el paso 0 de la guia\n'
+              '       (ros2 pkg create ... my_open; colcon build --symlink-install; source install/setup.bash).\n'
+              '  Si ya lo compilaste, falta cargar el entorno:  source install/setup.bash\n'
+              % (package, package), file=sys.stderr)
+        sys.exit(1)
+    return []
 
 
 def _drivers(context):
@@ -101,6 +122,8 @@ def _description(context):
 
 def generate_launch_description():
     hardware_config = os.path.join(get_package_share_directory('robotek_hardware'), 'config', 'robot.yaml')
+    with open(hardware_config) as stream:
+        default_max_pct = str(yaml.safe_load(stream)['base_adapter']['ros__parameters']['motor_max_pct'])
     return LaunchDescription([
         DeclareLaunchArgument('strategy', default_value='my_open', description='the package with your node'),
         DeclareLaunchArgument('executable', default_value='drive', description='the executable of that package'),
@@ -120,12 +143,15 @@ def generate_launch_description():
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
+        DeclareLaunchArgument('motor_max_pct', default_value=default_max_pct,
+                              description='motor ceiling in % (robot.yaml). First run on the car: 30, on blocks'),
         DeclareLaunchArgument('battery_guard', default_value='true',
                               description='red blinking RGBs when the battery is low (does not stop the car)'),
         DeclareLaunchArgument('battery_min_v', default_value='6.8', description='battery voltage (V) under which to change it'),
         DeclareLaunchArgument('status_leds', default_value='true',
                               description='state on the RRC Lite RGBs (green = ready for Start)'),
         DeclareLaunchArgument('description', default_value='true', description='robot_state_publisher, if installed'),
+        OpaqueFunction(function=_check_strategy),
         OpaqueFunction(function=_drivers),
         Node(package='robotek_hardware', executable='scan_adapter', name='scan_adapter', output='screen',
              parameters=[hardware_config],
@@ -137,7 +163,9 @@ def generate_launch_description():
              parameters=[hardware_config]),
         # Your /cmd_vel_raw is the base_adapter's input (in the simulator sim_actuator_model reads the same topic).
         Node(package='robotek_hardware', executable='base_adapter', name='base_adapter', output='screen',
-             parameters=[hardware_config], remappings=[('cmd_vel', '/cmd_vel_raw')]),
+             parameters=[hardware_config, {'motor_max_pct': ParameterValue(LaunchConfiguration('motor_max_pct'),
+                                                                           value_type=float)}],
+             remappings=[('cmd_vel', '/cmd_vel_raw')]),
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
              remappings=[('start', '/start')]),
         Node(package='robotek_hardware', executable='battery_guard', name='battery_guard', output='screen',
