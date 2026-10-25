@@ -64,6 +64,25 @@ ros2 run robotek_course score                # puntúa de nuevo la última ronda
 Las rondas se guardan en `~/robotek_runs/`. Los puntos son una **estimación de simulación** con las reglas
 publicadas, no una puntuación oficial.
 
+## Quiero que el coche haga la ronda ya
+
+En la rama `main` está el andamiaje (simulador, nodos del coche, drivers); tu estrategia, el paquete `src/my_open`, la
+escribes tú en la guía (git la ignora). La estrategia **terminada** de los pasos 2 a 9 se instala con
+`tools/get-reference.sh` (la extrae de la etiqueta `step-9`). Con un Raspberry Pi (Ubuntu 24.04) y el coche **sobre soportes**:
+
+```bash
+git clone https://github.com/renzodamgo/robotek-learn.git && cd robotek-learn
+bash tools/setup-pi.sh --with-reference        # ROS, dependencias, udev, grupos, estrategia del paso 9 y colcon build
+source install/setup.bash && ros2 launch robotek_course open_challenge.launch.py
+```
+
+Si el script te añadió a grupos nuevos (`dialout`, `video`, `gpio`), cierra la sesión y vuelve a entrar antes del último comando.
+Espera a que los LED de la placa se pongan **verdes** y pulsa el **botón de la placa una vez**: es el Start (`/start`) y el
+coche hace las tres vueltas de la ronda Open; una segunda pulsación lo detiene (`/robotek/stop`). Ver los límites de
+velocidad y por qué la primera vez conviene `motor_max_pct:=30`, más abajo. Para tu propia estrategia: crea tu paquete como en
+el paso 0 de la guía y lanza `car.launch.py strategy:=<tu paquete>`. Sin `src/my_open`, el launch lo dice y sale con
+código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de seguridad `src/my_open.bak-FECHA`) tu paquete por el de referencia.
+
 ## Coche real (Raspberry Pi)
 
 En el Raspberry Pi del coche (Ubuntu 24.04, arm64, con internet) basta clonar el repositorio y ejecutar un script:
@@ -74,13 +93,13 @@ cd robotek-learn
 bash tools/setup-pi.sh            # ROS 2 Jazzy base, dependencias, reglas de udev, grupos y colcon build
 ```
 
-Crea tu paquete `my_open` en `src` (el comando `ros2 pkg create` de arriba) o copia el tuyo, y vuelve a ejecutar el script
-(salta lo que ya está hecho). Después de cerrar la sesión y volver a entrar (por los grupos nuevos):
+Crea tu paquete `my_open` en `src` (el comando `ros2 pkg create` de arriba) o instala el de referencia con
+`bash tools/get-reference.sh` (o `setup-pi.sh --with-reference`), y vuelve a ejecutar el script (salta lo que ya está hecho). Después de cerrar la sesión y volver a entrar (por los grupos nuevos):
 
 ```bash
 bash tools/setup-pi.sh --check    # placa, LiDAR, cámara, grupos: solo comprueba, no cambia nada
 source install/setup.bash
-ros2 launch robotek_course car.launch.py strategy:=my_open
+ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strategy:=my_open
 ```
 
 **La primera vez, con el coche sobre soportes (ruedas en el aire).** Ni el script ni el launch mueven el motor por su
