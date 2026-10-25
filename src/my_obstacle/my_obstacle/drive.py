@@ -1,4 +1,4 @@
-"""Step 2: where the car is: the localizer on the walls, with the gyroscope and the LiDAR odometry.
+"""Step 3: + the signs: LiDAR clusters coloured by the camera, remembered by seat.
 
 The car does not drive itself yet (until step 6): drive it with the keyboard in another terminal,
 ``ros2 run robotek_course keyboard_drive``, and watch what the strategy understands:
@@ -26,7 +26,7 @@ from robotek_course.obstacle_vision import associate, color_blocks, scan_cluster
 from . import lane
 from .localizer import Localizer, direction_from_scan, scan_points
 
-STEP = 2
+STEP = 3
 if STEP >= 3:
     from .signs import SeatMemory
 if STEP >= 4:
