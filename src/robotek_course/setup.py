@@ -17,13 +17,15 @@ setup(
     zip_safe=True,
     maintainer='Renzo Damian',
     maintainer_email='renzo.damian.go@gmail.com',
-    description='Helpers for the Open Challenge course: round launch, recorder, score, mini simulator, strategy base.',
+    description='Helpers for the Open and Obstacle Challenge courses: round launches, referees, scores, mini simulator, strategy bases, sign vision.',
     license='MIT',
     extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
             'round_recorder = robotek_course.round_recorder:main',
             'score = robotek_course.score:main',
+            'obstacle_round_recorder = robotek_course.obstacle_round_recorder:main',
+            'score_obstacle = robotek_course.score_obstacle:main',
             'keyboard_drive = robotek_course.keyboard_drive:main',
         ],
     },

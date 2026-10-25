@@ -11,5 +11,7 @@ __pycache__/
 # lo crea el lector con `ros2 pkg create`; en la rama `solutions` se añade con git add -f
 src/my_open/
 src/my_open.bak-*/
+# el del reto Obstacle (referencia en la rama `solutions-obstacle`)
+src/my_obstacle/
 # drive.py of every step (spoilers): they are committed on the solutions branch only
 course/snapshots/

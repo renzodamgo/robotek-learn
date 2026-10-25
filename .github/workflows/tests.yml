@@ -17,4 +17,18 @@ jobs:
           python-version: '3.12'
       - run: pip install pytest numpy opencv-python-headless pyyaml
       # step 9 (the lab) needs ROS and is skipped here: pytest.importorskip('rclpy')
-      - run: python -m pytest course/tests -q
+      - run: python -m pytest course/tests -q --ignore=course/tests/obstacle
+
+  pytest-obstacle:
+    # The same for the Obstacle course, against its reference on the `solutions-obstacle` branch.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name == 'main' && 'solutions-obstacle' || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest numpy opencv-python-headless pyyaml
+      # step 9's lab round needs the course lab (it skips without it)
+      - run: python -m pytest course/tests/obstacle -q

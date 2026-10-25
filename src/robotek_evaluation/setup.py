@@ -16,12 +16,13 @@ setup(
     zip_safe=True,
     maintainer='Renzo Damian',
     maintainer_email='renzo.damian.go@gmail.com',
-    description='Simulation-only evaluation: contact recorder, actuator and scan models, rule judge and the Open lab. A strategy must not depend on it.',
+    description='Simulation-only evaluation: contact recorder, actuator and scan models, rule judges, the Open and Obstacle labs and the Obstacle field. A strategy must not depend on it.',
     license='MIT',
     extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
             'contact_recorder = robotek_evaluation.contact_recorder:main',
+            'obstacle_recorder = robotek_evaluation.obstacle_recorder:main',
             'sim_actuator_model = robotek_evaluation.sim_actuator_model:main',
             'sim_scan_model = robotek_evaluation.sim_scan_model:main',
         ],

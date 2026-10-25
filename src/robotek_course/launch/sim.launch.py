@@ -53,7 +53,7 @@ def _nodes(context):
         PythonLaunchDescriptionSource(os.path.join(share('robotek_gazebo'), 'launch', 'robotek_sim.launch.py')),
         launch_arguments={
             'field': 'open', 'world': LaunchConfiguration('world'), 'gui': LaunchConfiguration('gui'),
-            'spawn_x': '0.0', 'spawn_y': '-1.0', 'spawn_yaw': spawn_yaw,
+            'spawn_x': LaunchConfiguration('spawn_x').perform(context), 'spawn_y': '-1.0', 'spawn_yaw': spawn_yaw,
             'ackermann_velocity_limit': '1.0', 'ackermann_steer_p_gain': '20.0',
             'ackermann_acceleration': '30.0',      # the actuator model limits the accelerations, not the plugin
             'sensor_noise': 'true', 'real_sensors': 'true',
@@ -95,6 +95,8 @@ def generate_launch_description():
         DeclareLaunchArgument('direction', default_value='ccw',
                               description='ccw: the car faces the counter-clockwise lap; cw: the other way'),
         DeclareLaunchArgument('spawn_yaw', default_value='', description='override the start heading (rad)'),
+        DeclareLaunchArgument('spawn_x', default_value='0.0',
+                              description='start x on the bottom straight (m); the Obstacle starts at -0.25 (+0.25 in CW)'),
         DeclareLaunchArgument('world', default_value='', description='a world .sdf of your own'),
         DeclareLaunchArgument('actuator_params', default_value='',
                               description='override the car: name=value,name=value of sim_actuator_model '

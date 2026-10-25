@@ -112,6 +112,50 @@ Hiwonder, incluido con su permiso) está en `src/rrc_lite_*`; ver [CREDITS.md](C
 * [Paso 11: solución de problemas](https://renzodamian.com/learn/open-strategy/paso-11-solucion-de-problemas/)
 * [Paso 12: afinar](https://renzodamian.com/learn/open-strategy/paso-12-afinar/)
 
+## El reto Obstacle
+
+La segunda guía, **https://renzodamian.com/learn/obstacle-strategy**, construye la estrategia del reto Obstacle: tres
+vueltas pasando las señales rojas por la derecha y las verdes por la izquierda, y al final aparcar en paralelo. Tu
+paquete es `src/my_obstacle` (git lo ignora en `main`); la referencia está en la rama **`solutions-obstacle`**, con
+una etiqueta `obstacle-step-N` por paso.
+
+```bash
+cd src
+ros2 pkg create --build-type ament_python my_obstacle --node-name drive \
+  --license MIT --maintainer-name "Tu Nombre" --maintainer-email tu@correo.com \
+  --description "Mi estrategia del reto Obstacle" \
+  --dependencies rclpy geometry_msgs sensor_msgs std_msgs cv_bridge robotek_common robotek_course
+```
+
+Una ronda en Gazebo: `seed` elige la disposición de las señales con el procedimiento de las reglas (la misma semilla
+es el mismo campo) y `parking` pone el aparcamiento en la sección de salida.
+
+```bash
+ros2 launch robotek_course obstacle_round.launch.py strategy:=my_obstacle seed:=4 direction:=ccw parking:=true
+ros2 run robotek_course score_obstacle                       # puntúa de nuevo la última ronda
+python3 course/obstacle/verify_step.py 7                     # el paso 7 en Gazebo, sin ventana: PASS o FAIL
+```
+
+El laboratorio da la misma ronda en segundos, sin Gazebo (el campo, el coche real y el juez del Obstacle):
+
+```bash
+python3 -m robotek_evaluation.obstacle_lab --strategy my_obstacle.strategy:Strategy --seed 2 --direction cw
+python3 -m robotek_evaluation.obstacle_lab --strategy my_obstacle.strategy:Strategy --layouts 0-4 --seeds 0-4 --early
+python3 -m robotek_evaluation.obstacle_lab --strategy my_obstacle.strategy:Strategy --parking --layouts 0-9
+```
+
+| Pieza | Qué es |
+|---|---|
+| `robotek_course/obstacle_base.py` | La clase base de tu estrategia: escaneos, giroscopio, señales vistas (`on_signs`), `update` |
+| `robotek_course/obstacle_vision.py` | Ver las señales: grupos del LiDAR, manchas rojas y verdes de la cámara, y su asociación |
+| `robotek_evaluation/obstacle_field.py` | El campo por las reglas: las 36 cartas, el aparcamiento, el mundo de Gazebo |
+| `robotek_evaluation/obstacle_judge.py` | El juez: vueltas, lados, señales movidas, parada y aparcamiento (40, o 55 con el aparcamiento) |
+| `robotek_evaluation/obstacle_lab.py` | El laboratorio rápido, una ronda o lotes en paralelo |
+| `robotek_course/launch/obstacle_round.launch.py` | Una ronda: campo, simulador, tu nodo y el árbitro (`obstacle_round_recorder`) |
+
+Los puntos son estimaciones de simulación, no puntuación oficial; los +7 por arrancar dentro del aparcamiento no se
+evalúan.
+
 ## Licencia
 
 MIT, ver [LICENSE](LICENSE). Créditos y procedencia de los archivos en [CREDITS.md](CREDITS.md).
