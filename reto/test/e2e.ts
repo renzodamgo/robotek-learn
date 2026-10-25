@@ -195,6 +195,13 @@ async function main() {
   check("SSE rechaza token malo y clave mala", (await fetch(`${S.base}/events?room=${code}&token=nope`)).status === 401 && (await fetch(`${S.base}/events?room=${code}&key=nope00`)).status === 401);
   check("SSE rechaza sala inexistente", (await fetch(`${S.base}/events?room=0000&token=x`)).status === 404);
   check("el alumno no recibe la lista del profesor", !("players" in pl.Ana.last) && pl.Ana.last.role === "player");
+  // /api/state: el mismo estado sin SSE (para túneles que retienen el stream)
+  const st = await (await fetch(`${S.base}/api/state?room=${code}&token=${tokens.Ana}`)).json();
+  check("/api/state da al alumno su estado sin la lista del profesor", st.phase === "lobby" && st.me?.nick === "Ana" && !("players" in st));
+  const hst = await (await fetch(`${S.base}/api/state?room=${code}&key=${S.key}`)).json();
+  check("/api/state da al profesor los jugadores", hst.role === "host" && hst.players.length === 3);
+  check("/api/state rechaza token malo, clave mala y sala inexistente", (await fetch(`${S.base}/api/state?room=${code}&token=nope`)).status === 401
+    && (await fetch(`${S.base}/api/state?room=${code}&key=nope00`)).status === 401 && (await fetch(`${S.base}/api/state?room=0000&token=x`)).status === 404);
 
   check("empezar sin clave -> 401", (await post("/api/host", { room: code, action: "start" })).status === 401);
   check("no se puede avanzar durante el lobby -> 409", (await hostPost({ room: code, action: "next" })).status === 409);

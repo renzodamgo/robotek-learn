@@ -84,6 +84,12 @@ Tailscale Funnel (`tailscale funnel 3000`). Para el profesor sigue valiendo
 del alumno de la cabecera `cf-connecting-ip` o `x-forwarded-for` (solo si la
 petición llega desde el propio Mac).
 
+Los túneles rápidos de Cloudflare no dejan pasar el stream en vivo (SSE): llegan
+las cabeceras pero nunca los datos. Por eso, si en 5 segundos no llega nada por
+`/events`, el navegador pasa solo a pedir el estado a `/api/state` cada 0,6 s.
+Las preguntas pueden aparecer hasta medio segundo tarde, pero el tiempo de cada
+respuesta lo sigue midiendo el servidor.
+
 ## Límites
 
 - Todo vive **en memoria**. Si reinicias el servidor se pierden las salas y los

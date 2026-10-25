@@ -56,19 +56,41 @@ async function api(path, body, key) {
   return { ok: r.ok, status: r.status, data };
 }
 
-// ---- SSE con reconexión automática (la hace el navegador)
+// ---- SSE con reconexión automática (la hace el navegador). Si en 5 s no llega
+// nada (los túneles rápidos de Cloudflare retienen el SSE), pide el estado cada 0,6 s.
+// Una vez que pasa a pedirlo, las reconexiones siguientes lo piden desde el principio.
+let preferPoll = false;
 function connectEvents(url, onState, onFatal) {
-  const es = new EventSource(url);
-  es.onopen = () => setConnected(true);
-  es.onmessage = (ev) => {
-    setConnected(true);
-    try { onState(JSON.parse(ev.data)); } catch (e) { console.error(e); }
-  };
-  es.onerror = () => {
-    setConnected(false);
-    if (es.readyState === EventSource.CLOSED) onFatal();
-  };
-  return { close() { es.close(); } };
+  let es = preferPoll ? null : new EventSource(url);
+  let got = false, polling = false, stopped = false;
+  const deliver = (s) => { setConnected(true); try { onState(s); } catch (e) { console.error(e); } };
+  if (es) {
+    es.onopen = () => setConnected(true);
+    es.onmessage = (ev) => {
+      got = true;
+      try { deliver(JSON.parse(ev.data)); } catch (e) { console.error(e); }
+    };
+    es.onerror = () => {
+      setConnected(false);
+      if (es && es.readyState === EventSource.CLOSED && !polling) onFatal();
+    };
+  }
+  const fallback = setTimeout(() => { if (!got && !stopped) poll(); }, es ? 5000 : 0);
+  async function poll() {
+    polling = true; preferPoll = true;
+    if (es) es.close();
+    es = null;
+    const pollUrl = url.replace("/events?", "/api/state?");
+    while (!stopped) {
+      try {
+        const r = await fetch(pollUrl, { cache: "no-store" });
+        if (r.status === 404 || r.status === 401) { if (!stopped) onFatal(); return; }
+        if (r.ok) deliver(await r.json()); else setConnected(false);
+      } catch { setConnected(false); }
+      await sleep(600);
+    }
+  }
+  return { close() { stopped = true; clearTimeout(fallback); if (es) es.close(); } };
 }
 
 // ---- formas y opciones A B C D (forma + letra, no solo color)

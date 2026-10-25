@@ -52,6 +52,7 @@ interface Player {
   stepPts: Record<number, number>;
   conns: number;
   lastSeen: number;
+  polledAt: number; // última consulta a /api/state (sin SSE)
   last?: LastResult;
 }
 interface Client {
@@ -287,7 +288,7 @@ function viewFor(room: Room, client: Client, rk: Entry[]) {
   const lines = rk.map((e) => lineOf(room, e));
   if (client.kind === "host") {
     v.role = "host";
-    v.players = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => ({ nick: p.nick, online: p.conns > 0 }));
+    v.players = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => ({ nick: p.nick, online: p.conns > 0 || Date.now() - p.polledAt < 8000 }));
     v.maxPlayers = MAX_PLAYERS;
     if (room.phase === "question" || room.phase === "reveal") v.answered = room.answers.size;
     v.board = room.phase === "lobby" ? [] : lines;
@@ -532,6 +533,7 @@ async function handle(req: Request, srv: any): Promise<Response> {
       return serveStatic("host.html");
     }
     if (path === "/events") return handleEvents(req, url, srv, ip);
+    if (path === "/api/state") return handleState(req, url, ip);
     const roomMatch = path.match(/^\/api\/room\/(\d{4})$/);
     if (roomMatch) {
       if (!allow("lookup", ip, 120)) return fail(429, "Demasiadas consultas. Espera un momento.");
@@ -619,7 +621,7 @@ async function handle(req: Request, srv: any): Promise<Response> {
     if (room.players.size >= MAX_PLAYERS) return fail(403, "La sala está llena (60 jugadores).");
     const p: Player = {
       token: randomToken(), nick: c.nick, fold: key, joinedAt: Date.now(), score: 0, streak: 0, correct: 0,
-      stepPts: {}, conns: 0, lastSeen: Date.now(),
+      stepPts: {}, conns: 0, lastSeen: Date.now(), polledAt: 0,
     };
     room.players.set(p.token, p);
     room.byFold.set(key, p);
@@ -673,6 +675,25 @@ function handleEvents(req: Request, url: URL, srv: any, ip: string): Response {
   const p = room.players.get(url.searchParams.get("token") ?? "");
   if (!p) return fail(401, "Jugador no reconocido.");
   return openStream(room, "player", p);
+}
+
+// Lo mismo que /events, pero una sola vez: para túneles que no dejan pasar SSE
+// (los túneles rápidos de Cloudflare retienen el stream). El navegador lo pide cada 0,6 s.
+function handleState(req: Request, url: URL, ip: string): Response {
+  if (!allow("state", ip, 6000)) return fail(429, "Demasiadas consultas.");
+  const room = rooms.get(url.searchParams.get("room") ?? "");
+  if (!room) return fail(404, "No existe esa sala.");
+  if (url.searchParams.has("key")) {
+    if (!authHost(req, url, ip)) return fail(401, "Clave del profesor incorrecta.");
+    return json(viewFor(room, { kind: "host" } as Client, ranking(room)));
+  }
+  const p = room.players.get(url.searchParams.get("token") ?? "");
+  if (!p) return fail(401, "Jugador no reconocido.");
+  const wasActive = p.conns > 0 || Date.now() - p.polledAt < 8000;
+  p.lastSeen = p.polledAt = Date.now();
+  touch(room);
+  if (!wasActive) broadcast(room, (c) => c.kind === "host");
+  return json(viewFor(room, { kind: "player", player: p } as Client, ranking(room)));
 }
 
 // ---------------------------------------------------------------- arranque
