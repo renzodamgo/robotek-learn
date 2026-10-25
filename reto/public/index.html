@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="robots" content="noindex">
+  <title>Reto en vivo</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="student">
+  <div id="conn" class="conn" role="status" hidden>Reconectando...</div>
+  <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <header id="chips" class="chips" hidden>
+    <span class="chip chip-nick" id="chip-nick"></span>
+    <span class="chip" id="chip-total">Total: 0</span>
+    <span class="chip" id="chip-rank"></span>
+  </header>
+  <main id="app" class="wrap"><noscript>Necesitas activar JavaScript para jugar.</noscript></main>
+  <script src="/common.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

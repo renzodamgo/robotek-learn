@@ -115,3 +115,44 @@ Hiwonder, incluido con su permiso) está en `src/rrc_lite_*`; ver [CREDITS.md](C
 ## Licencia
 
 MIT, ver [LICENSE](LICENSE). Créditos y procedencia de los archivos en [CREDITS.md](CREDITS.md).
+
+## Quick start: sala de preguntas en vivo (`/reto`)
+
+Un cuestionario tipo Kahoot para clase: 5 preguntas por paso, 30 segundos cada una, puntos por acierto y rapidez, y
+ranking en vivo. El servidor corre en tu computadora; los alumnos solo necesitan un navegador.
+
+### Tú (profesor): arrancar el servidor
+
+1. Instala [Bun](https://bun.sh) (una sola vez): `curl -fsSL https://bun.sh/install | bash`
+2. Desde la carpeta del repositorio:
+
+   ```bash
+   bun reto/server.ts
+   ```
+
+3. En la terminal aparecen dos direcciones. Copia las dos:
+   * **La tuya (anfitrión):** `http://localhost:3000/host?key=XXXXXX`. La clave `XXXXXX` cambia cada vez que arrancas
+     el servidor y solo tú la ves. No se la des a los alumnos.
+   * **La de los alumnos:** `http://192.168.x.x:3000/` (el número de tu computadora en la red).
+4. Abre la dirección de anfitrión en tu navegador, marca los pasos que quieres jugar (del 1 al 9) y pulsa **Crear
+   sala**. Verás un **código de 4 dígitos** muy grande. Proyéctalo o díctalo.
+5. Cuando todos estén en la lista, pulsa **Empezar**. Con **Siguiente** avanzas de pregunta y de paso.
+
+### Alumnos: cómo entrar
+
+1. Conéctate al **mismo Wi-Fi** que el profesor.
+2. Abre en el navegador del celular o la laptop la **dirección de alumnos** que te dé el profesor
+   (por ejemplo `http://192.168.1.25:3000/`).
+3. Escribe el **código de 4 dígitos** y un **apodo** (hasta 16 letras, sin tu nombre completo) y pulsa **Entrar**.
+4. Espera a que el profesor empiece. En cada pregunta tienes 30 segundos: toca la respuesta (A, B, C o D). Cuanto más
+   rápido aciertes, más puntos. Arriba siempre ves tu total y tu puesto.
+5. Si se te cierra la página, vuelve a entrar con el **mismo código y apodo** y recuperas tus puntos.
+
+### Si algo no funciona
+
+* **Los alumnos no abren la dirección:** muchos Wi-Fi de colegio aíslan los dispositivos. Activa el punto de acceso
+  (hotspot) de tu celular, conecta ahí tu computadora y los alumnos, y usa la dirección nueva que imprime el servidor.
+* **Alumnos a distancia:** usa un túnel, por ejemplo `cloudflared tunnel --url http://localhost:3000`, y comparte el
+  enlace `https://...trycloudflare.com` que aparece. No hace falta cuenta.
+* **Reinicias el servidor:** la sala se pierde (todo está en memoria). Crea una nueva.
+* Detalles, formato de las preguntas y privacidad: [`reto/README.md`](reto/README.md).
