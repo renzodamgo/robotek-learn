@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  Game mat of the Open field: a static 3.2 x 3.2 m plate whose top face carries mat.png, our own drawing made by
+  tools/make_mat_texture.py (white driving area, dark border, and the blue and orange lines that mark the direction
+  of the lap). No WRO artwork or logo.
+
+  Top surface is at z = 0.01 m (box 0.02 m thick centred on the origin), so the walls in the world sit on it.
+-->
+<sdf version="1.10">
+  <model name="robotek_game_mat">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.2 3.2 0.02</size></box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.2 3.2 0.02</size></box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://robotek_game_mat/materials/textures/mat.png</albedo_map>
+              <roughness>1.0</roughness>
+              <metalness>0.0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

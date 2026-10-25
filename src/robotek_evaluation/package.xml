@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robotek_evaluation</name>
+  <version>0.1.0</version>
+  <description>Simulation-only evaluation: contact recorder, actuator and scan models, rule judge and the Open lab. A strategy must not depend on it.</description>
+  <maintainer email="renzo.damian.go@gmail.com">Renzo Damian</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>ros_gz_interfaces</depend>
+  <depend>python3-numpy</depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <depend>robotek_common</depend>
+  <exec_depend>robotek_gazebo</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

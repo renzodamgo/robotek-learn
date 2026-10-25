@@ -1,0 +1,33 @@
+Build fixes for ldlidar_stl_ros2 (upstream MIT, commit bf668a8) on Ubuntu 24.04 / ROS 2 Jazzy:
+link Threads and include <pthread.h>. From the root of your clone: git apply <this file>
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19,6 +19,7 @@
+ find_package(ament_cmake REQUIRED)
+ find_package(rclcpp REQUIRED)
+ find_package(sensor_msgs REQUIRED)
++find_package(Threads REQUIRED)
+ 
+ if(BUILD_TESTING)
+   find_package(ament_lint_auto REQUIRED)
+@@ -59,7 +60,7 @@
+   ${LDLIDAR_DRI_SERIAL}
+ )
+ ament_target_dependencies(${PROJECT_NAME}_node rclcpp sensor_msgs)
+-target_link_libraries(${PROJECT_NAME}_node pthread)
++target_link_libraries(${PROJECT_NAME}_node pthread Threads::Threads)
+ 
+ # Install
+ install(TARGETS ${PROJECT_NAME}_node
+--- a/ldlidar_driver/src/logger/log_module.cpp
++++ b/ldlidar_driver/src/logger/log_module.cpp
+@@ -16,7 +16,7 @@
+ * limitations under the License.
+ **/
+ #include "log_module.h"
+-
++#include <pthread.h>
+ #include <time.h>
+ #include <string.h>
+ 

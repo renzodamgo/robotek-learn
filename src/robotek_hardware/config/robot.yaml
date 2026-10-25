@@ -1,0 +1,64 @@
+# Real-car calibration (the Robotek car of this course). Values flagged measured: false or
+# "was ... guess" must be measured on your own car before you trust them (see README.md).
+base_adapter:
+  ros__parameters:
+    # 0.1174 m measured on 21 oct 2026 (was 0.13). The servo gains below and steer_limit_deg were
+    # derived with 0.13: recalibrate them before driving the car (README.md, section Calibracion).
+    wheelbase: 0.1174
+    servo_center_us: 1500.0
+    servo_gain_pos: 18.9655172414    # 550 / 29 us per degree (team SERVO_GAIN_POS)
+    servo_gain_neg: 17.2413793103    # 500 / 29 (team SERVO_GAIN_NEG)
+    servo_sign: -1.0
+    servo_min_us: 1000.0
+    servo_max_us: 2050.0
+    steer_limit_deg: 25.0
+    servo_duration: 0.05
+    # Measured 8 oct 2026 (motor_driver, 1 s straight pulses at 10-30 %, battery 7.3 V, i.e.
+    # low): v = 0.0137 * (pct - 6.5) m/s. Only checked up to 30 % (0.32 m/s); re-measure with a
+    # charged battery.
+    motor_pct_per_mps: 73.0          # % of PWM per m/s (was a 40.0 guess)
+    motor_min_pct: 6.5               # % where the car starts to move (was a 12.0 guess)
+    motor_max_pct: 50.0              # real Open tests 8 oct 2026: 40 ok, 90 too fast (crash); now 50; was 100
+    accel_limit: 1.0                 # m/s^2 (a full-power start lifts the front wheels)
+    # Wheel angle really reached per servo angle (circles, 8 oct 2026); the strategy's
+    # angle is the wheel angle, clamped to the symmetric range both sides can reach.
+    wheel_table_servo_deg: [10.0, 25.0]
+    wheel_table_left_deg: [8.7, 19.7]
+    wheel_table_right_deg: [8.6, 17.6]
+    wheel_limit_deg: 17.6
+    # The steering servo changed position and turned 90 deg in the new build (21 oct 2026): its centre,
+    # sign, gains and the wheel table above belong to the old linkage. Measure the wheel angle for each
+    # servo command (README.md, section Calibracion), replace them, then set servo_measured: true.
+    servo_measured: false
+    decel_limit: 0.6                 # m/s^2 (a hard stop makes the wheels skid)
+    watchdog: 0.3
+scan_adapter:
+  ros__parameters:
+    angle_offset: 3.14159265359      # STL-19P zero points backwards (front at 180 deg)
+    reverse: false                   # VERIFY: true if the driver's angles grow clockwise
+    frame_id: lidar_link
+    fov_deg: 110.0                   # measured: beyond +-110 deg the rays hit the car itself
+    min_valid_range: 0.12            # m: drops those 2-8 cm returns of the chassis
+tb6612fng_motor:
+  ros__parameters:
+    gpiochip: 4
+    pwm_a: 12
+    ain1: 5
+    ain2: 6
+    stby: 13
+    pwm_hz: 1000
+    watchdog_s: 0.30
+    brake_mode: ramp                 # soft stop; 'reverse' = old brake (skids)
+    stop_ramp_s: 0.6
+
+# IMU of the RRC Lite -> car frame (x forward, y left, z up) before the strategies read it.
+# The Raspberry Pi and the RRC Lite stand on their long edge in the new build (21 oct 2026), so the
+# old flat-board values below are wrong until measured: `ros2 run robotek_hardware imu_axes`
+# (car still, then one forward push) prints this block; copy it here and keep measured: true.
+imu_adapter:
+  ros__parameters:
+    forward_axis: '+y'   # old flat build (8 oct 2026): board +y forward, z up, x to the right
+    left_axis: '-x'
+    up_axis: '+z'
+    frame_id: imu_link
+    measured: false

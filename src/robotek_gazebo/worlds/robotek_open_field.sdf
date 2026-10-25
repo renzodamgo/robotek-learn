@@ -1,0 +1,297 @@
+<?xml version="1.0" ?>
+<!--
+  Robotek - WRO 2026 Future Engineers game field
+  ===============================================================
+  Built from the WRO 2026 Future Engineers game field specification (public rulebook)
+
+  Geometry (metres, origin at the centre of the mat):
+    game mat ............ 3.20 x 3.20          (spec 3200 x 3200 mm)
+    driving area ........ 3.00 x 3.00          (spec 3000 x 3000 mm)
+    exterior wall inner .. at +/-1.50
+    interior wall outer .. at +/-0.50  -> corridor = 1.00 m
+    wall height ......... 0.10                 (spec 100 mm)
+    wall thickness ...... 0.04                 (thickness is undefined in the rules)
+    starting zone ....... 0.50 x 0.20          (spec 500 x 200 mm)
+    traffic sign ........ 0.05 x 0.05 x 0.10   (spec 50 x 50 x 100 mm)
+    parking lot width ... 0.20                 (spec 200 mm)
+    parking lot length .. 0.45 (= 1.5 x 0.30 m robot)
+    parking limitation .. 0.20 x 0.02 x 0.10   (spec 200 x 20 x 100 mm)
+
+  This is the Open Challenge variant: same game field without the obstacles
+  (no traffic signs and no parking lot).
+-->
+<sdf version="1.10">
+  <world name="robotek_open_field">
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Core systems -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <!-- Required for camera / lidar sensors -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <!-- Required for IMU sensors -->
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.70 0.72 0.78 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 5 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
+
+    <gui fullscreen="0">
+      <plugin filename="MinimalScene" name="3D View">
+        <gz-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.6 0.6 0.6</ambient_light>
+        <background_color>0.70 0.72 0.78</background_color>
+        <camera_pose>-3.2 -3.2 3.6 0 0.42 0.785</camera_pose>
+        <camera_clip>
+          <near>0.05</near>
+          <far>1000</far>
+        </camera_clip>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="WorldControl" name="World control">
+        <gz-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="width">121</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>true</start_paused>
+        <service>/world/robotek_open_field/control</service>
+        <stats_topic>/world/robotek_open_field/stats</stats_topic>
+      </plugin>
+      <plugin filename="WorldStats" name="World stats">
+        <gz-gui>
+          <title>World stats</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">110</property>
+          <property type="double" key="width">290</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <sim_time>true</sim_time>
+        <real_time>true</real_time>
+        <real_time_factor>true</real_time_factor>
+        <iterations>true</iterations>
+        <topic>/world/robotek_open_field/stats</topic>
+      </plugin>
+      <plugin filename="EntityTree" name="Entity tree"/>
+      <plugin filename="ResourceSpawner" name="Resource Spawner"/>
+    </gui>
+
+    <!-- ============================ GROUND ============================ -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>30 30</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>30 30</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.30 0.30 0.30 1</ambient>
+            <diffuse>0.35 0.35 0.35 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ========================= GAME MAT ========================= -->
+    <!-- Textured floor: our own drawing (tools/make_mat_texture.py).
+         Resolved via model:// so GZ_SIM_RESOURCE_PATH must include this
+         package's models/ directory (the launch file sets it). -->
+    <include>
+      <uri>model://robotek_game_mat</uri>
+      <name>game_mat</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- ====================== STATIC GAME FIELD ====================== -->
+    <!-- Walls and start-zone marker (the mat floor is included above) -->
+    <model name="game_field">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="field"><sensor name="wall_contact" type="contact"><contact><collision>wall_ext_east_col</collision><collision>wall_ext_west_col</collision><collision>wall_ext_north_col</collision><collision>wall_ext_south_col</collision><collision>wall_int_east_col</collision><collision>wall_int_west_col</collision><collision>wall_int_north_col</collision><collision>wall_int_south_col</collision><topic>/audit/robot_contacts</topic></contact><always_on>1</always_on><update_rate>100</update_rate></sensor>
+
+        <!-- The mat floor itself is provided by the included
+             model://robotek_game_mat (our own texture, see tools/make_mat_texture.py). -->
+
+        <!-- Exterior walls (inner height 100 mm, black, inner face at +/-1.50) -->
+        <visual name="wall_ext_east">
+          <pose>1.52 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 3.08 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_ext_east_col">
+          <pose>1.52 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 3.08 0.10</size></box></geometry>
+        </collision>
+        <visual name="wall_ext_west">
+          <pose>-1.52 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 3.08 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_ext_west_col">
+          <pose>-1.52 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 3.08 0.10</size></box></geometry>
+        </collision>
+        <visual name="wall_ext_north">
+          <pose>0 1.52 0.06 0 0 0</pose>
+          <geometry><box><size>3.08 0.04 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_ext_north_col">
+          <pose>0 1.52 0.06 0 0 0</pose>
+          <geometry><box><size>3.08 0.04 0.10</size></box></geometry>
+        </collision>
+        <visual name="wall_ext_south">
+          <pose>0 -1.52 0.06 0 0 0</pose>
+          <geometry><box><size>3.08 0.04 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_ext_south_col">
+          <pose>0 -1.52 0.06 0 0 0</pose>
+          <geometry><box><size>3.08 0.04 0.10</size></box></geometry>
+        </collision>
+
+        <!-- Interior walls (100 mm high, black, outer face at +/-0.50,
+             square island 1.00 x 1.00 -> corridor 1.00 m). -->
+        <visual name="wall_int_east">
+          <pose>0.48 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 1.00 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_int_east_col">
+          <pose>0.48 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 1.00 0.10</size></box></geometry>
+        </collision>
+        <visual name="wall_int_west">
+          <pose>-0.48 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 1.00 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_int_west_col">
+          <pose>-0.48 0 0.06 0 0 0</pose>
+          <geometry><box><size>0.04 1.00 0.10</size></box></geometry>
+        </collision>
+        <visual name="wall_int_north">
+          <pose>0 0.48 0.06 0 0 0</pose>
+          <geometry><box><size>1.00 0.04 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_int_north_col">
+          <pose>0 0.48 0.06 0 0 0</pose>
+          <geometry><box><size>1.00 0.04 0.10</size></box></geometry>
+        </collision>
+        <visual name="wall_int_south">
+          <pose>0 -0.48 0.06 0 0 0</pose>
+          <geometry><box><size>1.00 0.04 0.10</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.05 0.05 0.05 1</diffuse>
+          </material>
+        </visual>
+        <collision name="wall_int_south_col">
+          <pose>0 -0.48 0.06 0 0 0</pose>
+          <geometry><box><size>1.00 0.04 0.10</size></box></geometry>
+        </collision>
+
+        <!-- Starting zone marker (500 x 200 mm, in the south straight). Visual only. -->
+        <visual name="start_zone">
+          <pose>0 -1.15 0.011 0 0 0</pose>
+          <geometry><box><size>0.50 0.20 0.002</size></box></geometry>
+          <material>
+            <ambient>0.85 0.85 0.85 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+  </world>
+</sdf>

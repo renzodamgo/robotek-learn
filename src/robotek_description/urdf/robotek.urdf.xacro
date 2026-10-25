@@ -1,0 +1,337 @@
+<?xml version="1.0"?>
+<!--
+  Robotek - simplified Ackermann vehicle for Gazebo (WRO 2026 Future Engineers).
+
+  Dimensions measured 20-21 oct 2026 (caliper + Assembly3.stp of the sensor plate); the rest
+  come from the team's STL files (meshes/):
+    Base_v1 plate         189 x 90 mm       -> chassis plate (centre 9.35 mm ahead of base_link)
+    wheels                 61 mm dia, 14.5 mm wide; track 133.5 mm front, 123.5 mm rear
+    wheelbase              117.4 mm; LiDAR axis 128 mm and camera 56.5 mm ahead of base_link
+    raspberry_housing.stl  84.5 x 59 x 70 mm
+    lidar_housing.stl      59 x 55 x 40 mm
+    camara_housing.stl     24.8 x 30 x 105 mm
+
+  Frame conventions: +X forward, +Y left, +Z up. base_link origin is on the
+  ground, centred between the axles.
+
+  Usage:  xacro robotek.urdf.xacro > robotek.urdf
+-->
+<robot name="robotek" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Gazebo 8 shares this limiter between linear m/s and angular rad/s. -->
+  <xacro:arg name="ackermann_velocity_limit" default="1.0"/>
+  <xacro:arg name="ackermann_steer_p_gain" default="1.0"/>
+  <!-- gz-sim 8 applies this limit to BOTH linear and angular (yaw-rate) speed. -->
+  <xacro:arg name="ackermann_acceleration" default="2.0"/>
+  <!-- Honest-simulation noise (off by default to keep older runs reproducible):
+       LiDAR STL-19P spec +/-45 mm -> gaussian sigma 15 mm; gyro z sigma 0.003 rad/s
+       with a 0.002 rad/s bias (removed by the start calibration only approximately). -->
+  <xacro:arg name="sensor_noise" default="false"/>
+  <!-- Real-car sensors (real_car:=true, measured 8 oct 2026, measured on the car):
+       IMU 50 Hz with the real gyro z noise (sigma 0.0019 rad/s, bias +0.006 rad/s),
+       camera ~6 fps with the measured pitch, height and field of view, LiDAR sees only +-110 deg: beyond that the car's own body returns
+       2-8 cm, which scan_adapter drops on the car (same angular resolution: 306 samples
+       over 220 deg). Off by default. -->
+  <xacro:arg name="real_sensors" default="false"/>
+  <xacro:property name="real" value="${'$(arg real_sensors)' == 'true'}"/>
+
+  <!-- ============================ parameters ============================ -->
+  <xacro:property name="wheel_radius" value="0.0305"/>
+  <xacro:property name="wheel_width"  value="0.0145"/>
+  <xacro:property name="wheel_base"   value="0.1174"/>
+  <xacro:property name="track_front"  value="0.1335"/>
+  <xacro:property name="track_rear"   value="0.1235"/>
+  <xacro:property name="steer_limit"  value="0.4363323129985824"/> <!-- 25 degrees -->
+
+  <xacro:property name="chassis_len"  value="0.189"/>
+  <xacro:property name="chassis_x"    value="0.00935"/>
+  <xacro:property name="chassis_wid"  value="0.090"/>
+  <xacro:property name="chassis_hgt"  value="0.030"/>
+  <xacro:property name="chassis_z"    value="0.045"/>
+
+  <xacro:property name="body_mass"    value="0.80"/>
+
+  <!-- Meshes come from Assembly3.stp (millimetres, Y up, front towards -X). To base_link:
+       x = 24.95 mm - X, y = Z, z = Y + mesh_z. mesh_z puts the plate top (STEP Y = 7.1 mm) at
+       z = 0.045 m (caliper, 21 oct 2026: 45 mm from the table to the top face of the plate). -->
+  <xacro:property name="mesh_x" value="0.02495"/>
+  <xacro:property name="mesh_z" value="0.0379"/>
+  <xacro:macro name="step_mesh" params="name file material">
+    <visual name="${name}">
+      <origin xyz="${mesh_x} 0 ${mesh_z}" rpy="1.5707963 0 3.1415927"/>
+      <geometry><mesh filename="package://robotek_description/meshes/${file}" scale="0.001 0.001 0.001"/></geometry>
+      <material name="${material}"/>
+    </visual>
+  </xacro:macro>
+  <xacro:property name="wheel_mass"   value="0.05"/>
+
+  <!-- ============================= materials ============================ -->
+  <material name="dark_grey"><color rgba="0.15 0.15 0.18 1.0"/></material>
+  <material name="blue"><color rgba="0.10 0.25 0.65 1.0"/></material>
+  <material name="black"><color rgba="0.05 0.05 0.05 1.0"/></material>
+  <material name="silver"><color rgba="0.7 0.7 0.7 1.0"/></material>
+  <material name="green"><color rgba="0.1 0.6 0.2 1.0"/></material>
+  <material name="purple"><color rgba="0.40 0.17 0.70 1.0"/></material>
+  <material name="pcb_green"><color rgba="0.04 0.32 0.20 1.0"/></material>
+  <material name="lilac"><color rgba="0.72 0.65 0.93 1.0"/></material>
+  <material name="olive"><color rgba="0.30 0.35 0.20 1.0"/></material>
+  <material name="lidar_navy"><color rgba="0.07 0.07 0.20 1.0"/></material>
+
+  <!-- ============================== base =============================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <mass value="${body_mass}"/>
+      <inertia ixx="1.207e-3" ixy="0" ixz="0"
+               iyy="2.756e-3" iyz="0"
+               izz="2.629e-3"/>
+    </inertial>
+
+    <!-- chassis plate -->
+    <xacro:step_mesh name="chassis" file="base_plate.stl" material="purple"/>
+    <collision name="chassis_col">
+      <origin xyz="${chassis_x} 0 ${chassis_z}" rpy="0 0 0"/>
+      <geometry><box size="${chassis_len} ${chassis_wid} ${chassis_hgt}"/></geometry>
+    </collision>
+
+    <!-- LiDAR and its plate tab: the nose reaches 147.7 mm ahead of base_link, so it touches pillars
+         and walls before the plate does (tab 54 mm wide, z 12 to 51 mm) -->
+    <collision name="lidar_nose_col">
+      <origin xyz="0.1258 0 0.0314" rpy="0 0 0"/>
+      <geometry><box size="0.0438 0.054 0.0388"/></geometry>
+    </collision>
+
+    <!-- parts of the sensor plate (visual only; the LiDAR has none so it cannot occlude its own scan) -->
+    <xacro:step_mesh name="case" file="case.stl" material="purple"/>
+    <xacro:step_mesh name="camera_support" file="camera_support.stl" material="purple"/>
+    <xacro:step_mesh name="camera_body" file="camera.stl" material="black"/>
+    <xacro:step_mesh name="steering_servo" file="servo.stl" material="black"/>
+    <xacro:step_mesh name="raspberry_pi" file="raspberry_pi.stl" material="pcb_green"/>
+    <xacro:step_mesh name="driver_board" file="driver_board.stl" material="pcb_green"/>
+    <!-- LD19 as in the STEP (axis X=-103.4 mm, standing on the plate tab), from primitives: the real
+         scan plane is the slit under the head, z = 0.030 m (lidar_link). The housing is inside the 0.03 m
+         minimum range of the sensor, so it cannot occlude the scan. -->
+    <visual name="lidar_body">
+      <origin xyz="0.12835 0 0.0233" rpy="0 0 0"/>
+      <geometry><box size="0.0386 0.0386 0.0146"/></geometry>
+      <material name="lidar_navy"/>
+    </visual>
+    <visual name="lidar_head">
+      <origin xyz="0.12835 0 0.0407" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0187" length="0.0202"/></geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
+  <!-- ============================ IMU link ============================= -->
+  <link name="imu_link">
+    <inertial><mass value="0.01"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+    <visual><geometry><box size="0.02 0.02 0.005"/></geometry><material name="silver"/></visual>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/><child link="imu_link"/>
+    <origin xyz="0 0 0.061" rpy="0 0 0"/>
+  </joint>
+
+  <!-- =========================== LiDAR link ============================ -->
+  <!-- STL-19P TOF lidar: 38.59 x 38.59 x 34.8 mm, mounted low at the front
+       so the scan plane sits within the 100 mm-high walls. -->
+  <link name="lidar_link">
+    <inertial><origin xyz="0 0 0.0175"/><mass value="0.10"/>
+      <inertia ixx="4.2e-5" ixy="0" ixz="0" iyy="4.2e-5" iyz="0" izz="4.6e-5"/>
+    </inertial>
+    <!-- No visual: gpu_lidar would otherwise hit its own housing at the scan
+         plane and self-occlude. The housing is cosmetic only. -->
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/><child link="lidar_link"/>
+    <origin xyz="0.128 0 0.030" rpy="0 0 0"/>
+  </joint>
+
+  <!-- =========================== camera link =========================== -->
+  <link name="camera_link">
+    <inertial><mass value="0.03"/>
+      <inertia ixx="2e-6" ixy="0" ixz="0" iyy="2e-6" iyz="0" izz="2e-6"/>
+    </inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/><child link="camera_link"/>
+    <!-- mounted behind the lidar and pitched ~23 deg down toward the floor -->
+    <!-- real: measured with a pillar on each side and the LiDAR (8 oct 2026): pitched ~10 deg,
+         turned 4.4 deg left of the LiDAR; height was ~8.3 cm (not measured directly); the STEP puts the camera board centre at 14.46 cm (21 oct 2026) -->
+    <origin xyz="0.0565 0 ${0.1446 if real else 0.095}" rpy="0 ${0.17 if real else 0.4} ${0.077 if real else 0}"/>
+  </joint>
+
+  <!-- ======================= steering knuckles ========================= -->
+  <xacro:macro name="steer_knuckle" params="side sign">
+    <link name="front_${side}_steer_link">
+      <inertial><mass value="0.02"/>
+        <inertia ixx="5e-7" ixy="0" ixz="0" iyy="5e-7" iyz="0" izz="5e-7"/>
+      </inertial>
+      <visual><geometry><cylinder radius="0.006" length="${wheel_radius*2}"/></geometry>
+        <material name="silver"/></visual>
+    </link>
+    <joint name="front_${side}_steering_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="front_${side}_steer_link"/>
+      <origin xyz="${wheel_base/2} ${sign*track_front/2} ${wheel_radius}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-steer_limit}" upper="${steer_limit}" effort="5.0" velocity="5.0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:steer_knuckle side="left"  sign="1"/>
+  <xacro:steer_knuckle side="right" sign="-1"/>
+
+  <!-- ============================== wheels ============================= -->
+  <xacro:macro name="wheel" params="name parent x y z">
+    <link name="${name}">
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <inertia ixx="1.185e-5" ixy="0" ixz="0"
+                 iyy="1.185e-5" iyz="0" izz="2.25e-5"/>
+      </inertial>
+      <visual name="tyre"><origin rpy="1.5708 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <material name="lilac"/></visual>
+      <visual name="hub"><origin rpy="1.5708 0 0"/>
+        <geometry><cylinder radius="${wheel_radius-0.0045}" length="${wheel_width+0.0006}"/></geometry>
+        <material name="olive"/></visual>
+      <collision><origin rpy="1.5708 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      </collision>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="${parent}"/>
+      <child link="${name}"/>
+      <origin xyz="${x} ${y} ${z}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Front wheels: child of their steering knuckle (already at wheel_radius) -->
+  <xacro:wheel name="front_left_wheel"  parent="front_left_steer_link"  x="0" y="0" z="0"/>
+  <xacro:wheel name="front_right_wheel" parent="front_right_steer_link" x="0" y="0" z="0"/>
+  <!-- Rear wheels: directly on the chassis at wheel_radius height -->
+  <xacro:wheel name="rear_left_wheel"   parent="base_link" x="${-wheel_base/2}" y="${track_rear/2}"  z="${wheel_radius}"/>
+  <xacro:wheel name="rear_right_wheel"  parent="base_link" x="${-wheel_base/2}" y="${-track_rear/2}" z="${wheel_radius}"/>
+
+  <!-- ========================= Gazebo plugins ========================= -->
+  <gazebo>
+    <plugin filename="gz-sim-ackermann-steering-system"
+            name="gz::sim::systems::AckermannSteering">
+      <left_joint>rear_left_wheel_joint</left_joint>
+      <right_joint>rear_right_wheel_joint</right_joint>
+      <left_steering_joint>front_left_steering_joint</left_steering_joint>
+      <right_steering_joint>front_right_steering_joint</right_steering_joint>
+      <kingpin_width>${track_front}</kingpin_width>
+      <steering_limit>${steer_limit}</steering_limit>
+      <steer_p_gain>$(arg ackermann_steer_p_gain)</steer_p_gain>
+      <wheel_base>${wheel_base}</wheel_base>
+      <wheel_separation>${track_rear}</wheel_separation>
+      <wheel_radius>${wheel_radius}</wheel_radius>
+      <min_velocity>-${float(xacro.arg('ackermann_velocity_limit'))}</min_velocity>
+      <max_velocity>$(arg ackermann_velocity_limit)</max_velocity>
+      <min_acceleration>-$(arg ackermann_acceleration)</min_acceleration>
+      <max_acceleration>$(arg ackermann_acceleration)</max_acceleration>
+      <odom_topic>/odom</odom_topic>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+
+    <plugin filename="gz-sim-joint-state-publisher-system"
+            name="gz::sim::systems::JointStatePublisher">
+      <topic>/joint_states</topic>
+      <joint_name>front_left_steering_joint</joint_name>
+      <joint_name>front_right_steering_joint</joint_name>
+      <joint_name>front_left_wheel_joint</joint_name>
+      <joint_name>front_right_wheel_joint</joint_name>
+      <joint_name>rear_left_wheel_joint</joint_name>
+      <joint_name>rear_right_wheel_joint</joint_name>
+    </plugin>
+
+    <!-- Ground-truth odometry from the physics engine (not dead-reckoning) -->
+    <plugin filename="gz-sim-odometry-publisher-system"
+            name="gz::sim::systems::OdometryPublisher">
+      <odom_publish_frequency>50</odom_publish_frequency>
+      <odom_topic>/model/robotek/odometry_gt</odom_topic>
+      <dimensions>2</dimensions>
+    </plugin>
+  </gazebo>
+
+  <!-- ============================ sensors ============================= -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <!-- real: sim_scan_model adds the LD19 dropouts and republishes /scan -->
+      <topic>${'/scan_gz' if real else '/scan'}</topic>
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <update_rate>10</update_rate>
+      <always_on>1</always_on>
+      <visualize>true</visualize>
+      <ray>
+        <scan>
+          <horizontal>
+            <!-- 5000 Hz ranging / 10 Hz rotation ~= 500 samples per revolution -->
+            <samples>${306 if real else 500}</samples>
+            <resolution>1</resolution>
+            <min_angle>${-1.91986 if real else -3.14159}</min_angle>
+            <max_angle>${1.91986 if real else 3.14159}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.03</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <xacro:if value="$(arg sensor_noise)">
+          <!-- real: per-ray sigma measured 5 mm median, 19 mm p90 (edges, dark surfaces) -->
+          <noise><type>gaussian</type><mean>0.0</mean><stddev>${0.008 if real else 0.015}</stddev></noise>
+        </xacro:if>
+      </ray>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="camera_link">
+    <sensor name="camera" type="camera">
+      <topic>/camera/image</topic>
+      <gz_frame_id>camera_link</gz_frame_id>
+      <update_rate>${6 if real else 30}</update_rate>
+      <always_on>1</always_on>
+      <visualize>true</visualize>
+      <camera>
+        <!-- real: effective focal 486 px at 640 px wide -> ~67 deg (column -> LiDAR bearing; the
+             real lens has barrel distortion, ~590 px near the centre, not modelled) -->
+        <horizontal_fov>${1.164 if real else 1.047}</horizontal_fov>
+        <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+        <clip><near>0.02</near><far>20</far></clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <topic>/imu</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <update_rate>${50 if real else 100}</update_rate>
+      <always_on>1</always_on>
+      <xacro:if value="$(arg sensor_noise)">
+        <imu>
+          <angular_velocity>
+            <z><noise type="gaussian"><mean>0.0</mean><stddev>${0.0019 if real else 0.003}</stddev>
+              <bias_mean>${0.006 if real else 0.002}</bias_mean><bias_stddev>0.0005</bias_stddev></noise></z>
+          </angular_velocity>
+        </imu>
+      </xacro:if>
+    </sensor>
+  </gazebo>
+
+</robot>

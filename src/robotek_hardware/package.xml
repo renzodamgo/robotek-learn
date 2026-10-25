@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robotek_hardware</name>
+  <version>0.1.0</version>
+  <description>Real-car only: adapters between your strategy (/cmd_vel_raw, /scan, /imu, /start) and the HiWonder RRC Lite (servo, IMU, button, RGBs), the TB6612 motor and the LD19 lidar.</description>
+  <maintainer email="renzo.damian.go@gmail.com">Renzo Damian</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <!-- On the robot only (see README.md, "Drivers de terceros"); without it the nodes start and log an error. -->
+  <exec_depend condition="$ROBOTEK_ROBOT == 1">rrc_lite_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

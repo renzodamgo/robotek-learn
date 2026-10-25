@@ -1,0 +1,19 @@
+name: tests
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    # The pure-Python tests of every step run against the reference solution on the `solutions` branch.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name == 'main' && 'solutions' || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest numpy opencv-python-headless pyyaml
+      # step 9 (the lab) needs ROS and is skipped here: pytest.importorskip('rclpy')
+      - run: python -m pytest course/tests -q

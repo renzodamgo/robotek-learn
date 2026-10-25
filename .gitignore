@@ -1,0 +1,14 @@
+build/
+install/
+log/
+build_*/
+install_*/
+log_*/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.DS_Store
+# lo crea el lector con `ros2 pkg create`; en la rama `solutions` se añade con git add -f
+src/my_open/
+# drive.py of every step (spoilers): they are committed on the solutions branch only
+course/snapshots/

@@ -1,0 +1,37 @@
+# Actuators of the real Robotek car for sim_actuator_model (real_car:=true).
+# Measured on the car on 8 oct 2026 (the author's runs). Battery was LOW (7.0-7.4 V) for the speed table.
+sim_actuator_model:
+  ros__parameters:
+    # Servo: command -> chassis reaction ~60 ms (52-79 ms, 8 steps); travel ~0.10-0.15 s
+    # for 10 deg and ~0.33-0.48 s for 25 deg (upper bounds) -> ~70 deg/s.
+    steer_delay: 0.06
+    steer_rate: 1.2
+    steer_tau: 0.05
+    # Wheel angle really reached, measured by driving circles with the wheels fixed (arc
+    # length from the LiDAR odometry / yaw from the gyro, 8 oct 2026): +10 -> 8.7,
+    # +25 -> 18.1/19.9/18.8/20.3 (~19.7, longer arcs weigh more), -10 -> -8.6,
+    # -25 -> -17.8/-17.8/-17.4 (~17.6). Left turns are tighter at full lock.
+    # (The earlier 5 deg dead band came from short pulses and was wrong.)
+    # Raw car, for reference (steer_table_cmd 10/25 deg -> left 8.7/19.7, right 8.6/17.6).
+    # On the car base_adapter inverts that table per side and clamps to 17.6 deg, so the
+    # wheels do what the strategy asks up to 17.6 deg on both sides: modelled here as no
+    # table and steer_limit = 17.6 deg (the strategies also get steer_limit 17.6 deg).
+    steer_deadband: 0.0
+    steer_gain: 1.0
+    steer_limit: 0.30718
+    # Drive as base_adapter sends it (robot.yaml accel_limit / decel_limit).
+    accel_max: 1.0
+    decel_max: 0.6
+    # Motor: command -> first acceleration 30-80 ms; reaches the speed in ~0.15 s.
+    drive_delay: 0.06
+    drive_tau: 0.15
+    # (100 % - 6.5 %) / (73 % per m/s), rounded to the table endpoint.
+    drive_command_limit: 1.28
+    drive_deadband: 0.005  # base_adapter MotorCalibration.deadband_mps
+    # Speed really reached vs commanded through /cmd_vel (cmdvel test): exact-ish up to
+    # 0.3 m/s, ~70 % above (low battery). The last point (1.28 m/s = 100 % motor) is
+    # INFERRED, not measured: a saturating fit of every point gives 0.52 m/s (90 %
+    # interval 0.39-0.60), a straight line over 30-50 % gives 0.71; 0.60 is taken.
+    # Re-measure with a charged battery and room (test:=cmdvel).
+    speed_table_cmd: [0.15, 0.30, 0.40, 0.60, 1.28]
+    speed_table_real: [0.18, 0.27, 0.30, 0.42, 0.60]
