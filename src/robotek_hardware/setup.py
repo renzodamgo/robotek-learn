@@ -32,6 +32,7 @@ setup(
             'servo_steer = robotek_hardware.servo_steer:main',
             'battery_guard = robotek_hardware.battery_guard:main',
             'status_leds = robotek_hardware.status_leds:main',
+            'camera_publisher = robotek_hardware.camera_publisher:main',
         ],
     },
 )

@@ -1,0 +1,4 @@
+rrc_lite_msgs/GetBusServoCmd[] cmd
+---
+bool success
+rrc_lite_msgs/BusServoState[] state

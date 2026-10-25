@@ -1,0 +1,4 @@
+rrc_lite_msgs/GetPWMServoCmd[] cmd
+---
+bool success
+rrc_lite_msgs/PWMServoState[] state

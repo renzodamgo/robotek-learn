@@ -1,0 +1,3 @@
+baseline	ccw	30 de 30	34.42	11.0 / 10.5 / 10.7	sí   margen mínimo 9.5 cm	
+baseline	cw	30 de 30	34.72	10.9 / 10.6 / 10.9	sí   margen mínimo 14.2 cm	
+delay-x2	ccw	30 de 30	35.92	11.2 / 11.1 / 11.3	sí   margen mínimo 15.8 cm	actuator_params:=steer_delay=0.12

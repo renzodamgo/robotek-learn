@@ -1,0 +1,5 @@
+rrc_driver:
+  ros__parameters:
+    imu_frame: "imu_link"
+    init_finish: false
+    port: ""          # vacio = /dev/rrc_lite (udev) o /dev/ttyACM0

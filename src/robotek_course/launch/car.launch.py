@@ -16,7 +16,7 @@ Here those names are connected to the car:
 Started here (each driver is skipped with a message when its package is not installed, so the launch can be tried
 on a laptop; see src/robotek_hardware/README.md for how to install them):
   - rrc_lite_driver (the RRC Lite board: IMU, button, servo, RGBs) and the LiDAR driver (ldlidar_stl_ros2, LD19)
-  - usb_cam
+  - the camera: robotek_hardware/camera_publisher (camera_driver:=usb_cam for the ROS package)
   - robotek_hardware: scan_adapter, imu_adapter, motor_driver, base_adapter, start_button, battery_guard, status_leds
   - robot_state_publisher with robotek_description (only if installed; useful to see the car in RViz on a laptop)
   - your strategy, with use_sim_time false
@@ -71,13 +71,20 @@ def _drivers(context):
     else:
         actions.append(LogInfo(msg='[car] LiDAR driver not launched here: it must publish ' + _arg(context, 'raw_scan_topic')))
     if _arg(context, 'camera').lower() == 'true':
-        if _share('usb_cam'):
-            actions.append(Node(package='usb_cam', executable='usb_cam_node_exe', name='usb_cam', namespace='usb_cam',
-                                output='screen',
-                                parameters=[{'video_device': _arg(context, 'video_device'), 'image_width': 640,
-                                             'image_height': 480, 'framerate': 30.0, 'pixel_format': 'yuyv'}]))
+        device = _arg(context, 'video_device')
+        if _arg(context, 'camera_driver') == 'usb_cam':
+            if _share('usb_cam'):
+                actions.append(Node(package='usb_cam', executable='usb_cam_node_exe', name='usb_cam',
+                                    namespace='usb_cam', output='screen',
+                                    parameters=[{'video_device': device or '/dev/video0', 'image_width': 640,
+                                                 'image_height': 480, 'framerate': 30.0, 'pixel_format': 'yuyv'}]))
+            else:
+                actions.append(LogInfo(msg='[car] usb_cam not found (sudo apt install ros-jazzy-usb-cam): '
+                                           'the camera must publish ' + _arg(context, 'camera_topic')))
         else:
-            actions.append(LogInfo(msg='[car] usb_cam not found: the camera must publish ' + _arg(context, 'camera_topic')))
+            # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
+            actions.append(Node(package='robotek_hardware', executable='camera_publisher', name='camera_publisher',
+                                output='screen', parameters=[{'device': device}]))
     return actions
 
 
@@ -105,9 +112,13 @@ def generate_launch_description():
         DeclareLaunchArgument('lidar_launch', default_value='ld19.launch.py', description='launch file of that package'),
         DeclareLaunchArgument('raw_scan_topic', default_value='/scan', description='what the LiDAR driver publishes'),
         DeclareLaunchArgument('imu_topic', default_value='/rrc/imu_raw', description='what the RRC Lite driver publishes'),
-        DeclareLaunchArgument('camera', default_value='true', description='start usb_cam'),
-        DeclareLaunchArgument('video_device', default_value='/dev/video0',
-                              description='your camera; better a stable /dev/v4l/by-id/... path than /dev/videoN'),
+        DeclareLaunchArgument('camera', default_value='true', description='start the camera node'),
+        DeclareLaunchArgument('camera_driver', default_value='camera_publisher',
+                              description="'camera_publisher' (robotek_hardware, retries if the camera is missing) "
+                                          "or 'usb_cam' (the ROS package)"),
+        DeclareLaunchArgument('video_device', default_value='',
+                              description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
+                                          '/dev/video0. A stable by-id path is better than /dev/videoN'),
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
         DeclareLaunchArgument('battery_guard', default_value='true',
                               description='red blinking RGBs when the battery is low (does not stop the car)'),

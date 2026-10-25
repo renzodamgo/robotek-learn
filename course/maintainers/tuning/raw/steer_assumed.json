@@ -1,0 +1,1831 @@
+{
+ "group": "steer_assumed",
+ "title": "Maximum steering angle: strategy and car agree (both change)",
+ "seeds": [
+  0
+ ],
+ "experiments": [
+  {
+   "experiment": {
+    "label": "both 0.2 rad (11.5 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.2",
+     "robotek_course.minisim.STEER_LIMIT=0.2"
+    ],
+    "act": {
+     "steer_limit": 0.2
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.2 rad (11.5 deg)",
+    "ok": 7,
+    "n": 12,
+    "pts": 22.0,
+    "t": 40.68,
+    "sq100": 34.980000000000004,
+    "clr": 0.0,
+    "walls": {
+     "TURN": 4
+    },
+    "stuck": {},
+    "why": {
+     "rule_maximum": 4,
+     "stop_observed": 4,
+     "no_contacts": 4,
+     "min_outer_wall_clearance_m": 5
+    }
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 34.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.24298570970476666,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.3,
+      10.5,
+      11.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 34.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.2162915119234018,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.3,
+      10.5,
+      10.999999999999996
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 1,
+     "time": 3.3000000000000003,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_outer_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 3.3200000000000003,
+     "end": "TURN",
+     "turns": 0,
+     "laps": [],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 1,
+     "time": 3.3000000000000003,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_outer_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 3.3200000000000003,
+     "end": "TURN",
+     "turns": 0,
+     "laps": [],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.88,
+     "valid": true,
+     "failed": [],
+     "margin": "tight",
+     "min_clearance": 0.04022620982292113,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.200000000000001,
+      14.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 21,
+     "time": 33.1,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_outer_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 33.14,
+     "end": "TURN",
+     "turns": 9,
+     "laps": [
+      13.6,
+      13.200000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 44.38,
+     "valid": true,
+     "failed": [],
+     "margin": "tight",
+     "min_clearance": 0.03663599246714022,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.700000000000001,
+      13.200000000000001,
+      14.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 44.38,
+     "valid": true,
+     "failed": [],
+     "margin": "tight",
+     "min_clearance": 0.03744877825040471,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.700000000000001,
+      13.200000000000001,
+      14.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 1,
+     "time": 3.3000000000000003,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_outer_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 3.3200000000000003,
+     "end": "TURN",
+     "turns": 0,
+     "laps": [],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 44.68,
+     "valid": false,
+     "failed": [
+      "min_outer_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0020237478358691163,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.200000000000001,
+      15.2
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 38.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "tight",
+     "min_clearance": 0.03600818746295942,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.4,
+      11.799999999999999,
+      12.600000000000005
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 40.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.055293888133699065,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      11.8,
+      13.400000000000002
+     ],
+     "seed": 0
+    }
+   ]
+  },
+  {
+   "experiment": {
+    "label": "both 0.25 rad (14.3 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.25",
+     "robotek_course.minisim.STEER_LIMIT=0.25"
+    ],
+    "act": {
+     "steer_limit": 0.25
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.25 rad (14.3 deg)",
+    "ok": 12,
+    "n": 12,
+    "pts": 30.0,
+    "t": 41.605,
+    "sq100": 33.480000000000004,
+    "clr": 1.639324196875691,
+    "walls": {},
+    "stuck": {},
+    "why": {}
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 33.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.19311722109556945,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.700000000000001,
+      10.1,
+      10.600000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 33.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.19121161203333611,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.700000000000001,
+      10.1,
+      10.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 50.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "risky",
+     "min_clearance": 0.01639324196875691,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.700000000000001,
+      15.299999999999999,
+      17.300000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 50.88,
+     "valid": true,
+     "failed": [],
+     "margin": "risky",
+     "min_clearance": 0.01718001958172266,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.6,
+      15.4,
+      17.200000000000003
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.054772572879101755,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.0,
+      12.7,
+      13.600000000000005
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.051730811060402226,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.0,
+      12.7,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.05512040567967991,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.3,
+      12.7,
+      14.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.052420439931414986,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.3,
+      12.7,
+      14.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.58,
+     "valid": true,
+     "failed": [],
+     "margin": "risky",
+     "min_clearance": 0.01639324196875691,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.1,
+      12.800000000000002,
+      13.499999999999996
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07451984413334167,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.0,
+      12.8,
+      14.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12865474020498668,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.9,
+      11.4,
+      11.900000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 39.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10231687188833738,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.1,
+      11.4,
+      13.100000000000001
+     ],
+     "seed": 0
+    }
+   ]
+  },
+  {
+   "experiment": {
+    "label": "both 0.28 rad (16.0 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.28",
+     "robotek_course.minisim.STEER_LIMIT=0.28"
+    ],
+    "act": {
+     "steer_limit": 0.28
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.28 rad (16.0 deg)",
+    "ok": 12,
+    "n": 12,
+    "pts": 30.0,
+    "t": 41.13,
+    "sq100": 32.88,
+    "clr": 5.402446566333929,
+    "walls": {},
+    "stuck": {},
+    "why": {}
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 32.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.166892463065291,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.6,
+      9.800000000000002,
+      10.299999999999997
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 33.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.16482489726993788,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.6,
+      9.800000000000002,
+      10.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 50.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.055920380205746856,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.6,
+      15.200000000000001,
+      17.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 50.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.054024465663339294,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.6,
+      15.300000000000002,
+      17.2
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.08630938659051801,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.9,
+      12.500000000000002,
+      13.499999999999996
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 40.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.08498145223364117,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.9,
+      12.500000000000002,
+      13.499999999999996
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09703121869117082,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.200000000000001,
+      12.6,
+      14.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09573987962918395,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.200000000000001,
+      12.6,
+      14.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.062393136601858856,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.9,
+      12.500000000000002,
+      13.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11909469780527804,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.600000000000001,
+      14.400000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 36.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15080951299642908,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.9,
+      11.200000000000001,
+      11.700000000000003
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 38.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13796650308480718,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.9,
+      11.299999999999999,
+      12.7
+     ],
+     "seed": 0
+    }
+   ]
+  },
+  {
+   "experiment": {
+    "label": "both 0.307 rad (17.6 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.307",
+     "robotek_course.minisim.STEER_LIMIT=0.307"
+    ],
+    "act": {
+     "steer_limit": 0.307
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.307 rad (17.6 deg)",
+    "ok": 12,
+    "n": 12,
+    "pts": 30.0,
+    "t": 40.76333333333333,
+    "sq100": 32.58,
+    "clr": 9.449544133884679,
+    "walls": {},
+    "stuck": {},
+    "why": {}
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 32.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14187730491206751,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.4,
+      9.700000000000001,
+      10.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 32.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13977563335537602,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.4,
+      9.700000000000001,
+      10.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 50.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0944954413388468,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.4,
+      15.200000000000001,
+      16.799999999999997
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 50.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09513410567239111,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.4,
+      15.200000000000001,
+      17.0
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14711803202354945,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.399999999999999,
+      13.2
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 40.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14602773917578515,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.399999999999999,
+      13.2
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09795917167760826,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.0,
+      12.400000000000002,
+      14.2
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11020775643637015,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.0,
+      12.5,
+      14.100000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0944954413388468,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.399999999999999,
+      13.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11883041982244369,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.399999999999999,
+      14.2
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 36.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15293664569767362,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.700000000000001,
+      11.200000000000001,
+      11.599999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 38.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13649094805497652,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.700000000000001,
+      11.1,
+      12.8
+     ],
+     "seed": 0
+    }
+   ]
+  },
+  {
+   "experiment": {
+    "label": "both 0.35 rad (20.1 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.35",
+     "robotek_course.minisim.STEER_LIMIT=0.35"
+    ],
+    "act": {
+     "steer_limit": 0.35
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.35 rad (20.1 deg)",
+    "ok": 12,
+    "n": 12,
+    "pts": 30.0,
+    "t": 40.34666666666667,
+    "sq100": 31.98,
+    "clr": 9.22481020982241,
+    "walls": {},
+    "stuck": {},
+    "why": {}
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 31.98,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09588962860633277,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.200000000000001,
+      9.6,
+      10.0
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 31.98,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0922481020982241,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.200000000000001,
+      9.6,
+      10.0
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 49.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12597052927447797,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.3,
+      15.0,
+      16.900000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 49.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12748214320770276,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.3,
+      15.0,
+      16.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13517533424009173,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.700000000000001,
+      12.4,
+      13.100000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 39.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1502659110263873,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.700000000000001,
+      12.1,
+      13.000000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11473417636304573,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.399999999999999,
+      14.000000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.68,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11365212405860359,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.8,
+      12.3,
+      13.899999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13269839257670424,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.700000000000001,
+      12.4,
+      13.100000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13537751247903834,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      12.4,
+      14.300000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 36.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11473417636304573,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.6,
+      11.000000000000002,
+      11.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 37.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0922481020982241,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.4,
+      11.000000000000002,
+      12.7
+     ],
+     "seed": 0
+    }
+   ]
+  },
+  {
+   "experiment": {
+    "label": "both 0.4 rad (22.9 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.4",
+     "robotek_course.minisim.STEER_LIMIT=0.4"
+    ],
+    "act": {
+     "steer_limit": 0.4
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.4 rad (22.9 deg)",
+    "ok": 12,
+    "n": 12,
+    "pts": 30.0,
+    "t": 40.13833333333333,
+    "sq100": 31.98,
+    "clr": 7.050215212153588,
+    "walls": {},
+    "stuck": {},
+    "why": {}
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 31.98,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07232831209949364,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.0,
+      9.600000000000001,
+      10.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 31.98,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07050215212153588,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.0,
+      9.600000000000001,
+      10.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 49.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13594465120451033,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.1,
+      15.000000000000002,
+      16.799999999999997
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 49.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13598846893409786,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.3,
+      15.0,
+      16.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 39.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10718947039203253,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.3,
+      12.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 39.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15273264819391363,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      12.200000000000001,
+      13.000000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.08798110902595468,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.700000000000001,
+      12.200000000000001,
+      13.999999999999996
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.58,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0869740227943423,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.700000000000001,
+      12.200000000000001,
+      13.999999999999996
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10176332240951742,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      12.200000000000001,
+      12.900000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10109750479874177,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.2,
+      14.100000000000005
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 35.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.08798110902595468,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.3,
+      11.0,
+      11.3
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 37.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07050215212153588,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.4,
+      11.000000000000002,
+      12.7
+     ],
+     "seed": 0
+    }
+   ]
+  },
+  {
+   "experiment": {
+    "label": "both 0.4363 rad (25.0 deg)",
+    "sets": [
+     "my_open.*.STEER_LIMIT=0.4363",
+     "robotek_course.minisim.STEER_LIMIT=0.4363"
+    ],
+    "act": {
+     "steer_limit": 0.4363
+    },
+    "latency": 0.0,
+    "fields": null,
+    "directions": null,
+    "note": ""
+   },
+   "summary": {
+    "label": "both 0.4363 rad (25.0 deg)",
+    "ok": 12,
+    "n": 12,
+    "pts": 30.0,
+    "t": 39.93000000000001,
+    "sq100": 31.98,
+    "clr": 6.807283512192686,
+    "walls": {},
+    "stuck": {},
+    "why": {}
+   },
+   "rounds": [
+    {
+     "field": "square100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 31.98,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0694761570873843,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.0,
+      9.600000000000001,
+      10.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square100",
+     "direction": "cw",
+     "points": 30,
+     "time": 31.98,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.06807283512192686,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      10.0,
+      9.600000000000001,
+      10.099999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 49.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10078209990790485,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.0,
+      14.900000000000002,
+      16.7
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 49.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13831491712419922,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      15.200000000000001,
+      14.799999999999999,
+      16.700000000000003
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 39.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1240093655262944,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.2,
+      12.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 39.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12534298165854518,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.2,
+      12.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07608243742961618,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      12.200000000000001,
+      14.000000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 40.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07485091348911677,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.100000000000001,
+      13.700000000000003
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 40.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09420240714784052,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.3,
+      12.8
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09150253802498677,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.2,
+      14.100000000000005
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 35.68,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.07608243742961618,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.3,
+      10.8,
+      11.299999999999997
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 37.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.06807283512192686,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      11.4,
+      10.9,
+      12.500000000000004
+     ],
+     "seed": 0
+    }
+   ]
+  }
+ ]
+}

@@ -20,6 +20,15 @@ Gazebo before they are used to decide anything.
 
     python3 -m robotek_evaluation.open_lab --strategy my_open.strategy:Strategy
     python3 -m robotek_evaluation.open_lab --strategy my_open.strategy:Strategy --field square100 --direction ccw
+
+Experiments (what happens if the servo is slower, the speed lower, the LiDAR noisier...), all optional and off by default::
+
+    --act steer_delay=0.12 --act steer_rate=0.6      # the CAR's actuators (sim_actuator_model parameters)
+    --act-scale speed_table_real=0.85                # multiply a parameter (or every entry of a list) by a factor
+    --set my_open.mission.CRUISE_SPEED=1.0           # a constant of the strategy (monkeypatch, see apply_sets)
+    --set 'my_open.*.STEER_LIMIT=0.25'               # '*' = the package and every submodule that has that name
+    --set robotek_evaluation.open_lab.SCAN_DROPOUT=0.10   # the lab's own sensor noise
+    --latency 0.04 --seeds 0,1,2 --jobs 8
 """
 import argparse
 import json
@@ -71,6 +80,8 @@ SCAN_DROPOUT = 0.043
 SCAN_COPIES = 3
 GYRO_NOISE = 0.0019
 GYRO_BIAS = 0.006
+GYRO_DRIFT = 0.0            # rad/s per second: the bias grows linearly after Start (0 = constant bias, as measured)
+GYRO_SCALE = 1.0            # factor on the true yaw rate seen by the gyroscope (1 = perfect)
 # Optional first-order lag between the actuator model's yaw rate and the body's. Off by default: against
 # the Gazebo ground truth the yaw rate follows the measured wheel angle with no lag (rms 0.03 rad/s);
 # the lag that exists is in the wheel itself. A fit of 0.05 s lowers the open-loop error but makes
@@ -314,7 +325,8 @@ def run_round(world, direction, strategy, seed=0, tmax=180.0, spawn=START, plant
                     t_start = now
                     events.append({'event': 'start', 'sim_time': now, 'wall_time': now})
         if tick % IMU_EVERY == 0:
-            strategy.on_imu(now, yaw_rate + bias + rng.normal(0.0, GYRO_NOISE))
+            drift = GYRO_DRIFT * (now - t_start) if (GYRO_DRIFT and t_start is not None) else 0.0
+            strategy.on_imu(now, yaw_rate * GYRO_SCALE + bias + drift + rng.normal(0.0, GYRO_NOISE))
         if t_start is not None and now >= t_start + CAMERA_DELAY and \
                 (camera_time is None or now - camera_time >= CAMERA_PERIOD - 1e-9):
             camera_time = now
@@ -381,12 +393,117 @@ def _result(world, direction, strategy, rows, events, clearance, contact, steer_
 
 
 # --------------------------------------------------------------------- CLI
-def run_suite(strategy, seed=0, fields=None, directions=None, worlds=FIELDS):
+def _literal(text):
+    value = yaml.safe_load(text)
+    return value
+
+
+def apply_sets(sets):
+    """Monkeypatch module constants: ``sets`` is a list of ``module.NAME=value`` strings.
+
+    ``module`` may end in ``.*``: the package and every submodule already imported that has ``NAME``
+    (a constant imported with ``from .x import NAME`` is a separate copy in each module). Functions whose
+    DEFAULT argument has the constant's lower-case name (``def f(damping=DAMPING)``) get the new default too.
+    Returns the list of ``module.NAME`` really changed.
+    """
+    import importlib
+    import inspect
+    import pkgutil
+    import sys
+    changed = []
+    for item in sets:
+        target, _, text = item.partition('=')
+        module_name, _, name = target.rpartition('.')
+        wildcard = module_name.endswith('.*')
+        package = module_name[:-2] if wildcard else module_name
+        base = importlib.import_module(package)
+        if wildcard and hasattr(base, '__path__'):
+            for info in pkgutil.walk_packages(base.__path__, package + '.'):
+                importlib.import_module(info.name)
+        modules = [m for k, m in list(sys.modules.items())
+                   if m is not None and (k == package or (wildcard and k.startswith(package + '.')))]
+        value = _literal(text)
+        for module in modules:
+            if not hasattr(module, name):
+                continue
+            old = getattr(module, name)
+            setattr(module, name, type(old)(value) if isinstance(old, (int, float)) and not isinstance(old, bool) else value)
+            changed.append(f'{module.__name__}.{name}')
+            for _, obj in inspect.getmembers(module, lambda o: inspect.isfunction(o) or inspect.isclass(o)):
+                if getattr(obj, '__module__', None) != module.__name__:
+                    continue
+                for fn in ([obj] if inspect.isfunction(obj) else
+                           [f for f in vars(obj).values() if inspect.isfunction(f)]):
+                    _patch_default(fn, name.lower(), getattr(module, name))
+    if not changed:
+        raise SystemExit(f'--set: nothing matched {sets}')
+    return changed
+
+
+def _patch_default(fn, parameter, value):
+    code = fn.__code__
+    names = code.co_varnames[:code.co_argcount]
+    if parameter in names and fn.__defaults__:
+        offset = len(names) - len(fn.__defaults__)
+        index = names.index(parameter) - offset
+        if index >= 0:
+            defaults = list(fn.__defaults__)
+            defaults[index] = value
+            fn.__defaults__ = tuple(defaults)
+    if fn.__kwdefaults__ and parameter in fn.__kwdefaults__:
+        fn.__kwdefaults__[parameter] = value
+
+
+def parse_actuator(act, scale):
+    """``--act name=value`` and ``--act-scale name=factor`` -> the dict run_round takes (``actuator=``)."""
+    base = actuator_parameters()
+    out = {k: _literal(v) for k, v in (a.split('=', 1) for a in act)}
+    for item in scale:
+        name, _, factor = item.partition('=')
+        current = out.get(name, base[name])
+        out[name] = [x * float(factor) for x in current] if isinstance(current, list) else current * float(factor)
+    return out
+
+
+def _one(job):
+    """One lab round in a worker process: (strategy spec, constructor overrides, sets, field, direction, seed, ...)."""
+    spec, overrides, sets, field, direction, seed, actuator, latency, worlds = job
+    import importlib
+    if sets:
+        apply_sets(sets)
+    # Under `python -m` this file is __main__; the lab's own constants (--set ...open_lab.SCAN_DROPOUT=...) are
+    # patched in the importable module, so the round must run from there.
+    lab = importlib.import_module('robotek_evaluation.open_lab')
+    return lab.run_round(worlds / f'{field}.sdf', direction, lab.load_strategy(spec, overrides), seed=seed,
+                         actuator=actuator, latency=latency)
+
+
+def run_suite(strategy, seed=0, fields=None, directions=None, worlds=FIELDS, actuator=None, latency=0.0):
     results = []
     for field, direction in STD12:
         if (fields and field not in fields) or (directions and direction not in directions):
             continue
-        results.append(run_round(worlds / f'{field}.sdf', direction, strategy, seed=seed))
+        results.append(run_round(worlds / f'{field}.sdf', direction, strategy, seed=seed,
+                                 actuator=actuator, latency=latency))
+    return results
+
+
+def run_suite_parallel(spec, overrides=None, sets=(), seeds=(0,), fields=None, directions=None, worlds=FIELDS,
+                       actuator=None, latency=0.0, jobs=1):
+    """The suite for several seeds, ``jobs`` rounds at a time (one fresh process per round: the monkeypatches
+    of ``sets`` are applied in each worker, so the parent stays clean). Returns a list of result dicts
+    (with ``seed`` added) in a fixed order."""
+    import multiprocessing
+    work = [(spec, overrides, list(sets), field, direction, seed, actuator, latency, worlds)
+            for seed in seeds for field, direction in STD12
+            if not ((fields and field not in fields) or (directions and direction not in directions))]
+    if jobs <= 1:
+        results = [_one(w) for w in work]
+    else:
+        with multiprocessing.get_context('spawn').Pool(jobs, maxtasksperchild=1) as pool:
+            results = pool.map(_one, work, chunksize=1)
+    for r, w in zip(results, work):
+        r['seed'] = w[5]
     return results
 
 
@@ -404,20 +521,32 @@ def main(argv=None):
     parser.add_argument('--strategy', required=True, help='module:Class, for example my_open.strategy:Strategy')
     parser.add_argument('--param', action='append', default=[], help='name=value, passed to the constructor')
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--seeds', help='comma-separated seeds (replaces --seed), for example 0,1,2')
     parser.add_argument('--field', action='append')
     parser.add_argument('--direction', action='append')
+    parser.add_argument('--set', dest='sets', action='append', default=[], metavar='MODULE.NAME=VALUE',
+                        help="monkeypatch a constant; 'my_open.*.NAME' patches every submodule that has it")
+    parser.add_argument('--act', action='append', default=[], metavar='NAME=VALUE',
+                        help='override a parameter of the car\'s actuators (sim_actuator_model), for example steer_delay=0.12')
+    parser.add_argument('--act-scale', action='append', default=[], metavar='NAME=FACTOR',
+                        help='multiply an actuator parameter (or each entry of a list) by FACTOR')
+    parser.add_argument('--latency', type=float, default=0.0, help='extra seconds between the strategy and the actuators')
+    parser.add_argument('--jobs', type=int, default=1, help='rounds in parallel')
     parser.add_argument('--out', type=Path, help='write the results as JSON')
     args = parser.parse_args(argv)
     overrides = {k: yaml.safe_load(v) for k, v in (p.split('=', 1) for p in args.param)}
-    factory = load_strategy(args.strategy, overrides)
-    results = run_suite(factory, args.seed, args.field, args.direction)
+    seeds = [int(s) for s in args.seeds.split(',')] if args.seeds else [args.seed]
+    actuator = parse_actuator(args.act, args.act_scale) or None
+    results = run_suite_parallel(args.strategy, overrides, args.sets, seeds, args.field, args.direction,
+                                 actuator=actuator, latency=args.latency, jobs=args.jobs)
     for result in results:
-        print(format_result(result), flush=True)
+        print(('seed %d ' % result['seed'] if len(seeds) > 1 else '') + format_result(result), flush=True)
     valid = sum(r['valid'] for r in results)
     print(f'{valid}/{len(results)} valid, mean time '
           f'{np.mean([r["time"] for r in results if r["time"]]):.2f} s')
     if args.out:
-        args.out.write_text(json.dumps({'tag': args.tag, 'seed': args.seed, 'rounds': results}, indent=1))
+        args.out.write_text(json.dumps({'tag': args.tag, 'seeds': seeds, 'sets': args.sets, 'act': actuator,
+                                        'rounds': results}, indent=1))
     return 0
 
 

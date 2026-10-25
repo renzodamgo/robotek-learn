@@ -40,6 +40,9 @@ ros2 pkg create --build-type ament_python my_open --node-name drive \
 | `src/robotek_evaluation` | Solo simulación: juez de reglas, modelo del servo y del motor, contactos, Open lab |
 | `src/robotek_course` | Lanzadores del simulador y de una ronda, el árbitro, `score`, la clase base de la estrategia |
 | `src/robotek_hardware` | Los nodos del coche real (Raspberry Pi) |
+| `src/ldlidar_stl_ros2` | Driver del LiDAR LD19 (copia del de LDROBOT, MIT) |
+| `src/rrc_lite_driver`, `src/rrc_lite_msgs` | Driver de la placa RRC Lite (basado en Hiwonder MentorPi, con permiso) |
+| `tools/setup-pi.sh` | Deja un Raspberry Pi listo para el coche real (un solo comando) |
 | `course/tests` | Pruebas de cada paso (`pytest`, sin ROS ni Gazebo) |
 | `course/verify_step.py` | Comprobación de cada paso en Gazebo |
 
@@ -60,6 +63,35 @@ ros2 run robotek_course score                # puntúa de nuevo la última ronda
 
 Las rondas se guardan en `~/robotek_runs/`. Los puntos son una **estimación de simulación** con las reglas
 publicadas, no una puntuación oficial.
+
+## Coche real (Raspberry Pi)
+
+En el Raspberry Pi del coche (Ubuntu 24.04, arm64, con internet) basta clonar el repositorio y ejecutar un script:
+
+```bash
+git clone https://github.com/renzodamgo/robotek-learn.git
+cd robotek-learn
+bash tools/setup-pi.sh            # ROS 2 Jazzy base, dependencias, reglas de udev, grupos y colcon build
+```
+
+Crea tu paquete `my_open` en `src` (el comando `ros2 pkg create` de arriba) o copia el tuyo, y vuelve a ejecutar el script
+(salta lo que ya está hecho). Después de cerrar la sesión y volver a entrar (por los grupos nuevos):
+
+```bash
+bash tools/setup-pi.sh --check    # placa, LiDAR, cámara, grupos: solo comprueba, no cambia nada
+source install/setup.bash
+ros2 launch robotek_course car.launch.py strategy:=my_open
+```
+
+**La primera vez, con el coche sobre soportes (ruedas en el aire).** Ni el script ni el launch mueven el motor por su
+cuenta: tu estrategia espera el Start (el botón de la placa) y el motor tiene límites de velocidad, aceleración y un
+watchdog. El detalle (nodos, calibración, nombres de los dispositivos) está en
+[`src/robotek_hardware/README.md`](src/robotek_hardware/README.md). El driver de la placa RRC Lite (basado en código de
+Hiwonder, incluido con su permiso) está en `src/rrc_lite_*`; ver [CREDITS.md](CREDITS.md). Páginas de la guía:
+
+* [Paso 10: el coche real](https://renzodamian.com/learn/open-strategy/paso-10-el-coche-real/)
+* [Paso 11: solución de problemas](https://renzodamian.com/learn/open-strategy/paso-11-solucion-de-problemas/)
+* [Paso 12: afinar](https://renzodamian.com/learn/open-strategy/paso-12-afinar/)
 
 ## Licencia
 

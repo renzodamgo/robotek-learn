@@ -1,0 +1,2 @@
+float64 duration
+uint16 position

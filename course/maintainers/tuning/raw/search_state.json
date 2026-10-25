@@ -1,0 +1,1048 @@
+{
+ "best": {
+  "LAST_CORNER_SPEED": 1.1,
+  "FINISH_SPEED": 0.6,
+  "BRAKE_GAIN": 2.0,
+  "BRAKE_MARGIN": 0.15,
+  "FINISH_LEAD": 0.08,
+  "CALIBRATE_SECONDS": 0.3,
+  "KP": 0.8,
+  "TURN_FRONT": 1.19,
+  "ARM_DISTANCE": 0.25,
+  "GAP": 0.25,
+  "GAIN": 0.6
+ },
+ "best_eval": {
+  "valid": true,
+  "clr": 9.238243904614851,
+  "time": 38.86333333333333,
+  "n_valid": 24,
+  "n": 24
+ },
+ "log": [
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 0.6,
+    "FINISH_SPEED": 0.15,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 40.76333333333333,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 0.8,
+    "FINISH_SPEED": 0.15,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 40.017500000000005,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 0.9,
+    "FINISH_SPEED": 0.15,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 39.721666666666664,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.0,
+    "FINISH_SPEED": 0.15,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 39.405,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.15,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 39.155,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.3,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 39.0675,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.45,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 39.01333333333333,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.93,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.8,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 9.468294136629218,
+   "time": 38.87166666666667,
+   "n_valid": 0,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 1.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.93416666666666,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 3.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.93,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 4.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.92583333333333,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.05,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.92166666666667,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.25,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.9425,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.35,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.9675,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.04,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 39.017500000000005,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.15,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 9.468294136629218,
+   "time": 38.759166666666665,
+   "n_valid": 14,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.1,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 8.193027009640264,
+   "time": 38.955,
+   "n_valid": 22,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.2,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 8.583983426083375,
+   "time": 38.942499999999995,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.6,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 9.020430818612324,
+   "time": 38.92583333333334,
+   "n_valid": 22,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 1.0,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 8.80133878588838,
+   "time": 38.89666666666667,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 1.2,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 9.48555588662343,
+   "time": 38.93416666666667,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.1,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.92166666666667,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.3,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.946666666666665,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.1,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.93,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.4,
+    "GAP": 0.25,
+    "GAIN": 0.3
+   },
+   "valid": true,
+   "clr": 9.468294136629218,
+   "time": 38.98416666666667,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.15,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 8.274166710329478,
+   "time": 38.83416666666667,
+   "n_valid": 20,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.2,
+    "GAIN": 0.3
+   },
+   "valid": false,
+   "clr": 7.937808918667644,
+   "time": 38.955000000000005,
+   "n_valid": 20,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.86333333333333,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 1.0
+   },
+   "valid": false,
+   "clr": 8.499072727042511,
+   "time": 38.90083333333333,
+   "n_valid": 20,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 0.6,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 39.509166666666665,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 0.8,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 39.234166666666674,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 0.9,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 39.10916666666667,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.0,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.98833333333334,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.15,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 39.07583333333333,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.3,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.99666666666667,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.45,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.93833333333334,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.8,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": false,
+   "clr": 9.238243904614851,
+   "time": 38.81333333333333,
+   "n_valid": 0,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 1.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.87166666666666,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 3.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.855,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 4.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.855,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.05,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.855,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.25,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.87166666666666,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.35,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.87166666666666,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.04,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 9.238243904614851,
+   "time": 38.946666666666665,
+   "n_valid": 24,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.15,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": false,
+   "clr": 9.238243904614851,
+   "time": 38.70916666666667,
+   "n_valid": 13,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.1,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": false,
+   "clr": 9.047125893776276,
+   "time": 38.884166666666665,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.2,
+    "KP": 0.8,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": false,
+   "clr": 9.046106143317022,
+   "time": 38.89666666666667,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 0.6,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": false,
+   "clr": 8.41704628501001,
+   "time": 38.921666666666674,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 1.0,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": false,
+   "clr": 8.632622303923476,
+   "time": 38.821666666666665,
+   "n_valid": 23,
+   "n": 24
+  },
+  {
+   "config": {
+    "LAST_CORNER_SPEED": 1.1,
+    "FINISH_SPEED": 0.6,
+    "BRAKE_GAIN": 2.0,
+    "BRAKE_MARGIN": 0.15,
+    "FINISH_LEAD": 0.08,
+    "CALIBRATE_SECONDS": 0.3,
+    "KP": 1.2,
+    "TURN_FRONT": 1.19,
+    "ARM_DISTANCE": 0.25,
+    "GAP": 0.25,
+    "GAIN": 0.6
+   },
+   "valid": true,
+   "clr": 8.592220210487511,
+   "time": 38.850833333333334,
+   "n_valid": 24,
+   "n": 24
+  }
+ ],
+ "cursor": 7,
+ "changed_in_pass": false,
+ "passes": 1,
+ "done": false
+}

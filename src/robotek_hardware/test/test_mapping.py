@@ -1,5 +1,7 @@
 import math
 
+import pytest
+
 from robotek_hardware.mapping import (MotorCalibration, ServoCalibration, mask_scan, motor_pct, rate_limit,
                                       servo_for_wheel,
                                       rotate_scan_angles, servo_us, steer_from_twist)
@@ -138,6 +140,7 @@ def test_estimate_axes_from_rest_and_a_forward_push():
 
 
 def test_forward_burst_stops_when_the_acceleration_flips():
+    pytest.importorskip('rclpy')   # imu_axes.py is a ROS node: needs the ROS environment (source /opt/ros/jazzy/setup.bash)
     from robotek_hardware.imu_axes import forward_burst
     samples = [(0., 0., 0.)]*3 + [(2., 0., 0.)]*4 + [(-2., 0., 0.)]*4
     assert forward_burst(samples) == [2., 0., 0.]

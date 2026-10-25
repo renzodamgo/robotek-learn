@@ -1,7 +1,7 @@
 import math
 
 from helpers import drive_lane
-from my_open.lane import GAP, lane_steer, lateral_bias
+from my_open.lane import GAIN, GAP, lane_steer, lateral_bias
 
 
 def test_no_offset_at_the_wanted_gap():
@@ -10,7 +10,7 @@ def test_no_offset_at_the_wanted_gap():
 
 def test_a_car_too_far_aims_towards_the_island_and_one_too_close_aims_away():
     assert lateral_bias(0.45) > 0 > lateral_bias(0.15)
-    assert math.isclose(lateral_bias(0.45), 0.3 * 0.20)
+    assert math.isclose(lateral_bias(0.45), GAIN * (0.45 - GAP))
 
 
 def test_the_offset_is_limited():

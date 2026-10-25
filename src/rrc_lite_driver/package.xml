@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rrc_lite_driver</name>
+  <version>0.0.1</version>
+  <description>Driver ROS 2 de la placa HiWonder RRC Lite (IMU, boton, bateria, LED, servo de direccion). Basado en Hiwonder MentorPi.</description>
+  <maintainer email="renzo.damian.go@gmail.com">Renzo Damian</maintainer>
+  <license>Hiwonder (con permiso); cambios del equipo Robotek: MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>ament_index_python</depend>
+  <depend>rrc_lite_msgs</depend>
+  <exec_depend>python3-serial</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

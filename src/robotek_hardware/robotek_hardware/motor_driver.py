@@ -45,19 +45,44 @@ class Tb6612Motor(Node):
         self.last_pct = 0.
         self.braking_until = None
         if lgpio is None:
-            self.get_logger().error('lgpio missing: motor disabled.')
-        else:
-            self.gpio = lgpio.gpiochip_open(self.chip)
-            for pin in self.pins.values():
-                lgpio.gpio_claim_output(self.gpio, pin, 0)
-            self.stop_motor()
-            self.get_logger().info('TB6612FNG ready (forward and reverse).')
+            self.get_logger().error('lgpio missing (sudo apt install python3-lgpio): motor disabled.')
+        elif not self.open_gpio():
+            # Not on a Raspberry Pi, or the user cannot open /dev/gpiochipN: keep retrying, never crash.
+            self.create_timer(5., self.retry_gpio)
         self.create_subscription(Float32, '/motor_vel', self.on_command, 10)
         self.create_subscription(Bool, '/robotek/estop', self.on_estop, 10)
         self.create_subscription(Bool, '/robotek/stop', self.on_stop, 10)
         self.estop_until = 0.
         self.stopped = False
         self.create_timer(TICK, self.on_watchdog)
+
+    def open_gpio(self):
+        """Claim the bridge pins, all low (motor stopped). False, with a clear log, if the GPIO chip is not usable."""
+        handle = None
+        try:
+            handle = lgpio.gpiochip_open(self.chip)
+            for pin in self.pins.values():
+                lgpio.gpio_claim_output(handle, pin, 0)
+        except Exception as error:   # lgpio.error: no such chip, permission denied, pin busy
+            if handle is not None:
+                try:
+                    lgpio.gpiochip_close(handle)
+                except Exception:   # noqa: BLE001
+                    pass
+            self.get_logger().warn(
+                f'GPIO chip {self.chip} not usable ({error}): motor disabled, retrying every 5 s. '
+                'Is this a Raspberry Pi 5 with python3-lgpio, and is your user in the "gpio" group '
+                '(or is another program holding the pins)? The motor does NOT move without this.',
+                throttle_duration_sec=60.)
+            return False
+        self.gpio = handle
+        self.stop_motor()
+        self.get_logger().info('TB6612FNG ready (forward and reverse).')
+        return True
+
+    def retry_gpio(self):
+        if self.gpio is None:
+            self.open_gpio()
 
     def stop_motor(self):
         if self.gpio is None:

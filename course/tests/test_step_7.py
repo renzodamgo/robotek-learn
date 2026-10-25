@@ -107,7 +107,7 @@ def test_the_operator_can_stop_it_for_good():
 
 
 def test_the_heading_comes_from_the_gyroscope_without_the_bias():
-    mission = started(camera=+1, gyro=0.006)                 # a still gyroscope with a 0.006 rad/s bias
-    for _ in range(50):
-        mission.step(DT, CLEAR, 0.006 + 0.5, 0.0)            # 1 s turning at 0.5 rad/s
-    assert math.isclose(mission.yaw, 0.5, abs_tol=0.01)
+    mission = started(camera=+1, gyro=0.02)                  # a still gyroscope with a 0.02 rad/s bias
+    for _ in range(150):
+        mission.step(DT, CLEAR, 0.02 + 0.5, 0.0)             # 3 s turning at 0.5 rad/s
+    assert math.isclose(mission.yaw, 1.5, abs_tol=0.01)      # without the calibration it would read 1.56

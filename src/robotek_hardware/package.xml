@@ -11,8 +11,10 @@
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
-  <!-- On the robot only (see README.md, "Drivers de terceros"); without it the nodes start and log an error. -->
-  <exec_depend condition="$ROBOTEK_ROBOT == 1">rrc_lite_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <!-- The board driver (src/rrc_lite_msgs). If it is not in the workspace the nodes start and log an error. -->
+  <exec_depend>rrc_lite_msgs</exec_depend>
 
   <test_depend>python3-pytest</test_depend>
 
