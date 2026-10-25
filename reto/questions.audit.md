@@ -1,9 +1,16 @@
 # Auditoría del banco de preguntas (questions.json)
 
-Fuente: las páginas `paso-1-el-coche.md` a `paso-9-puntuar-y-medir.md` en
+Fuente: las páginas `paso-0-instalar-y-preparar.md`, `paso-1-el-coche.md` a `paso-9-puntuar-y-medir.md` en
 `Portfolio-Astro/src/content/learn/steps/open-strategy/` (se cita `pN:línea`) y el código de referencia del tag
 `step-9` (extraído en `/tmp/q9`, se cita `archivo.py`). Las comprobaciones con código se corrieron con RoboStack
 (`PYTHONPATH=/tmp/q9/src/my_open:/tmp/q9/src/robotek_course`). Id de pregunta: `S<paso>Q<n>`.
+
+## Paso 0, Instalar y preparar
+- S0Q1: p0:46 "`source`: el comando que activa en *esta* terminal lo que acabas de instalar o compilar. Si una orden de ROS «no existe», casi siempre falta un `source`". Los distractores son colcon (p0:45), la instalación (p0:76) y borrar la compilación (no aparece).
+- S0Q2: p0:41 "los **nodos**, que se pasan mensajes por canales con nombre, los **tópicos**. Por ejemplo, `/cmd_vel_raw`". Distractores: install/ (p0:90), colcon (p0:45), el USB del LiDAR (no es un tópico).
+- S0Q3: p0:264 "La ronda puntúa casi 0 aunque el código esté bien ... Casi siempre quedan procesos de una ejecución anterior"; `clean_sim.sh`. Distractor rosdep: p0:263 dice que no hace falta; 6 fotogramas es la cámara (p0:172).
+- S0Q4: p0:90 "`--symlink-install` hace que `install/` apunte a tus archivos en lugar de copiarlos. Así, cuando edites Python, no hace falta recompilar"; p0:150.
+- S0Q5: p0:253 "Git ignora `src/my_open` en la rama `main`: es tu código ... una rama `solutions` con ... una etiqueta `step-N` por cada paso". Distractor: my_open no existe en solutions solamente; colcon copia (no mueve) a install/.
 
 ## Paso 1, El coche
 - S1Q1: p1:35 "el radio no se mueve ... depende del ángulo y de nada más"; p1:44 `radio = L / tan(δ)`; `model.py::turn_radius` no recibe la velocidad.

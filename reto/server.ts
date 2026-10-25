@@ -93,7 +93,7 @@ function validateQuestions(data: any): { steps: Step[]; errors: string[] } {
   const seen = new Set<number>();
   for (const s of data.steps) {
     const where = `paso ${s?.step}`;
-    if (!Number.isInteger(s?.step) || s.step < 1 || s.step > 99) { errors.push(`${where}: "step" no es un número válido`); continue; }
+    if (!Number.isInteger(s?.step) || s.step < 0 || s.step > 99) { errors.push(`${where}: "step" no es un número válido`); continue; }
     if (seen.has(s.step)) { errors.push(`${where}: repetido`); continue; }
     seen.add(s.step);
     if (typeof s.title !== "string" || !s.title.trim()) errors.push(`${where}: falta "title"`);

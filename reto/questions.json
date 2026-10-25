@@ -2,6 +2,72 @@
   "version": 1,
   "steps": [
     {
+      "step": 0,
+      "title": "Instalar y preparar",
+      "questions": [
+        {
+          "q": "¿Qué hace source install/setup.bash en una terminal?",
+          "options": [
+            "Compila todos los paquetes del workspace",
+            "Descarga ROS 2 y Gazebo",
+            "Borra la compilación anterior",
+            "Activa en esa terminal lo que compilaste"
+          ],
+          "answer": 3,
+          "why": "source activa en esa terminal lo instalado o compilado. Si una orden de ROS «no existe», casi siempre falta un source.",
+          "ref": "paso 0, 'Seis palabras que vas a leer'"
+        },
+        {
+          "q": "En ROS 2, ¿cómo se pasan mensajes los nodos?",
+          "options": [
+            "Por canales con nombre, los tópicos",
+            "Escribiendo archivos dentro de la carpeta install/",
+            "Con colcon, cada vez que compilas",
+            "Por el cable USB del LiDAR"
+          ],
+          "answer": 0,
+          "why": "Los nodos son programas pequeños que se pasan mensajes por tópicos. Por ejemplo, /cmd_vel_raw pide velocidades al coche.",
+          "ref": "paso 0, 'Seis palabras que vas a leer'"
+        },
+        {
+          "q": "Tu ronda puntúa casi 0 aunque el código esté bien. ¿Qué es lo más probable?",
+          "options": [
+            "El LiDAR del simulador está roto",
+            "Quedan procesos de una ronda anterior",
+            "Falta correr rosdep install antes de compilar",
+            "La cámara va a 6 fotogramas"
+          ],
+          "answer": 1,
+          "why": "Un gz sim o nodos de una ronda cortada se mezclan con la nueva. Ciérralos con clean_sim.sh antes de lanzar otra.",
+          "ref": "paso 0, 'Si algo falla'"
+        },
+        {
+          "q": "¿Para qué sirve --symlink-install en colcon build?",
+          "options": [
+            "Para compilar más rápido en paralelo",
+            "Para instalar ROS 2 desde internet",
+            "Para no recompilar al editar Python",
+            "Para saltar las pruebas de estilo"
+          ],
+          "answer": 2,
+          "why": "install/ apunta a tus archivos en vez de copiarlos, así que tus cambios de Python valen sin recompilar.",
+          "ref": "paso 0, 'Ubuntu 24.04' y 'macOS (RoboStack)'"
+        },
+        {
+          "q": "¿Por qué git no ve tu carpeta src/my_open en la rama main?",
+          "options": [
+            "Porque ROS la borra al compilar",
+            "Porque solo existe en la rama solutions",
+            "Porque colcon la mueve a install/",
+            "Porque main la ignora: es tu código"
+          ],
+          "answer": 3,
+          "why": "Git ignora src/my_open en main porque es tu código. La referencia de cada paso está en la rama solutions, con etiquetas step-N.",
+          "ref": "paso 0, 'Tu código y la referencia'"
+        }
+      ]
+    },
+    {
       "step": 1,
       "title": "El coche",
       "questions": [

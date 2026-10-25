@@ -10,7 +10,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-STEPS, PER_STEP, OPTIONS = 9, 5, 4
+STEPS, PER_STEP, OPTIONS = 10, 5, 4   # steps 0..9
 MAX_Q, MAX_OPTION, MAX_WHY = 140, 60, 160
 WARN_WORDS, ERROR_WORDS = 20, 24      # words per sentence
 BAD_CHARS = {"\u2014": "em dash", "\u2013": "en dash", "\u2212": "minus sign (use -)"}
@@ -60,7 +60,7 @@ def main():
 
     overall, longest_correct, ratios = Counter(), 0, []
     all_q = []
-    for index, step in enumerate(steps, start=1):
+    for index, step in enumerate(steps):
         sw = f"step {index}"
         if step.get("step") != index:
             err(sw, f"'step' must be {index}, got {step.get('step')!r}")
