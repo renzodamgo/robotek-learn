@@ -40,7 +40,7 @@ SCAN_EVERY = 5            # ticks between LiDAR scans (10 Hz, like the LD19)
 CALIBRATE_SECONDS = 0.6
 HONEST = 'Replay del mini simulador de Python (mismo código que el nodo), no una grabación de Gazebo.'
 MAIN_COLOR, GHOST_COLOR = '#e8a33d', '#ff7a6b'
-OUT_DEFAULT = '/Users/damian/Projects/Portfolio-Astro/public/learn/assets/replays'
+OUT_DEFAULT = 'replays-out'            # the guide's site copies these files to public/learn/assets/replays/
 
 # The fields. square100 = minisim.WALLS. long-island = the world of course/verify_step.py lane_world(): the island
 # (x from -0.5 to 9.0, 1 m wide) with the outer walls 1 m around it and the east wall at x = 10.0.

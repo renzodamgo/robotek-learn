@@ -47,7 +47,7 @@ from my_open.perception import perceive
 from my_open.strategy import Strategy
 from my_open.turn_gate import ISLAND_OPEN, TurnGate
 
-OUT = Path('/Users/damian/Projects/Portfolio-Astro/public/learn/assets/replays')
+OUT = Path('replays-out')              # the guide's site copies these files to public/learn/assets/replays/
 FRAME_DT = 0.05
 COLOR_MAIN, COLOR_GHOST = '#e8a33d', '#7aa7d9'
 WORLD = L.FIELDS / 'square100.sdf'
