@@ -1,7 +1,6 @@
-"""Step 5: + the corners: straight-arc-straight lines replace the plan in every corner.
+"""Step 6: + following the line: the car drives one lap on its own and stops.
 
-The car does not drive itself yet (until step 6): drive it with the keyboard in another terminal,
-``ros2 run robotek_course keyboard_drive``, and watch what the strategy understands:
+The car drives one lap on its own, following the planned line at 0.25 m/s, and stops. Watch:
 
   ros2 topic echo /obstacle/pose      # x, y, heading (track frame) and progress
   ros2 topic echo /obstacle/signs     # the seats remembered so far (from step 3)
@@ -26,7 +25,7 @@ from robotek_course.obstacle_vision import associate, color_blocks, scan_cluster
 from . import lane
 from .localizer import Localizer, direction_from_scan, scan_points
 
-STEP = 5
+STEP = 6
 if STEP >= 3:
     from .signs import SeatMemory
 if STEP >= 4:
