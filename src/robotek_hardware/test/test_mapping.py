@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from robotek_hardware.mapping import (MotorCalibration, ServoCalibration, mask_scan, motor_pct, rate_limit,
+from robotek_hardware.mapping import (MotorCalibration, ServoCalibration, mask_scan, motor_pct, motor_rps, rate_limit,
                                       servo_for_wheel,
                                       rotate_scan_angles, servo_us, steer_from_twist)
 
@@ -144,3 +144,13 @@ def test_forward_burst_stops_when_the_acceleration_flips():
     from robotek_hardware.imu_axes import forward_burst
     samples = [(0., 0., 0.)]*3 + [(2., 0., 0.)]*4 + [(-2., 0., 0.)]*4
     assert forward_burst(samples) == [2., 0., 0.]
+
+
+def test_motor_rps_scales_caps_and_signs():
+    assert motor_rps(0., 5.) == 0.
+    assert motor_rps(.002, 5.) == 0.            # inside the deadband
+    assert motor_rps(.4, 5.) == pytest.approx(2.)
+    assert motor_rps(-.4, 5.) == pytest.approx(-2.)
+    assert motor_rps(1., 5., max_rps=3.) == 3.
+    assert motor_rps(-1., 5., max_rps=3.) == -3.
+    assert motor_rps(.4, 5., sign=-1.) == pytest.approx(-2.)

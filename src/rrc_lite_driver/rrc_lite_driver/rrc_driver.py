@@ -56,6 +56,12 @@ class RosRobotController(Node):
         # always used 2; on the team's car the servo is in J4, which turned out to be channel 1 (1 nov 2026).
         self.declare_parameter("acker_channel", 2)
         self.acker_channel = int(self.get_parameter("acker_channel").value)
+        # The board holds the last motor speed it got. If commands stop (base_adapter killed, network cut), stop the
+        # motors after motor_watchdog seconds (0 disables).
+        self.declare_parameter("motor_watchdog", 0.5)
+        self.motor_watchdog = float(self.get_parameter("motor_watchdog").value)
+        self.motor_last = time.monotonic()
+        self.motor_moving = False
 
         self.imu_pub = self.create_publisher(Imu, "rrc/imu_raw", 1)
         self.joy_pub = self.create_publisher(Joy, "rrc/joy", 1)
@@ -66,6 +72,7 @@ class RosRobotController(Node):
         self.create_subscription(BuzzerState, "rrc/set_buzzer", self.set_buzzer_state, 5)
         self.create_subscription(OLEDState, "rrc/set_oled", self.set_oled_state, 5)
         self.create_subscription(MotorsState, "rrc/set_motor", self.set_motor_state, 10)
+        self.create_timer(0.1, self.check_motor_watchdog)
         self.create_subscription(Bool, "rrc/enable_reception", self.enable_reception, 1)
         self.create_subscription(
             SetBusServoState, "rrc/bus_servo/set_state", self.set_bus_servo_state, 10
@@ -186,6 +193,14 @@ class RosRobotController(Node):
         for i in msg.data:
             data.extend([[i.id, -i.rps]])
         self.board.set_motor_speed(data)
+        self.motor_last = time.monotonic()
+        self.motor_moving = any(i.rps != 0. for i in msg.data)
+
+    def check_motor_watchdog(self):
+        if self.motor_watchdog > 0. and self.motor_moving and time.monotonic() - self.motor_last > self.motor_watchdog:
+            self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
+            self.motor_moving = False
+            self.get_logger().warning(f"No motor command for {self.motor_watchdog:.1f} s: motors stopped.")
 
     def set_oled_state(self, msg):
         self.board.set_oled_text(int(msg.index), msg.text)

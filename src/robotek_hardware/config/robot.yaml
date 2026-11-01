@@ -8,7 +8,7 @@ base_adapter:
     servo_center_us: 1500.0
     servo_gain_pos: 18.9655172414    # 550 / 29 us per degree (team SERVO_GAIN_POS)
     servo_gain_neg: 17.2413793103    # 500 / 29 (team SERVO_GAIN_NEG)
-    servo_sign: -1.0
+    servo_sign: 1.0                  # measured 1 nov 2026 (new linkage): +angle turns left; centre 1500 us keeps the wheels straight
     servo_min_us: 1000.0
     servo_max_us: 2050.0
     steer_limit_deg: 25.0
@@ -31,6 +31,15 @@ base_adapter:
     # servo command (README.md, section Calibracion), replace them, then set servo_measured: true.
     servo_measured: false
     decel_limit: 0.6                 # m/s^2 (a hard stop makes the wheels skid)
+    # Drive motor (1 nov 2026): the team's car now uses an encoder motor on port M4 of the RRC Lite (+rps = forward),
+    # not the DC motor on the TB6612 (its channel B gave no output). 'tb6612' goes back to /motor_vel and the motor_pct_*
+    # values above. motor_rps_per_mps = motor revolutions per second per m/s of the car: MEASURE IT (until then 0 keeps
+    # the motor at 0). motor_max_rps 0 = no cap.
+    motor_backend: rrc
+    rrc_motor_port: 4
+    rrc_motor_sign: 1.0
+    motor_rps_per_mps: 0.0
+    motor_max_rps: 0.0
     watchdog: 0.3
 scan_adapter:
   ros__parameters:

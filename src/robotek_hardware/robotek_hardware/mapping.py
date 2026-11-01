@@ -91,6 +91,17 @@ def motor_pct(speed_mps, cal: MotorCalibration):
     return math.copysign(min(cal.max_pct, pct), speed_mps)
 
 
+def motor_rps(speed_mps, rps_per_mps, max_rps=0., sign=1., deadband_mps=.005):
+    """Signed motor speed in revolutions per second for the RRC Lite's closed-loop (encoder) motor ports.
+    rps_per_mps is measured on the car (motor rps per m/s of the car); max_rps <= 0 means no cap."""
+    if abs(speed_mps) < deadband_mps:
+        return 0.
+    rps = speed_mps*rps_per_mps
+    if max_rps > 0.:
+        rps = max(-max_rps, min(max_rps, rps))
+    return sign*rps
+
+
 def mask_scan(ranges, angle_min, increment, fov_deg=0., min_valid=0.):
     """Ranges as inf outside +-fov_deg (0 = no limit) or closer than min_valid (0 = off)."""
     out = []

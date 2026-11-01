@@ -1,4 +1,10 @@
-"""/cmd_vel (Twist) -> RRC Lite servo (us) + TB6612 motor (%), for the real car.
+"""/cmd_vel (Twist) -> RRC Lite servo (us) + drive motor, for the real car.
+
+The drive motor goes one of two ways (motor_backend in robot.yaml):
+  - 'tb6612' (default): a DC motor on the TB6612 bridge, as a % on /motor_vel for motor_driver;
+  - 'rrc': an encoder motor on a motor port of the RRC Lite (rrc_motor_port, e.g. 4 = M4), as revolutions
+    per second on /rrc/set_motor; the board holds that speed with the encoder. motor_rps_per_mps must be
+    measured on the car (motor rps per m/s); until it is (0), the motor stays at 0.
 
 The strategies publish a bicycle-model Twist. Steering = atan(w * wheelbase / v); with
 v ~ 0 the last angle is kept, so a strategy can pre-set the wheels while creeping.
@@ -25,15 +31,15 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Bool, Float32
 
-from .mapping import (MotorCalibration, ServoCalibration, motor_pct, rate_limit, servo_for_wheel, servo_us,
-                      steer_from_twist)
+from .mapping import (MotorCalibration, ServoCalibration, motor_pct, motor_rps, rate_limit, servo_for_wheel,
+                      servo_us, steer_from_twist)
 
 TICK = .02  # s, motor update period
 
 try:
-    from rrc_lite_msgs.msg import SetAckerServoState
+    from rrc_lite_msgs.msg import MotorsState, MotorState, SetAckerServoState
 except ImportError:  # only installed on the robot (HiWonder image)
-    SetAckerServoState = None
+    MotorsState = MotorState = SetAckerServoState = None
 
 
 class BaseAdapter(Node):
@@ -47,7 +53,9 @@ class BaseAdapter(Node):
             motor_pct_per_mps=40., motor_min_pct=12., motor_max_pct=100.,
             accel_limit=1., decel_limit=.6,
             wheel_table_servo_deg=[0.], wheel_table_left_deg=[0.], wheel_table_right_deg=[0.],
-            wheel_limit_deg=0., servo_measured=True).items()}
+            wheel_limit_deg=0., servo_measured=True,
+            motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
+            motor_rps_per_mps=0., motor_max_rps=0.).items()}
         servo_pts = [math.radians(float(x)) for x in p['wheel_table_servo_deg'] if float(x) > 0.]
         n = len(servo_pts)
         left = [math.radians(float(x)) for x in p['wheel_table_left_deg']][-n:] if n else []
@@ -69,7 +77,20 @@ class BaseAdapter(Node):
             self.servo_pub = None
         else:
             self.servo_pub = self.create_publisher(SetAckerServoState, p['servo_topic'], 10)
-        self.motor_pub = self.create_publisher(Float32, p['motor_topic'], 10)
+        self.backend = str(p['motor_backend'])
+        if self.backend not in ('tb6612', 'rrc'):
+            raise ValueError(f"motor_backend must be 'tb6612' or 'rrc', got {self.backend!r}")
+        if self.backend == 'rrc':
+            if MotorsState is None:
+                raise RuntimeError("motor_backend 'rrc' needs rrc_lite_msgs")
+            self.motor_pub = self.create_publisher(MotorsState, p['rrc_motor_topic'], 10)
+            if float(p['motor_rps_per_mps']) <= 0.:
+                self.get_logger().error('motor_backend rrc with motor_rps_per_mps <= 0: not measured yet, the motor '
+                                        'stays at 0 (robot.yaml).')
+            self.get_logger().info(f"Drive motor: RRC Lite port M{int(p['rrc_motor_port'])}, "
+                                   f"{float(p['motor_rps_per_mps']):.2f} rps per m/s.")
+        else:
+            self.motor_pub = self.create_publisher(Float32, p['motor_topic'], 10)
         self.create_subscription(Twist, 'cmd_vel', self.on_cmd, 10)
         self.create_subscription(Bool, '/robotek/estop', self.on_estop, 10)
         self.create_subscription(Bool, '/robotek/stop', self.on_stop, 10)
@@ -89,14 +110,25 @@ class BaseAdapter(Node):
     def on_estop(self, msg):
         if msg.data:
             self.target = self.speed = 0.
-            self.motor_pub.publish(Float32(data=0.))
+            self.send_speed(0.)
 
     def on_stop(self, msg):
         self.stopped = bool(msg.data)
         if self.stopped:
             self.target = self.speed = 0.
-            self.motor_pub.publish(Float32(data=0.))
+            self.send_speed(0.)
             self.get_logger().warning('Operator stop: motor held at 0.')
+
+    def send_speed(self, speed):
+        """Car speed (m/s) to the drive motor of the chosen backend."""
+        p = self.p
+        if self.backend == 'rrc':
+            rps_per_mps = float(p['motor_rps_per_mps'])
+            rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign'])) \
+                if rps_per_mps > 0. else 0.
+            self.motor_pub.publish(MotorsState(data=[MotorState(id=int(p['rrc_motor_port']), rps=float(rps))]))
+        else:
+            self.motor_pub.publish(Float32(data=float(motor_pct(speed, self.motor))))
 
     def send_servo(self, us):
         if self.servo_pub is not None:
@@ -114,7 +146,7 @@ class BaseAdapter(Node):
                                 float(self.p['decel_limit']), TICK)
         if self.target == 0. and abs(self.speed) < 1e-3:
             self.speed = 0.
-        self.motor_pub.publish(Float32(data=float(motor_pct(self.speed, self.motor))))
+        self.send_speed(self.speed)
 
 
 def main(args=None):
@@ -125,7 +157,7 @@ def main(args=None):
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        if rclpy.ok():   # on a launch shutdown the context is gone; motor_driver's watchdog stops it
-            node.motor_pub.publish(Float32(data=0.))
+        if rclpy.ok():   # on a launch shutdown the context is gone; motor_driver's / rrc_driver's watchdog stops it
+            node.send_speed(0.)
         node.destroy_node()
         rclpy.try_shutdown()
