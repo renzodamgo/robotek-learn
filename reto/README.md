@@ -151,6 +151,10 @@ pregunta sin reiniciar (las salas ya creadas conservan su copia). Formato:
 - Para añadir preguntas, agrégalas a la lista `questions` de su paso; para un
   paso nuevo, añade otro objeto a `steps` con su `step` y su `title`.
 - Si algo está mal escrito, el servidor avisa en la terminal y al crear la sala.
+- [`kahoot-preguntas.md`](kahoot-preguntas.md) lista todas las preguntas por paso,
+  con la respuesta correcta marcada. Tras cambiar el JSON, pasa
+  `python3 reto/validate_questions.py` y regénéralo con `python3 reto/questions_to_md.py`.
+  `questions.audit.md` dice de qué parte de la guía sale cada pregunta.
 
 Opcional para pruebas: `RETO_DURATION_MS=5000` cambia el tiempo por pregunta.
 
