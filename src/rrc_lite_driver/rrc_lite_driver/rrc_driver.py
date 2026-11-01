@@ -194,12 +194,8 @@ class RosRobotController(Node):
             if i.id and i.offset:
                 self.board.pwm_servo_set_offset(i.id[0], i.offset[0])
 
-        self.get_logger().info(
-            "data" + str(msg.data))
-        
         if data != []:
-            self.get_logger().info(
-            "data" + str(msg.duration, data))
+            self.get_logger().debug(f"pwm servo duration={msg.duration} positions={data}")
             self.board.pwm_servo_set_position(msg.duration, data)
 
     def set_acker_servo_state(self, msg):
