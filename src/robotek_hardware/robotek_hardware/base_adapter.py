@@ -6,6 +6,11 @@ The drive motor goes one of two ways (motor_backend in robot.yaml):
     per second on /rrc/set_motor; the board holds that speed with the encoder. motor_rps_per_mps must be
     measured on the car (motor rps per m/s); until it is (0), the motor stays at 0.
 
+Wall guard (wall_stop_m > 0): with the nearest LiDAR return within +-wall_half_deg of straight ahead
+(/robotek/scan, 0 rad ahead) nearer than wall_slow_m, the forward speed is scaled down linearly, to 0 at
+wall_stop_m. The speed still follows decel_limit, so the car slows down smoothly instead of braking hard.
+Reversing is not limited. Without scans (none in the last 0.5 s) the guard does nothing.
+
 The strategies publish a bicycle-model Twist. Steering = atan(w * wheelbase / v); with
 v ~ 0 the last angle is kept, so a strategy can pre-set the wheels while creeping.
 A watchdog stops the motor (and centres nothing) when commands stop arriving.
@@ -27,12 +32,14 @@ import math
 
 import rclpy
 from geometry_msgs.msg import Twist
+from rclpy.qos import qos_profile_sensor_data
+from sensor_msgs.msg import LaserScan
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Bool, Float32
 
-from .mapping import (MotorCalibration, ServoCalibration, motor_pct, motor_rps, rate_limit, servo_for_wheel,
-                      servo_us, steer_from_twist)
+from .mapping import (MotorCalibration, ServoCalibration, front_distance, motor_pct, motor_rps, rate_limit,
+                      servo_for_wheel, servo_us, steer_from_twist, wall_speed_factor)
 
 TICK = .02  # s, motor update period
 
@@ -55,7 +62,8 @@ class BaseAdapter(Node):
             wheel_table_servo_deg=[0.], wheel_table_left_deg=[0.], wheel_table_right_deg=[0.],
             wheel_limit_deg=0., servo_measured=True,
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
-            motor_rps_per_mps=0., motor_max_rps=0.).items()}
+            motor_rps_per_mps=0., motor_max_rps=0.,
+            wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
         servo_pts = [math.radians(float(x)) for x in p['wheel_table_servo_deg'] if float(x) > 0.]
         n = len(servo_pts)
         left = [math.radians(float(x)) for x in p['wheel_table_left_deg']][-n:] if n else []
@@ -92,6 +100,12 @@ class BaseAdapter(Node):
         else:
             self.motor_pub = self.create_publisher(Float32, p['motor_topic'], 10)
         self.create_subscription(Twist, 'cmd_vel', self.on_cmd, 10)
+        self.front = math.inf             # nearest obstacle ahead (m), from the LiDAR
+        self.front_time = None
+        if float(p['wall_stop_m']) > 0.:
+            self.create_subscription(LaserScan, p['scan_topic'], self.on_scan, qos_profile_sensor_data)
+            self.get_logger().info(f"Wall guard: slows down from {float(p['wall_slow_m']):.2f} m, "
+                                   f"0 at {float(p['wall_stop_m']):.2f} m (+-{float(p['wall_half_deg']):.0f} deg).")
         self.create_subscription(Bool, '/robotek/estop', self.on_estop, 10)
         self.create_subscription(Bool, '/robotek/stop', self.on_stop, 10)
         self.stopped = False              # latched operator stop
@@ -106,6 +120,17 @@ class BaseAdapter(Node):
         self.steer = steer_from_twist(msg.linear.x, msg.angular.z, self.p['wheelbase'], self.steer)
         servo = servo_for_wheel(self.steer, *self.wheel_table)
         self.send_servo(servo_us(servo, self.servo))
+
+    def on_scan(self, msg):
+        self.front = front_distance(msg.ranges, msg.angle_min, msg.angle_increment, float(self.p['wall_half_deg']))
+        self.front_time = self.get_clock().now()
+
+    def guarded(self, target):
+        """target limited by the wall guard (forward only, and only with a recent scan)."""
+        if target <= 0. or self.front_time is None or \
+                (self.get_clock().now()-self.front_time).nanoseconds*1e-9 > .5:
+            return target
+        return target*wall_speed_factor(self.front, float(self.p['wall_stop_m']), float(self.p['wall_slow_m']))
 
     def on_estop(self, msg):
         if msg.data:
@@ -142,7 +167,7 @@ class BaseAdapter(Node):
             self.target = 0.               # commands stopped: slow down to 0 (decel_limit)
         if self.stopped:
             self.target = self.speed = 0.
-        self.speed = rate_limit(self.speed, self.target, float(self.p['accel_limit']),
+        self.speed = rate_limit(self.speed, self.guarded(self.target), float(self.p['accel_limit']),
                                 float(self.p['decel_limit']), TICK)
         if self.target == 0. and abs(self.speed) < 1e-3:
             self.speed = 0.

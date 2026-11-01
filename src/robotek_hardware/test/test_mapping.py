@@ -2,7 +2,8 @@ import math
 
 import pytest
 
-from robotek_hardware.mapping import (MotorCalibration, ServoCalibration, mask_scan, motor_pct, motor_rps, rate_limit,
+from robotek_hardware.mapping import (MotorCalibration, ServoCalibration, front_distance, mask_scan, motor_pct,
+                                      motor_rps, rate_limit, wall_speed_factor,
                                       servo_for_wheel,
                                       rotate_scan_angles, servo_us, steer_from_twist)
 
@@ -154,3 +155,25 @@ def test_motor_rps_scales_caps_and_signs():
     assert motor_rps(1., 5., max_rps=3.) == 3.
     assert motor_rps(-1., 5., max_rps=3.) == -3.
     assert motor_rps(.4, 5., sign=-1.) == pytest.approx(-2.)
+
+
+def test_wall_speed_factor_slows_linearly_and_stops():
+    assert wall_speed_factor(1.0, .10, .30) == 1.
+    assert wall_speed_factor(.30, .10, .30) == 1.
+    assert wall_speed_factor(.20, .10, .30) == pytest.approx(.5)
+    assert wall_speed_factor(.10, .10, .30) == 0.
+    assert wall_speed_factor(.05, .10, .30) == 0.
+    assert wall_speed_factor(math.inf, .10, .30) == 1.
+    assert wall_speed_factor(.05, 0., .30) == 1.      # guard off
+
+
+def test_front_distance_only_looks_ahead():
+    n = 360
+    inc = 2*math.pi/n
+    ranges = [5.]*n
+    ranges[0] = .4                                   # straight ahead
+    ranges[90] = .1                                  # left: ignored
+    ranges[355] = math.inf                           # lost ray: ignored
+    assert front_distance(ranges, 0., inc, 15.) == pytest.approx(.4)
+    ranges[10] = .2                                  # 10 deg left, inside the cone
+    assert front_distance(ranges, 0., inc, 15.) == pytest.approx(.2)

@@ -91,6 +91,28 @@ def motor_pct(speed_mps, cal: MotorCalibration):
     return math.copysign(min(cal.max_pct, pct), speed_mps)
 
 
+def wall_speed_factor(front_m, stop_m, slow_m):
+    """Share (0..1) of the forward speed allowed with the nearest obstacle ahead at front_m: 1 beyond slow_m,
+    0 at stop_m or nearer, linear in between. stop_m <= 0 disables it (always 1); unknown front (inf) is 1."""
+    if stop_m <= 0. or not math.isfinite(front_m):
+        return 1.
+    if front_m <= stop_m:
+        return 0.
+    if slow_m <= stop_m or front_m >= slow_m:
+        return 1.
+    return (front_m-stop_m)/(slow_m-stop_m)
+
+
+def front_distance(ranges, angle_min, increment, half_deg):
+    """Nearest valid range within +-half_deg of straight ahead (angle 0), inf if none."""
+    best = math.inf
+    for i, r in enumerate(ranges):
+        a = math.atan2(math.sin(angle_min+i*increment), math.cos(angle_min+i*increment))
+        if abs(math.degrees(a)) <= half_deg and math.isfinite(r) and r > 0.:
+            best = min(best, r)
+    return best
+
+
 def motor_rps(speed_mps, rps_per_mps, max_rps=0., sign=1., deadband_mps=.005):
     """Signed motor speed in revolutions per second for the RRC Lite's closed-loop (encoder) motor ports.
     rps_per_mps is measured on the car (motor rps per m/s of the car); max_rps <= 0 means no cap."""
