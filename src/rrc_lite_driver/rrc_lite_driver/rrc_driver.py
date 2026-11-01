@@ -52,6 +52,10 @@ class RosRobotController(Node):
         self.declare_parameter("imu_frame", "imu_link")
         self.declare_parameter("init_finish", False)
         self.IMU_FRAME = self.get_parameter("imu_frame").value
+        # PWM channel (1-4) of the steering servo, the one rrc/acker_servo/set_state moves. HiWonder's code
+        # always used 2; on the team's car the servo is in J4, which turned out to be channel 1 (1 nov 2026).
+        self.declare_parameter("acker_channel", 2)
+        self.acker_channel = int(self.get_parameter("acker_channel").value)
 
         self.imu_pub = self.create_publisher(Imu, "rrc/imu_raw", 1)
         self.joy_pub = self.create_publisher(Joy, "rrc/joy", 1)
@@ -199,7 +203,7 @@ class RosRobotController(Node):
             self.board.pwm_servo_set_position(msg.duration, data)
 
     def set_acker_servo_state(self, msg):
-        self.board.pwm_acker_set_position(msg.duration, msg.position)
+        self.board.pwm_servo_set_position(msg.duration, [[self.acker_channel, msg.position]])
 
     def get_pwm_servo_state(self, msg):
         states = []

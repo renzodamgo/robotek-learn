@@ -3,3 +3,4 @@ rrc_driver:
     imu_frame: "imu_link"
     init_finish: false
     port: ""          # vacio = /dev/rrc_lite (udev) o /dev/ttyACM0
+    acker_channel: 1  # canal PWM del servo de dirección: en el coche del equipo, J4 es el canal 1 (medido 1 nov 2026)
