@@ -60,6 +60,8 @@ class CameraPublisher(Node):
             self.declare_parameter('white_balance_temperature', 4000).value)
         self.brightness = int(self.declare_parameter('brightness', 32).value)  # -64..64
         self.jpeg_quality = int(self.declare_parameter('jpeg_quality', 50).value)  # 1..100
+        # Camara montada al reves (coche del equipo, 1 nov 2026): girar la imagen 180 grados antes de publicarla.
+        self.rotate_180 = bool(self.declare_parameter('rotate_180', False).value)
 
         # Si la camara se desconecta el descriptor abierto queda muerto: tras reopen_after fallos
         # seguidos se reabre sola, reintentando cada reopen_retry s (0 = desactivado).
@@ -195,6 +197,8 @@ class CameraPublisher(Node):
             self._reabrir()
             return
         ret, frame = self.cap.read()
+        if ret and self.rotate_180:
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
         if not ret:
             # Un warn por cuadro perdido inunda el log; avisar cada 30.
             if self._fallos % 30 == 0:

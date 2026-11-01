@@ -105,7 +105,9 @@ def _drivers(context):
         else:
             # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
             actions.append(Node(package='robotek_hardware', executable='camera_publisher', name='camera_publisher',
-                                output='screen', parameters=[{'device': device}]))
+                                output='screen', parameters=[
+                                    os.path.join(get_package_share_directory('robotek_hardware'), 'config', 'robot.yaml'),
+                                    {'device': device}]))
     return actions
 
 

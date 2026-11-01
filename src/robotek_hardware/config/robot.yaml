@@ -81,3 +81,9 @@ imu_adapter:
     up_axis: '+y'
     frame_id: imu_link
     measured: true
+
+# Camera node (robotek_hardware camera_publisher). rotate_180: the camera of the team's car is mounted upside down
+# (new build, checked 1 nov 2026: the field appears upside down and the LiDAR at the top of the image).
+camera_publisher:
+  ros__parameters:
+    rotate_180: true
