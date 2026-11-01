@@ -9,24 +9,37 @@ On the real car two extra cuts, set by car.launch through the environment (off i
   - ROBOTEK_CAMERA_WALL_MASK=1: only look at the field inside the black walls. For each column the lowest band of at
     least WALL_MIN_ROWS dark rows (scanning up from the bottom cut) is the wall; everything above its lower edge (the
     wall and the room behind it) is ignored. The edge is smoothed across columns so a thin dark line on the field
-    is never taken for the wall.
+    is never taken for the wall. WALL_MARGIN rows just below the edge are skipped too (the black-to-mat transition
+    looked blue);
+  - ROBOTEK_CAMERA_BLUE / ROBOTEK_CAMERA_ORANGE: the colour ranges measured under the room's light, as
+    "h_min,h_max,s_min,v_min,v_max" (h_min > h_max wraps through 0: the real orange line looks red, H 155-10).
 """
 import os
 
 import cv2
 import numpy as np
 
-BLUE_HSV = (90, 135, 60, 60)
-ORANGE_HSV = (5, 28, 60, 60)
+def _colour(name, default):
+    text = os.environ.get(name, '')
+    return tuple(int(x) for x in text.split(',')) if text else default
+
+
+BLUE_HSV = _colour('ROBOTEK_CAMERA_BLUE', (90, 135, 60, 60))
+ORANGE_HSV = _colour('ROBOTEK_CAMERA_ORANGE', (5, 28, 60, 60))
 BOTTOM_CROP = float(os.environ.get('ROBOTEK_CAMERA_BOTTOM_CROP', '0'))
 WALL_MASK = os.environ.get('ROBOTEK_CAMERA_WALL_MASK', '0') == '1'
 WALL_V_MAX = 60          # HSV value: darker than this is the black wall
 WALL_MIN_ROWS = 6        # a dark band at least this tall is the wall (the coloured lines are 1-3 px far away)
 WALL_SMOOTH = 31         # columns of the median filter on the wall edge
+WALL_MARGIN = 4          # rows just below the wall edge that are also skipped
 
 
-def _mask(hsv, h_min, h_max, s_min, v_min):
-    return cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, 255, 255]))
+def _mask(hsv, h_min, h_max, s_min, v_min, v_max=255):
+    """255 inside the colour range; h_min > h_max wraps through 0 (red hues)."""
+    if h_min <= h_max:
+        return cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, 255, v_max]))
+    return cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([179, 255, v_max])) | \
+        cv2.inRange(hsv, np.array([0, s_min, v_min]), np.array([h_max, 255, v_max]))
 
 
 def _longest_line(mask):
@@ -71,7 +84,7 @@ def field_mask(shape, value, bottom_crop=None, wall_mask=None):
     if wall_mask:
         edges = wall_edges(value, bottom)
         rows = np.arange(h)[:, None]
-        keep[(rows < edges[None, :]) & (edges[None, :] > 0)] = 0
+        keep[(rows < edges[None, :] + WALL_MARGIN) & (edges[None, :] > 0)] = 0
     return keep
 
 

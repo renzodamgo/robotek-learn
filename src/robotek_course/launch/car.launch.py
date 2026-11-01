@@ -147,6 +147,10 @@ def generate_launch_description():
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
         DeclareLaunchArgument('camera_bottom_crop', default_value='0.12',
                               description='share of image rows at the bottom the line detector ignores (the LiDAR is in view)'),
+        DeclareLaunchArgument('camera_blue_hsv', default_value='95,135,15,35,125',
+                              description='blue line h_min,h_max,s_min,v_min,v_max under the room light (1 nov 2026)'),
+        DeclareLaunchArgument('camera_orange_hsv', default_value='155,10,25,35,255',
+                              description='orange line (looks red: hue wraps through 0), same format'),
         DeclareLaunchArgument('camera_wall_mask', default_value='true',
                               description='line detector only looks inside the black walls'),
         DeclareLaunchArgument('motor_max_pct', default_value=default_max_pct,
@@ -188,6 +192,8 @@ def generate_launch_description():
              output='screen', parameters=[{'use_sim_time': False}],
              # robotek_course.vision on the car: ignore the bottom of the image (the LiDAR) and look only inside the walls.
              additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
+                             'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
+                             'ROBOTEK_CAMERA_ORANGE': LaunchConfiguration('camera_orange_hsv'),
                              'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
                                  ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
              remappings=[('/scan', '/robotek/scan'), ('scan', '/robotek/scan'),
