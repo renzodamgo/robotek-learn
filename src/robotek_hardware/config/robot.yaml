@@ -45,7 +45,7 @@ scan_adapter:
   ros__parameters:
     angle_offset: 0.0                # new build (1 nov 2026, checked in RViz with a box in front): the LD19 zero points FORWARD;
                                      # the car body fills 120-240 deg. Old build: 3.14159265359 (zero backwards)
-    reverse: false                   # VERIFY: true if the driver's angles grow clockwise
+    reverse: false                   # checked 1 nov 2026 in RViz: 90 deg is the car's left (angles grow counterclockwise)
     frame_id: lidar_link
     fov_deg: 110.0                   # measured: beyond +-110 deg the rays hit the car itself
     min_valid_range: 0.12            # m: drops those 2-8 cm returns of the chassis
