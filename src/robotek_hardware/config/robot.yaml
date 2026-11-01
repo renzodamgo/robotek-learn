@@ -31,13 +31,13 @@ base_adapter:
     # servo command (README.md, section Calibracion), replace them, then set servo_measured: true.
     servo_measured: false
     decel_limit: 0.6                 # m/s^2 (a hard stop makes the wheels skid)
-    # Drive motor (1 nov 2026): the team's car now uses an encoder motor on port M4 of the RRC Lite (+rps = forward),
+    # Drive motor (1 nov 2026): the team's car now uses an encoder motor on port M4 of the RRC Lite (+rps = backward),
     # not the DC motor on the TB6612 (its channel B gave no output). 'tb6612' goes back to /motor_vel and the motor_pct_*
     # values above. motor_rps_per_mps = motor revolutions per second per m/s of the car: MEASURE IT (until then 0 keeps
     # the motor at 0). motor_max_rps 0 = no cap.
     motor_backend: rrc
     rrc_motor_port: 4
-    rrc_motor_sign: 1.0
+    rrc_motor_sign: -1.0             # measured 1 nov 2026 on the floor with the LiDAR: +rps on M4 drives the car BACKWARD (the gears invert)
     motor_rps_per_mps: 0.0
     motor_max_rps: 0.0
     watchdog: 0.3
