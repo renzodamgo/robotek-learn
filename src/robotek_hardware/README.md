@@ -128,8 +128,8 @@ Qué hace falta para cada cosa:
 * **LiDAR LD19**: adaptador CP210x (USB `10c4:ea60`), aparece como `/dev/ttyUSB0` a 230400 baudios, que es lo que
   abre el `ld19.launch.py` del driver; la regla de udev añade `/dev/ldlidar`. Si en tu Pi es otro puerto, arranca el
   driver tú y lanza con `lidar_package:=''`.
-* **Motor**: el TB6612 va por GPIO del Pi 5 (`gpiochip` 4; pines PWM 12, AIN1 5, AIN2 6, STBY 13 en
-  `config/robot.yaml`). Hace falta `python3-lgpio` y el grupo `gpio`. Sin `lgpio` o sin acceso a `/dev/gpiochip4` el
+* **Motor**: el motor va al canal B del TB6612 (motor 2: BO1 y BO2) y el puente, por GPIO del Pi 5 (`gpiochip` 4;
+  GPIO12 a PWMB, GPIO5 a BIN1, GPIO6 a BIN2, STBY 13 en `config/robot.yaml`, donde se llaman `pwm_a`, `ain1`, `ain2`). Hace falta `python3-lgpio` y el grupo `gpio`. Sin `lgpio` o sin acceso a `/dev/gpiochip4` el
   nodo arranca, avisa («GPIO chip 4 not usable» o «lgpio missing») y reintenta, sin mover nada.
 * **Cámara**: `camera_publisher` busca la primera `/dev/v4l/by-id/*-video-index0` (en el Pi 5 hay muchos
   `/dev/videoN` y el número cambia: mejor la ruta estable; se fija con `video_device:=` en el launch). YUYV 640x480.

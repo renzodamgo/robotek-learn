@@ -1,4 +1,5 @@
-"""TB6612FNG driver (channel A) for the Raspberry Pi 5, with reverse.
+"""TB6612FNG driver for the Raspberry Pi 5, with reverse. The car uses channel B (motor 2): the
+parameters pwm_a/ain1/ain2 are the GPIOs wired to PWMB/BIN1/BIN2.
 
 Based on the team's first motor driver: std_msgs/Float32 on
 /motor_vel, now -100..100 % (negative = reverse, needed for parking and recovery).
