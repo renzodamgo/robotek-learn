@@ -52,13 +52,17 @@ tb6612fng_motor:
     stop_ramp_s: 0.6
 
 # IMU of the RRC Lite -> car frame (x forward, y left, z up) before the strategies read it.
-# The Raspberry Pi and the RRC Lite stand on their long edge in the new build (21 oct 2026), so the
-# old flat-board values below are wrong until measured: `ros2 run robotek_hardware imu_axes`
-# (car still, then one forward push) prints this block; copy it here and keep measured: true.
+# The Raspberry Pi and the RRC Lite stand on their long edge in the new build (21 oct 2026). Measured on
+# the team's car on 1 nov 2026, axis by axis (guide: "Medir a mano, eje por eje"): the RRC Lite stands
+# on its edge on the left side with its components facing out. At rest board y = +9.70 m/s^2 (up);
+# nose lifted ~14 deg: board x -2.44 (x points back); left side lifted: board z +3.59 (z points left);
+# a hand turn to the left: board gyro y +0.36 rad/s, the other axes ~0. Gyro y bias at rest +0.043 rad/s
+# (the strategy measures it after Start). Re-measure with `ros2 run robotek_hardware imu_axes` if the
+# board moves.
 imu_adapter:
   ros__parameters:
-    forward_axis: '+y'   # old flat build (8 oct 2026): board +y forward, z up, x to the right
-    left_axis: '-x'
-    up_axis: '+z'
+    forward_axis: '-x'
+    left_axis: '+z'
+    up_axis: '+y'
     frame_id: imu_link
-    measured: false
+    measured: true
