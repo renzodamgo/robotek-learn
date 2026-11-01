@@ -1,54 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="680" height="400" viewBox="0 0 680 400" font-family="Helvetica, Arial, sans-serif" font-size="12">
-<title>TB6612FNG canal B a Raspberry Pi 5 (robotek_hardware motor_driver: pwm_a 12, ain1 5, ain2 6, stby 13)</title>
-<rect width="680" height="400" fill="#ffffff"/>
-<rect x="40" y="30" width="200" height="222" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
-<text x="140" y="56" text-anchor="middle" font-size="14" font-weight="bold" fill="#444441">Raspberry Pi 5</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="530" viewBox="0 0 680 530" font-family="Helvetica, Arial, sans-serif" font-size="12">
+<title>Pinout de la Raspberry Pi 5 y del TB6612FNG, cableado del canal B con STBY puenteado a VCC (motor_driver: pwm_a 12, ain1 5, ain2 6)</title>
+<rect width="680" height="530" fill="#ffffff"/>
+<text x="56" y="30" font-size="14" font-weight="bold" fill="#2C2C2A">Raspberry Pi 5 · conector de 40 pines (pin 1 junto a la tarjeta SD)</text>
+<rect x="56" y="58" width="560" height="68" rx="6" fill="none" stroke="#888780" stroke-width="0.5"/>
+<g fill="none" stroke="#888780" stroke-width="1">
+<circle cx="70" cy="80" r="5"/><circle cx="98" cy="80" r="5"/><circle cx="154" cy="80" r="5"/><circle cx="182" cy="80" r="5"/><circle cx="210" cy="80" r="5"/><circle cx="238" cy="80" r="5"/><circle cx="266" cy="80" r="5"/><circle cx="294" cy="80" r="5"/><circle cx="322" cy="80" r="5"/><circle cx="350" cy="80" r="5"/><circle cx="378" cy="80" r="5"/><circle cx="406" cy="80" r="5"/><circle cx="434" cy="80" r="5"/><circle cx="462" cy="80" r="5"/><circle cx="518" cy="80" r="5"/><circle cx="546" cy="80" r="5"/><circle cx="574" cy="80" r="5"/><circle cx="602" cy="80" r="5"/>
+<circle cx="98" cy="104" r="5"/><circle cx="126" cy="104" r="5"/><circle cx="154" cy="104" r="5"/><circle cx="182" cy="104" r="5"/><circle cx="210" cy="104" r="5"/><circle cx="238" cy="104" r="5"/><circle cx="266" cy="104" r="5"/><circle cx="294" cy="104" r="5"/><circle cx="322" cy="104" r="5"/><circle cx="350" cy="104" r="5"/><circle cx="378" cy="104" r="5"/><circle cx="406" cy="104" r="5"/><circle cx="434" cy="104" r="5"/><circle cx="518" cy="104" r="5"/><circle cx="546" cy="104" r="5"/><circle cx="574" cy="104" r="5"/><circle cx="602" cy="104" r="5"/>
+</g>
+<rect x="64" y="98" width="12" height="12" fill="#E24B4A"/>
+<circle cx="126" cy="80" r="6" fill="#888780"/><circle cx="462" cy="104" r="6" fill="#378ADD"/><circle cx="490" cy="104" r="6" fill="#D4537E"/><circle cx="490" cy="80" r="6" fill="#EF9F27"/>
+<g fill="#5F5E5A" text-anchor="middle">
+<text x="70" y="52">2</text><text x="126" y="52">6</text><text x="490" y="52">32</text><text x="602" y="52">40</text>
+<text x="70" y="142">1</text><text x="462" y="142">29</text><text x="490" y="142">31</text><text x="602" y="142">39</text>
+</g>
+<g fill="none" stroke-width="2.5" stroke-linejoin="round">
+<path d="M126 74 V 40 H 646 V 214 H 524 V 236" stroke="#888780"/>
+<path d="M462 110 V 180 H 398 V 236" stroke="#378ADD"/>
+<path d="M490 110 V 190 H 440 V 236" stroke="#D4537E" stroke-dasharray="7 3"/>
+<path d="M490 86 H 504 V 200 H 482 V 236" stroke="#EF9F27"/>
+<path d="M70 110 V 360 H 272 V 324" stroke="#E24B4A"/>
+<path d="M356 236 V 218 H 186 V 346 H 262 V 324" stroke="#7F77DD" stroke-dasharray="4 3"/>
+<path d="M230 324 V 402" stroke="#E24B4A"/>
+<path d="M314 324 V 402" stroke="#888780"/>
+<path d="M440 324 V 402" stroke="#1D9E75"/>
+<path d="M482 324 V 402" stroke="#1D9E75"/>
+</g>
+<rect x="200" y="226" width="360" height="108" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<g fill="#ffffff" stroke="#534AB7" stroke-width="1">
+<circle cx="230" cy="242" r="5"/><circle cx="272" cy="242" r="5"/><circle cx="314" cy="242" r="5"/><circle cx="356" cy="242" r="5"/><circle cx="398" cy="242" r="5"/><circle cx="440" cy="242" r="5"/><circle cx="482" cy="242" r="5"/><circle cx="524" cy="242" r="5"/>
+<circle cx="230" cy="318" r="5"/><circle cx="272" cy="318" r="5"/><circle cx="314" cy="318" r="5"/><circle cx="356" cy="318" r="5"/><circle cx="398" cy="318" r="5"/><circle cx="440" cy="318" r="5"/><circle cx="482" cy="318" r="5"/><circle cx="524" cy="318" r="5"/>
+</g>
+<g fill="#3C3489" text-anchor="middle">
+<text x="230" y="264" fill="#AFA9EC">PWMA</text><text x="272" y="264" fill="#AFA9EC">AIN2</text><text x="314" y="264" fill="#AFA9EC">AIN1</text><text x="356" y="264">STBY</text><text x="398" y="264">BIN1</text><text x="440" y="264">BIN2</text><text x="482" y="264">PWMB</text><text x="524" y="264">GND</text>
+<text x="380" y="286" font-size="14" font-weight="bold">TB6612FNG</text>
+<text x="230" y="306">VM</text><text x="272" y="306">VCC</text><text x="314" y="306">GND</text><text x="356" y="306" fill="#AFA9EC">AO1</text><text x="398" y="306" fill="#AFA9EC">AO2</text><text x="440" y="306">BO2</text><text x="482" y="306">BO1</text><text x="524" y="306">GND</text>
+</g>
+<rect x="200" y="402" width="144" height="44" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<g fill="#712B13" text-anchor="middle"><text x="230" y="428">+</text><text x="272" y="428">Batería</text><text x="314" y="428">−</text></g>
+<rect x="410" y="402" width="102" height="44" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="461" y="429" text-anchor="middle" font-size="14" font-weight="bold" fill="#085041">Motor</text>
 <g fill="#444441">
-<text x="58" y="84">pin 1 · 3,3 V</text>
-<text x="58" y="114">pin 6 · GND</text>
-<text x="58" y="144">pin 33 · GPIO13</text>
-<text x="58" y="174">pin 29 · GPIO5</text>
-<text x="58" y="204">pin 31 · GPIO6</text>
-<text x="58" y="234">pin 32 · GPIO12</text>
+<text x="40" y="482">Pin 1 · 3,3 V → VCC (rojo)   Pin 6 · GND → GND (gris)   STBY ↔ VCC: puente en la placa (morado, rayas)</text>
+<text x="40" y="502">Pin 29 · GPIO5 → BIN1 (azul)   Pin 31 · GPIO6 → BIN2 (rosa, rayas)   Pin 32 · GPIO12 → PWMB (ámbar)</text>
+<text x="40" y="522" fill="#888780">Atenuado: canal A sin usar. El orden de los pines del TB6612 cambia según la placa: guíate por las etiquetas.</text>
 </g>
-<rect x="380" y="30" width="150" height="312" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
-<text x="455" y="56" text-anchor="middle" font-size="14" font-weight="bold" fill="#3C3489">TB6612FNG</text>
-<g fill="#3C3489">
-<text x="392" y="84">VCC</text>
-<text x="392" y="114">GND</text>
-<text x="392" y="144">STBY</text>
-<text x="392" y="174">BIN1</text>
-<text x="392" y="204">BIN2</text>
-<text x="392" y="234">PWMB</text>
-<text x="518" y="84" text-anchor="end">VM</text>
-<text x="518" y="114" text-anchor="end">GND</text>
-<text x="518" y="174" text-anchor="end">BO1</text>
-<text x="518" y="204" text-anchor="end">BO2</text>
-</g>
-<g fill="#AFA9EC">
-<text x="392" y="264">AIN1</text>
-<text x="392" y="294">AIN2</text>
-<text x="392" y="324">PWMA</text>
-<text x="518" y="264" text-anchor="end">AO1</text>
-<text x="518" y="294" text-anchor="end">AO2</text>
-</g>
-<g stroke-width="2">
-<line x1="240" y1="80" x2="380" y2="80" stroke="#E24B4A"/>
-<line x1="240" y1="110" x2="380" y2="110" stroke="#888780"/>
-<line x1="240" y1="140" x2="380" y2="140" stroke="#7F77DD"/>
-<line x1="240" y1="170" x2="380" y2="170" stroke="#7F77DD"/>
-<line x1="240" y1="200" x2="380" y2="200" stroke="#7F77DD" stroke-dasharray="6 3"/>
-<line x1="240" y1="230" x2="380" y2="230" stroke="#D85A30"/>
-<line x1="530" y1="80" x2="570" y2="80" stroke="#E24B4A"/>
-<line x1="530" y1="110" x2="570" y2="110" stroke="#888780"/>
-<line x1="530" y1="170" x2="570" y2="170" stroke="#1D9E75"/>
-<line x1="530" y1="200" x2="570" y2="200" stroke="#1D9E75"/>
-</g>
-<rect x="570" y="66" width="70" height="58" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
-<text x="605" y="88" text-anchor="middle" fill="#712B13">Batería +</text>
-<text x="605" y="112" text-anchor="middle" fill="#712B13">Batería −</text>
-<rect x="570" y="156" width="70" height="58" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
-<text x="605" y="190" text-anchor="middle" font-size="14" font-weight="bold" fill="#085041">Motor</text>
-<text x="40" y="372" fill="#5F5E5A">Rojo: alimentación · gris: masa · morado: sentido · naranja: PWM · verde: motor</text>
-<text x="40" y="392" fill="#888780">Atenuado: canal A sin usar. El orden de los pines cambia según la placa: guíate por las etiquetas.</text>
 </svg>
