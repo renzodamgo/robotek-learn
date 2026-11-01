@@ -87,3 +87,9 @@ imu_adapter:
 camera_publisher:
   ros__parameters:
     rotate_180: true
+    # Lens correction (one-coefficient radial model) and crop to the simulated camera's 60 deg: fitted 1 nov 2026 so the
+    # far wall's lower edge is straight (rms 0.8 px), with the team's measured 66.7 deg field (fit gives 66.6).
+    undistort: true
+    camera_f: 570.0
+    camera_k1: -0.34
+    output_hfov_deg: 60.0

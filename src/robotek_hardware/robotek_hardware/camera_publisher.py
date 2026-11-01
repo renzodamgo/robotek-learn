@@ -28,12 +28,14 @@ forma explicita el modo que quiere (auto o manual): asi arranca igual siempre.
 """
 
 import glob
+import math
 import os
 import shutil
 import subprocess
 import time
 
 import cv2
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
@@ -62,6 +64,15 @@ class CameraPublisher(Node):
         self.jpeg_quality = int(self.declare_parameter('jpeg_quality', 50).value)  # 1..100
         # Camara montada al reves (coche del equipo, 1 nov 2026): girar la imagen 180 grados antes de publicarla.
         self.rotate_180 = bool(self.declare_parameter('rotate_180', False).value)
+        # Correccion de la lente (distorsion de barril) con un modelo radial de un coeficiente, y recorte al campo de
+        # vision de la camara simulada: la imagen del coche se parece a la de Gazebo (rectas rectas, mismo angulo).
+        # camera_f y camera_k1 se ajustaron (1 nov 2026) dejando recto el borde del muro del fondo, con el campo
+        # medido por el equipo (66.7 grados); output_hfov_deg = 60, el de la simulacion.
+        self.undistort = bool(self.declare_parameter('undistort', False).value)
+        self.camera_f = float(self.declare_parameter('camera_f', 570.).value)
+        self.camera_k1 = float(self.declare_parameter('camera_k1', -0.34).value)
+        self.output_hfov_deg = float(self.declare_parameter('output_hfov_deg', 60.).value)
+        self._maps = None
 
         # Si la camara se desconecta el descriptor abierto queda muerto: tras reopen_after fallos
         # seguidos se reabre sola, reintentando cada reopen_retry s (0 = desactivado).
@@ -199,6 +210,8 @@ class CameraPublisher(Node):
         ret, frame = self.cap.read()
         if ret and self.rotate_180:
             frame = cv2.rotate(frame, cv2.ROTATE_180)
+        if ret and self.undistort:
+            frame = self._corregir(frame)
         if not ret:
             # Un warn por cuadro perdido inunda el log; avisar cada 30.
             if self._fallos % 30 == 0:
@@ -223,6 +236,18 @@ class CameraPublisher(Node):
                 comp.format = 'bgr8; jpeg compressed bgr8'
                 comp.data = jpg.tobytes()
                 self.pub_jpeg.publish(comp)
+
+    def _corregir(self, frame):
+        """Lente corregida y recortada a output_hfov_deg (los mapas se calculan una vez por tamano de imagen)."""
+        h, w = frame.shape[:2]
+        if self._maps is None or self._maps[0] != (w, h):
+            K = np.array([[self.camera_f, 0, w / 2], [0, self.camera_f, h / 2], [0, 0, 1]], np.float64)
+            fo = (w / 2) / math.tan(math.radians(self.output_hfov_deg) / 2)
+            P = np.array([[fo, 0, w / 2], [0, fo, h / 2], [0, 0, 1]], np.float64)
+            m1, m2 = cv2.initUndistortRectifyMap(K, np.array([self.camera_k1, 0, 0, 0], np.float64), None, P,
+                                                 (w, h), cv2.CV_16SC2)
+            self._maps = ((w, h), m1, m2)
+        return cv2.remap(frame, self._maps[1], self._maps[2], cv2.INTER_LINEAR)
 
     def destroy_node(self):
         if self.cap is not None and self.cap.isOpened():
