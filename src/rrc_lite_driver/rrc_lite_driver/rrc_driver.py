@@ -58,6 +58,13 @@ class RosRobotController(Node):
         self.acker_channel = int(self.get_parameter("acker_channel").value)
         # The board holds the last motor speed it got. If commands stop (base_adapter killed, network cut), stop the
         # motors after motor_watchdog seconds (0 disables).
+        # Encoder motor model for the board's speed control (0 JGB520, 1 JGB37, 2 JGB27, 3 JGB528; -1 = leave the
+        # board's own setting). Sent at every start: it is not known whether the board keeps it.
+        self.declare_parameter("motor_type", -1)
+        motor_type = int(self.get_parameter("motor_type").value)
+        if motor_type >= 0:
+            self.board.set_motor_type(motor_type)
+            self.get_logger().info(f"Motor type {motor_type} sent to the board.")
         self.declare_parameter("motor_watchdog", 0.5)
         self.motor_watchdog = float(self.get_parameter("motor_watchdog").value)
         self.motor_last = time.monotonic()

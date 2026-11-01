@@ -384,6 +384,11 @@ class Board:
         off_time = int(off_time*1000)
         self.buf_write(PacketFunction.PACKET_FUNC_BUZZER, struct.pack("<HHHH", freq, on_time, off_time, repeat))
 
+    def set_motor_type(self, motor_type):
+        """Encoder motor model of the board's speed control (motor packet 0x05; HiWonder's LanderPi SDK):
+        0 JGB520, 1 JGB37, 2 JGB27, 3 JGB528."""
+        self.buf_write(PacketFunction.PACKET_FUNC_MOTOR, struct.pack("<BB", 0x05, int(motor_type)))
+
     def set_motor_speed(self, speeds):
         data = [0x01, len(speeds)]
         for i in speeds:

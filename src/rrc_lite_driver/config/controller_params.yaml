@@ -4,3 +4,4 @@ rrc_driver:
     init_finish: false
     port: ""          # vacio = /dev/rrc_lite (udev) o /dev/ttyACM0
     acker_channel: 1  # canal PWM del servo de dirección: en el coche del equipo, J4 es el canal 1 (medido 1 nov 2026)
+    motor_type: 2     # JGB27 (0 JGB520, 1 JGB37, 2 JGB27, 3 JGB528): the MentorPi A1 encoder motor is a 310 on a ~27 mm gearbox (1 nov 2026, to confirm by measuring)
