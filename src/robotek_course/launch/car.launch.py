@@ -35,7 +35,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration
+from launch.substitutions import Command, LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
@@ -145,6 +145,10 @@ def generate_launch_description():
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
+        DeclareLaunchArgument('camera_bottom_crop', default_value='0.12',
+                              description='share of image rows at the bottom the line detector ignores (the LiDAR is in view)'),
+        DeclareLaunchArgument('camera_wall_mask', default_value='true',
+                              description='line detector only looks inside the black walls'),
         DeclareLaunchArgument('motor_max_pct', default_value=default_max_pct,
                               description='motor ceiling in % (robot.yaml). First run on the car: 30, on blocks'),
         DeclareLaunchArgument('battery_guard', default_value='true',
@@ -182,6 +186,10 @@ def generate_launch_description():
         # Your strategy: real clock, waits for /start (the button of the board).
         Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
              output='screen', parameters=[{'use_sim_time': False}],
+             # robotek_course.vision on the car: ignore the bottom of the image (the LiDAR) and look only inside the walls.
+             additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
+                             'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
+                                 ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
              remappings=[('/scan', '/robotek/scan'), ('scan', '/robotek/scan'),
                          ('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
                          ('/camera/image', LaunchConfiguration('camera_topic'))]),
