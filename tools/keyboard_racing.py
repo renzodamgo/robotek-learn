@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drive the real car like a racing game, from a small window on your computer (not over ssh).
+r"""Drive the real car like a racing game, from a small window on your computer (not over ssh).
 
     # on the car:      ros2 launch robotek_course car.launch.py teleop:=true
     # on the computer: bash tools/keyboard_racing.sh            (or this script with ROS and the car's network set)
