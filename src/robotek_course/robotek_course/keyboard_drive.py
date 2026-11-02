@@ -4,7 +4,7 @@
     ros2 run robotek_course keyboard_drive --ros-args -p hold:=true     # real car: move it to the start
 
 hold:=true (to place the real car, with car.launch.py teleop:=true): the car moves only while w (forward) or s (back)
-is held, at hold_speed m/s, and stops hold_timeout s after the key is released (the terminal repeats a held key);
+is held, at hold_speed m/s (0.2: lower did not move the car on the encoder motor), and stops hold_timeout s after the key is released (the terminal repeats a held key);
 a/d steer, x centres the wheels. Leaving (q or Ctrl+C) sends zero speed.
 
 Publishes /cmd_vel_raw like a strategy would: linear.x is the speed and angular.z = speed * tan(steer) / wheelbase.
@@ -31,7 +31,7 @@ class KeyboardDrive(Node):
         self.speed = 0.0
         self.steer = 0.0
         self.hold = bool(self.declare_parameter('hold', False).value)
-        self.hold_speed = float(self.declare_parameter('hold_speed', 0.15).value)
+        self.hold_speed = float(self.declare_parameter('hold_speed', 0.2).value)  # 0.15 (0.72 rps) did not move the car
         self.hold_timeout = float(self.declare_parameter('hold_timeout', 0.6).value)
         self.last_key = 0.0
         self.create_timer(0.05, self.tick)
