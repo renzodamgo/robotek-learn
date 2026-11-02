@@ -3,6 +3,7 @@
 
     # on the car:      ros2 launch robotek_course car.launch.py teleop:=true
     # on the computer: bash tools/keyboard_racing.sh            (or this script with ROS and the car's network set)
+    # on Windows:      powershell -ExecutionPolicy Bypass -File tools\keyboard_racing.ps1 -Speed 0.4
 
 Hold the arrows (or W A S D) and combine them: up = forward, down = back, left/right = steer while held. Releasing
 everything stops the car and centres the wheels. If the window loses focus or closes, the car stops. It publishes
