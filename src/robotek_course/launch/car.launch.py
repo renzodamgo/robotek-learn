@@ -145,6 +145,10 @@ def generate_launch_description():
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
+        DeclareLaunchArgument('button', default_value='true',
+                              description='false: start by itself after start_delay s, without the button (tests only)'),
+        DeclareLaunchArgument('start_delay', default_value='12.0',
+                              description='seconds from launch to the automatic start with button:=false'),
         DeclareLaunchArgument('camera_bottom_crop', default_value='0.12',
                               description='share of image rows at the bottom the line detector ignores (the LiDAR is in view)'),
         DeclareLaunchArgument('camera_blue_hsv', default_value='95,135,15,35,125',
@@ -177,7 +181,11 @@ def generate_launch_description():
                                                                            value_type=float)}],
              remappings=[('cmd_vel', '/cmd_vel_raw')]),
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
-             remappings=[('start', '/start')]),
+             remappings=[('start', '/start')],
+             # button:=false (quick tests): start by itself after start_delay s; the first press is then the stop.
+             parameters=[{'auto_start_delay': ParameterValue(PythonExpression(
+                 ["0.0 if '", LaunchConfiguration('button'), "'.lower() == 'true' else ", LaunchConfiguration('start_delay')]),
+                 value_type=float)}]),
         Node(package='robotek_hardware', executable='battery_guard', name='battery_guard', output='screen',
              condition=IfCondition(LaunchConfiguration('battery_guard')),
              parameters=[{'min_voltage': ParameterValue(LaunchConfiguration('battery_min_v'), value_type=float)}]),

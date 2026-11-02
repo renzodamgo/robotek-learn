@@ -3,7 +3,10 @@ debounced like the team's robot_node (1.5 s).
 
 Any press after the first one publishes /robotek/stop (Bool true, two beeps): base_adapter
 and motor_driver hold the motor at 0 and the Open strategy stops for good. Restart the
-launch to run again. (8 Oct 2026: the car hit a wall and could not be stopped.)"""
+launch to run again. (8 Oct 2026: the car hit a wall and could not be stopped.)
+
+auto_start_delay > 0 (car.launch button:=false, for quick tests): the node starts by itself that many seconds after it
+comes up, as if the button had been pressed, so the FIRST real press is already the stop."""
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
@@ -24,12 +27,32 @@ class StartButton(Node):
         self.stop_pub = self.create_publisher(Bool, '/robotek/stop', 10)
         self.last = None
         self.started = False
+        delay = float(self.declare_parameter('auto_start_delay', 0.0).value)
+        if delay > 0.:
+            self.auto_timer = self.create_timer(delay, self.auto_start)
+            self.auto_count = 0
+            self.get_logger().warning(f'No button: the car starts by itself in {delay:.0f} s; press the button to stop.')
         if ButtonState is None:
             self.get_logger().error('rrc_lite_msgs missing: publish /start by hand.')
             return
         self.buzzer = self.create_publisher(BuzzerState, '/rrc/set_buzzer', 10)
         self.create_subscription(ButtonState, '/rrc/button', self.on_button, 10)
         self.get_logger().info('Press the button to start; press it again to stop.')
+
+    def auto_start(self):
+        """Start without the button; /start goes out three times, 0.5 s apart, in case the strategy is still waking up."""
+        if self.auto_count == 0:
+            self.auto_timer.cancel()
+            self.auto_timer = self.create_timer(0.5, self.auto_start)
+            if self.started:
+                self.auto_timer.cancel()
+                return
+            self.started = True
+            self.get_logger().info('Start (no button).')
+        self.pub.publish(Bool(data=True))
+        self.auto_count += 1
+        if self.auto_count >= 3:
+            self.auto_timer.cancel()
 
     def on_button(self, msg):
         if msg.state not in PRESS_STATES:
