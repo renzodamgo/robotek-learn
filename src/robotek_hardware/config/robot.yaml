@@ -42,7 +42,7 @@ base_adapter:
     # values above. motor_rps_per_mps = motor revolutions per second per m/s of the car: MEASURE IT (until then 0 keeps
     # the motor at 0). motor_max_rps 0 = no cap.
     motor_backend: rrc
-    rrc_motor_port: 3                # 1 nov 2026: M4 stopped driving after a frontal crash (the motor stalled and got hot; it runs fine on M3)
+    rrc_motor_port: 4                # 1 nov 2026: the old motor burnt out after a frontal crash (stalled, overheated); a new 310 motor on M4 runs
     rrc_motor_sign: -1.0             # measured 1 nov 2026 on the floor with the LiDAR: +rps on M4 drives the car BACKWARD (the gears invert)
     # Motor: MentorPi A1 310 gear motor (1:90, Hall encoder), 110 rpm no load / 85 rpm rated at the shaft; 1:2 gear up
     # to the wheels (r 30.5 mm, 0.192 m per turn) -> top speed 0.70 m/s no load, 0.54 m/s rated. The board's "rps" is
