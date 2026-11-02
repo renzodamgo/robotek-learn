@@ -102,14 +102,56 @@ source install/setup.bash
 ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strategy:=my_open
 ```
 
-Para probar más rápido, sin pulsar el botón: `ros2 launch robotek_course open_challenge.launch.py button:=false` arranca
-solo 12 s después (`start_delay:=...`); la primera pulsación del botón ya es la parada. Para colocar el coche a mano: `car.launch.py teleop:=true` en el coche y, en tu Mac, `bash tools/keyboard_racing.sh`
-(una ventana: mantén y combina las flechas como en un juego; soltar para; en Windows,
-`tools\keyboard_racing.ps1` desde una terminal con ROS 2 Jazzy cargado). Con `debug:=true` la misma terminal informa de los estados, el sentido, cada esquina y vuelta y las líneas
-cruzadas. En otra terminal,
-`python3 tools/open_monitor.py` muestra dos veces por segundo el estado, lo que ve la cámara (y las líneas que cruza),
-el LiDAR, el giroscopio y la dirección y velocidad que manda la estrategia. `get-reference.sh` aplica los arreglos del
-coche de `tools/patches/` (con `--no-patch`, la referencia exacta del curso).
+### Probar más rápido
+
+`ros2 launch robotek_course open_challenge.launch.py button:=false` arranca solo 12 s después de lanzar
+(`start_delay:=...`), sin pulsar el botón; la primera pulsación del botón ya es la parada. Ctrl+C también para el motor.
+
+### Conducir el coche con el teclado (para colocarlo en la salida)
+
+En el coche, todo menos la estrategia:
+
+```bash
+ros2 launch robotek_course car.launch.py teleop:=true                  # hasta ~0,2 m/s
+ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=1.3   # más rápido (~0,4 m/s; no pasar de 1,8)
+```
+
+En tu ordenador, en la misma Wi-Fi que el coche, una ventana como un juego de carreras: mantén y combina
+**↑ ↓ ← →** (o **W A S D**); al soltar todo se para y centra la dirección; si la ventana pierde el foco o se cierra,
+el coche se para. Los números son la velocidad (m/s) y los grados de giro.
+
+* **Mac** (RoboStack):
+
+  ```bash
+  ROBOSTACK_ENV=~/robotek-ros/jazzy bash tools/keyboard_racing.sh 0.4 15
+  ```
+
+* **Windows**: desde una terminal con ROS 2 Jazzy cargado (RoboStack con `pixi shell`, o los binarios oficiales con
+  `call C:\dev\ros2_jazzy\local_setup.bat`):
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File tools\keyboard_racing.ps1 -Speed 0.4 -Steer 15
+  ```
+
+  La primera vez, permite a Python en el cortafuegos de Windows (redes privadas). Si el coche tiene otra IP:
+  `-PiIp 192.168.8.xxx`.
+
+Las dos usan la red del coche (Cyclone DDS, `ROS_DOMAIN_ID` 1, descubrimiento en la subred, el Pi como par fijo). La
+velocidad real la limita `motor_max_rps` del launch, no la ventana. Desde una terminal del Pi, sin ventana:
+`ros2 run robotek_course keyboard_drive --ros-args -p hold:=true` (una tecla por movimiento: `u i o / j k l / m , .`).
+
+### Ver qué hace
+
+* `debug:=true` en el launch: la misma terminal informa de los estados, el sentido, cada esquina y vuelta y las líneas
+  cruzadas.
+* `python3 tools/open_monitor.py` en otra terminal del Pi: dos veces por segundo el estado, lo que ve la cámara (y las
+  líneas que cruza), el LiDAR, el giroscopio y la dirección y velocidad que manda la estrategia; guarda imágenes de la
+  decisión del sentido.
+* `get-reference.sh` aplica los arreglos del coche de `tools/patches/` (con `--no-patch`, la referencia exacta del
+  curso).
+
+**Después de compilar en el Pi, `sync` (o `sudo poweroff`) antes de cortar la corriente**: un corte en mitad de la
+escritura deja archivos vacíos (le pasó al ejecutable de la estrategia).
 
 **La primera vez, con el coche sobre soportes (ruedas en el aire).** Ni el script ni el launch mueven el motor por su
 cuenta: tu estrategia espera el Start (el botón de la placa) y el motor tiene límites de velocidad, aceleración y un
