@@ -103,7 +103,8 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 ```
 
 Para probar más rápido, sin pulsar el botón: `ros2 launch robotek_course open_challenge.launch.py button:=false` arranca
-solo 12 s después (`start_delay:=...`); la primera pulsación del botón ya es la parada. En otra terminal,
+solo 12 s después (`start_delay:=...`); la primera pulsación del botón ya es la parada. Con `debug:=true` la misma terminal informa de los estados, el sentido, cada esquina y vuelta y las líneas
+cruzadas. En otra terminal,
 `python3 tools/open_monitor.py` muestra dos veces por segundo el estado, lo que ve la cámara (y las líneas que cruza),
 el LiDAR, el giroscopio y la dirección y velocidad que manda la estrategia. `get-reference.sh` aplica los arreglos del
 coche de `tools/patches/` (con `--no-patch`, la referencia exacta del curso).

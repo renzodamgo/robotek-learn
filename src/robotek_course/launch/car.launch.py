@@ -145,6 +145,8 @@ def generate_launch_description():
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
+        DeclareLaunchArgument('debug', default_value='false',
+                              description='true: report states, direction, corners, laps and lines in this terminal'),
         DeclareLaunchArgument('button', default_value='true',
                               description='false: start by itself after start_delay s, without the button (tests only)'),
         DeclareLaunchArgument('start_delay', default_value='12.0',
@@ -195,6 +197,16 @@ def generate_launch_description():
                           'camera_topic': LaunchConfiguration('camera_topic'),
                           'camera_required': ParameterValue(LaunchConfiguration('camera'), value_type=bool)}]),
         OpaqueFunction(function=_description),
+        # debug:=true: live report of the round (states, direction, corners, laps, lines) in this terminal.
+        Node(package='robotek_course', executable='round_reporter', name='round_reporter', output='screen',
+             condition=IfCondition(LaunchConfiguration('debug')),
+             additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
+                             'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
+                             'ROBOTEK_CAMERA_ORANGE': LaunchConfiguration('camera_orange_hsv'),
+                             'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
+                                 ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
+             remappings=[('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
+                         ('/camera/image', LaunchConfiguration('camera_topic'))]),
         # Your strategy: real clock, waits for /start (the button of the board).
         Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
              output='screen', parameters=[{'use_sim_time': False}],

@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'round_recorder = robotek_course.round_recorder:main',
+            'round_reporter = robotek_course.round_reporter:main',
             'score = robotek_course.score:main',
             'obstacle_round_recorder = robotek_course.obstacle_round_recorder:main',
             'score_obstacle = robotek_course.score_obstacle:main',
