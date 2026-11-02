@@ -5,10 +5,13 @@ base_adapter:
     # 0.1174 m measured on 21 oct 2026 (was 0.13). The servo gains below and steer_limit_deg were
     # derived with 0.13: recalibrate them before driving the car (README.md, section Calibracion).
     wheelbase: 0.1174
-    servo_center_us: 1500.0
-    servo_gain_pos: 18.9655172414    # 550 / 29 us per degree (team SERVO_GAIN_POS)
-    servo_gain_neg: 17.2413793103    # 500 / 29 (team SERVO_GAIN_NEG)
-    servo_sign: 1.0                  # measured 1 nov 2026 (new linkage): +angle turns left; centre 1500 us keeps the wheels straight
+    # Steering measured 1 nov 2026 on the floor with tools/steer_calibration.py (gyro yaw rate at 0.209 m/s, bicycle
+    # model; battery 8.3 V): 1403 us drives straight (1500 us = 4.5 deg right). 20 us per servo degree on both sides,
+    # so the servo angle is just (us - centre) / 20; wheel_table_* below turns it into the real wheel angle.
+    servo_center_us: 1403.0
+    servo_gain_pos: 20.0             # us per servo degree, right (higher us)
+    servo_gain_neg: 20.0             # us per servo degree, left (lower us)
+    servo_sign: 1.0                  # +angle turns left = lower us
     servo_min_us: 1000.0
     servo_max_us: 2050.0
     steer_limit_deg: 25.0
@@ -20,16 +23,19 @@ base_adapter:
     motor_min_pct: 6.5               # % where the car starts to move (was a 12.0 guess)
     motor_max_pct: 50.0              # real Open tests 8 oct 2026: 40 ok, 90 too fast (crash); now 50; was 100
     accel_limit: 1.0                 # m/s^2 (a full-power start lifts the front wheels)
-    # Wheel angle really reached per servo angle (circles, 8 oct 2026); the strategy's
-    # angle is the wheel angle, clamped to the symmetric range both sides can reach.
-    wheel_table_servo_deg: [10.0, 25.0]
-    wheel_table_left_deg: [8.7, 19.7]
-    wheel_table_right_deg: [8.6, 17.6]
-    wheel_limit_deg: 17.6
-    # The steering servo changed position and turned 90 deg in the new build (21 oct 2026): its centre,
-    # sign, gains and the wheel table above belong to the old linkage. Measure the wheel angle for each
-    # servo command (README.md, section Calibracion), replace them, then set servo_measured: true.
-    servo_measured: false
+    # Real wheel angle per servo angle (1 nov 2026, steer_calibration.py; servo deg = (us - 1403) / 20), interpolated
+    # at the same servo angles on both sides. Measured: left 1300 4.4, 1200 9.6, 1100 15.7, 1050 19.9 deg;
+    # right 1500 4.5, 1600 8.8, 1700 13.8, 1800 17.9, 1900 19.2 (19.5), 1950 18.1 deg: the right side stops at
+    # ~19.3 deg by this method (2000 us hit something and skidded; left 1000 us gave 24 and 14: not used; the left
+    # points at 20 and 25 servo deg are extrapolated). The radius on the floor gave ~21 deg for the right maximum:
+    # the gyro reads less at full lock (the front tyres slip), the same on both sides, so both sides are compared
+    # with this method. wheel_limit_deg = the right maximum, so +-19 deg is the same angle on both sides and every
+    # angle in between is proportional (19 deg: ~1061 us left, ~1877 us right).
+    wheel_table_servo_deg: [5.0, 10.0, 15.0, 17.5, 20.0, 25.0]
+    wheel_table_left_deg: [4.24, 9.42, 15.55, 19.63, 23.7, 31.9]
+    wheel_table_right_deg: [4.63, 8.93, 13.92, 15.99, 17.98, 19.35]
+    wheel_limit_deg: 19.0
+    servo_measured: true
     decel_limit: 0.6                 # m/s^2 (a hard stop makes the wheels skid)
     # Drive motor (1 nov 2026): the team's car now uses an encoder motor on port M4 of the RRC Lite (+rps = backward),
     # not the DC motor on the TB6612 (its channel B gave no output). 'tb6612' goes back to /motor_vel and the motor_pct_*
