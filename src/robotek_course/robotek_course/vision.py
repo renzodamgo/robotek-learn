@@ -99,3 +99,42 @@ def line_lengths(bgr):
         mask[keep == 0] = 0
         lengths.append(_longest_line(mask))
     return tuple(lengths)
+
+
+CROSS_BAND = (0.70, 0.88)    # rows (share of the image height) where a line just ahead of the car is seen
+CROSS_MIN_LENGTH = 40.0      # px: a line in the band at least this long counts as present
+CROSS_GAP_FRAMES = 3         # frames without it after being present = the car has driven over it
+
+
+class LineCounter:
+    """Counts the coloured lines the car drives over (each corner of the Open field has one blue and one orange line).
+
+    A line is present when the longest blob of its colour inside the bottom band (CROSS_BAND, within the field mask)
+    is at least CROSS_MIN_LENGTH pixels long; once present, CROSS_GAP_FRAMES frames without it count one crossing.
+    Feed every camera frame (a slower rate can miss a line at speed)."""
+
+    def __init__(self):
+        self.counts = {'blue': 0, 'orange': 0}
+        self._present = {'blue': False, 'orange': False}
+        self._missing = {'blue': 0, 'orange': 0}
+
+    def update(self, bgr):
+        """One BGR frame; returns (blue_crossings, orange_crossings) so far."""
+        hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+        h = bgr.shape[0]
+        keep = field_mask(bgr.shape, hsv[..., 2])
+        band = np.zeros_like(keep)
+        band[int(h * CROSS_BAND[0]):int(h * CROSS_BAND[1])] = 255
+        kernel = np.ones((3, 5), dtype=np.uint8)
+        for name, colour in (('blue', BLUE_HSV), ('orange', ORANGE_HSV)):
+            mask = cv2.morphologyEx(_mask(hsv, *colour), cv2.MORPH_CLOSE, kernel)
+            mask[(keep == 0) | (band == 0)] = 0
+            seen = _longest_line(mask) >= CROSS_MIN_LENGTH
+            if seen:
+                self._present[name], self._missing[name] = True, 0
+            elif self._present[name]:
+                self._missing[name] += 1
+                if self._missing[name] >= CROSS_GAP_FRAMES:
+                    self.counts[name] += 1
+                    self._present[name], self._missing[name] = False, 0
+        return self.counts['blue'], self.counts['orange']

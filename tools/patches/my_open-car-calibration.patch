@@ -1,0 +1,30 @@
+Real car (1 nov 2026): wait 0.5 s after Start (pressing the button shakes the car), then average the gyro 1.5 s.
+With the course's 0.3 s the bias came out half the real one and the car drifted right. Applied by tools/get-reference.sh.
+The course tests of step 7 assume 0.3 s: use get-reference.sh --no-patch for the exact course reference.
+
+--- a/src/my_open/my_open/mission.py	2026-11-01 19:28:03
++++ b/src/my_open/my_open/mission.py	2026-11-01 19:28:04
+@@ -15,7 +15,8 @@
+ FINISH_SPEED = 0.15
+ FINISH_LEAD = 0.08             # m: brake when the wall ahead is this close to the distance seen at Start
+ STOP_WAIT = 0.9                # s at rest before DONE
+-CALIBRATE_SECONDS = 0.3
++CALIBRATE_SETTLE = 0.5         # s after Start before measuring: pressing the button shakes the car
++CALIBRATE_SECONDS = 1.5        # s of gyro samples for the bias (on the car 0.3 s gave half the real bias)
+ DIRECTION_TIMEOUT = 15.0       # s without a direction from the camera: stop instead of guessing
+ TURN_TOLERANCE = 0.12          # rad: a corner is done within this of the goal heading (0.4 on the last one)
+ LAST_TOLERANCE = 0.4
+@@ -88,9 +89,10 @@
+         if not self.started:
+             return 0.0, 0.0
+         self._time += dt
+-        if not self._calibrated and self._time < CALIBRATE_SECONDS:
+-            self._samples.append(gyro_z)
+-            self._fronts.append(scene.front_axis)
++        if not self._calibrated and self._time < CALIBRATE_SETTLE + CALIBRATE_SECONDS:
++            if self._time >= CALIBRATE_SETTLE:
++                self._samples.append(gyro_z)
++                self._fronts.append(scene.front_axis)
+         elif not self._calibrated:
+             self.heading.calibrate(self._samples)
+             finite = [f for f in self._fronts if math.isfinite(f)]

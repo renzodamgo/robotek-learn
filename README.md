@@ -102,6 +102,12 @@ source install/setup.bash
 ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strategy:=my_open
 ```
 
+Para probar más rápido, sin pulsar el botón: `ros2 launch robotek_course open_challenge.launch.py button:=false` arranca
+solo 12 s después (`start_delay:=...`); la primera pulsación del botón ya es la parada. En otra terminal,
+`python3 tools/open_monitor.py` muestra dos veces por segundo el estado, lo que ve la cámara (y las líneas que cruza),
+el LiDAR, el giroscopio y la dirección y velocidad que manda la estrategia. `get-reference.sh` aplica los arreglos del
+coche de `tools/patches/` (con `--no-patch`, la referencia exacta del curso).
+
 **La primera vez, con el coche sobre soportes (ruedas en el aire).** Ni el script ni el launch mueven el motor por su
 cuenta: tu estrategia espera el Start (el botón de la placa) y el motor tiene límites de velocidad, aceleración y un
 watchdog. El detalle (nodos, calibración, nombres de los dispositivos) está en

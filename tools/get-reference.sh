@@ -4,6 +4,7 @@
 #   bash tools/get-reference.sh             # la extrae de la etiqueta step-9 y compila solo my_open
 #   bash tools/get-reference.sh --force     # si ya tienes src/my_open: copia de seguridad src/my_open.bak-FECHA y lo reemplaza
 #   bash tools/get-reference.sh --no-build  # solo la extrae (lo usa tools/setup-pi.sh, que compila todo después)
+#   bash tools/get-reference.sh --no-patch  # la referencia exacta del curso, sin los arreglos del coche (tools/patches)
 #
 # En la rama main tu paquete src/my_open no existe (es el que escribes tú en la guía). Si ya existe, este script
 # NO lo toca (avisa y sale) salvo con --force. Se puede repetir sin riesgo.
@@ -12,10 +13,12 @@ set -euo pipefail
 TAG=step-9
 FORCE=0
 BUILD=1
+PATCH=1
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=1 ;;
     --no-build) BUILD=0 ;;
+    --no-patch) PATCH=0 ;;
     -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     *) echo "Opción desconocida: $arg (usa --help)" >&2; exit 2 ;;
   esac
@@ -51,6 +54,18 @@ fi
 echo ">>> Extrayendo src/my_open de la etiqueta $TAG"
 git archive "$TAG" src/my_open | tar -x
 echo ">>> Listo: src/my_open ($(git rev-parse --short "$TAG^{commit}"))"
+
+# Real-car fixes on top of the course reference (tools/patches/*.patch, applied from the repository root).
+if [ "$PATCH" = 1 ]; then
+  for p in tools/patches/*.patch; do
+    [ -e "$p" ] || continue
+    if patch -p1 --forward --silent < "$p"; then
+      echo ">>> Parche del coche aplicado: $p"
+    else
+      echo "!!! No pude aplicar $p (¿ya estaba aplicado?)" >&2
+    fi
+  done
+fi
 
 if [ "$BUILD" = 0 ]; then
   exit 0

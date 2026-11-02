@@ -37,3 +37,24 @@ def test_colour_mask_wraps_through_red_and_caps_the_value():
     assert orange[0].tolist() == [255, 255, 0, 0, 0]
     blue = vision._mask(hsv, 95, 135, 15, 35, 125)
     assert blue[0].tolist() == [0, 0, 255, 0, 255]       # the bright mat (V 200) is not the dark blue line
+
+
+def test_line_counter_counts_a_line_once_after_it_leaves_the_band():
+    import cv2
+    blank = np.full((240, 320, 3), 200, np.uint8)
+    with_line = blank.copy()
+    cv2.line(with_line, (20, 190), (300, 190), (200, 120, 60), 4)     # blue in BGR, inside the bottom band
+    counter = vision.LineCounter()
+    blue_hsv = vision.BLUE_HSV
+    vision.BLUE_HSV = (95, 135, 60, 60)
+    try:
+        for frame in [blank] * 3 + [with_line] * 4 + [blank] * 2:
+            counter.update(frame)
+        assert counter.counts['blue'] == 0                         # not yet: still within the gap
+        counter.update(blank)
+        assert counter.counts['blue'] == 1
+        for frame in [blank] * 5:
+            counter.update(frame)
+        assert counter.counts['blue'] == 1                         # counted once
+    finally:
+        vision.BLUE_HSV = blue_hsv
