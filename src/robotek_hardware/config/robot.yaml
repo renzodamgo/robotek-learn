@@ -44,8 +44,14 @@ base_adapter:
     motor_backend: rrc
     rrc_motor_port: 3                # 1 nov 2026: M4 stopped driving after a frontal crash (the motor stalled and got hot; it runs fine on M3)
     rrc_motor_sign: -1.0             # measured 1 nov 2026 on the floor with the LiDAR: +rps on M4 drives the car BACKWARD (the gears invert)
-    motor_rps_per_mps: 4.8           # 1 nov 2026, LiDAR toward a wall: -1 rps = 0.20-0.21 m/s (repeatable); 2 rps gave 1.07 m/s (not linear)
-    motor_max_rps: 1.0               # keep the board's speed control in its repeatable range (~0.2 m/s) until it is understood
+    # Motor: MentorPi A1 310 gear motor (1:90, Hall encoder), 110 rpm no load / 85 rpm rated at the shaft; 1:2 gear up
+    # to the wheels (r 30.5 mm, 0.192 m per turn) -> top speed 0.70 m/s no load, 0.54 m/s rated. The board's "rps" is
+    # not real turns of this motor (its speed loop uses another motor's encoder model): 1 board rps = 0.209 m/s = ~0.55
+    # real shaft turns/s, and it is not linear. LiDAR, 1 nov 2026: 1 rps 0.209 m/s (repeatable); ~1.9 rps 0.65-0.69 m/s
+    # peak forward (0.45 mean, battery ~7 V), 0.40-0.44 m/s backward = the motor's limit. Above ~2 rps the motor cannot
+    # turn faster: the board only pushes more current (a frontal crash at full push stalled and overheated it).
+    motor_rps_per_mps: 4.8           # 1 rps = 0.209 m/s; valid only near 1 rps
+    motor_max_rps: 1.6               # ~0.5 m/s, inside the rated zone (85 rpm); never above 2 (motor limit)
     # Wall guard: forward speed scaled down from wall_slow_m to 0 at wall_stop_m (nearest LiDAR return within +-wall_half_deg
     # of straight ahead; the LiDAR is ~2 cm behind the front of the car), smoothly through decel_limit. 0 = off.
     wall_stop_m: 0.10
