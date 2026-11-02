@@ -92,6 +92,11 @@ def main():
     root.bind('<space>', stop)
     root.protocol('WM_DELETE_WINDOW', close)
     root.after(50, publish)
+    # Started from another program the window can open behind the others: bring it to the front once.
+    root.lift()
+    root.attributes('-topmost', True)
+    root.after(800, lambda: root.attributes('-topmost', False))
+    root.focus_force()
     try:
         root.mainloop()
     except KeyboardInterrupt:
