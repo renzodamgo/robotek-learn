@@ -8,9 +8,10 @@ For each pulse the car drives forward at a fixed motor speed for a few seconds a
 w. The board's speed control keeps the rear wheels at the same speed with any steering, so the speed v measured
 once on a straight run toward a wall (LiDAR) holds for every pulse, and the bicycle model gives the wheel angle:
 delta = atan(wheelbase * w / v) (+ = left). The pulse with delta = 0 is the real centre; the extreme pulses give the
-largest angle on each side. Needs ~1.5 m free in front (speed run) and ~1 m around the car (each arc).
+largest angle on each side. After each run the car backs up along the same arc (same servo, same time), so it
+ends near where it started. Needs ~1.5 m free in front (speed run) and ~1 m around the car (each arc).
 
-Safety: the motor stops if something is closer than STOP_M in front, at the end of each run and on Ctrl+C; the
+Safety: the motor stops if something is closer than STOP_M in front (behind when backing up), at the end of each run and on Ctrl+C; the
 board's motor watchdog stops it too if this script dies.
 """
 import math
@@ -38,6 +39,7 @@ class SteerCalibration:
         self.motor = node.create_publisher(MotorsState, '/rrc/set_motor', 10)
         self.gyro = None
         self.front = math.inf
+        self.back = math.inf
         node.create_subscription(Imu, '/robotek/imu', self.on_imu, qos_profile_sensor_data)
         node.create_subscription(LaserScan, '/robotek/scan', self.on_scan, qos_profile_sensor_data)
 
@@ -45,9 +47,13 @@ class SteerCalibration:
         self.gyro = msg.angular_velocity.z
 
     def on_scan(self, msg):
-        near = sorted(r for i, r in enumerate(msg.ranges)
-                      if abs(math.degrees(msg.angle_min + i*msg.angle_increment)) <= 5 and msg.range_min < r < msg.range_max)
-        self.front = near[len(near)//2] if near else math.inf
+        def sector(centre):
+            near = sorted(r for i, r in enumerate(msg.ranges)
+                          if abs((math.degrees(msg.angle_min + i*msg.angle_increment) - centre + 180) % 360 - 180) <= 5
+                          and msg.range_min < r < msg.range_max)
+            return near[len(near)//2] if near else math.inf
+        self.front = sector(0.)
+        self.back = sector(180.)
 
     def spin(self, seconds, each=None):
         end = time.monotonic() + seconds
@@ -73,18 +79,21 @@ class SteerCalibration:
         self.spin(1.5, lambda: self.gyro is not None and samples.append(self.gyro))
         return sum(samples)/len(samples)
 
-    def run(self, us, seconds, record):
-        """Drive forward at RPS with the servo at us; record(t, gyro, front) after SETTLE_S. False if blocked."""
+    def run(self, us, seconds, record=None, backward=False):
+        """Drive at RPS (forward, or backward) with the servo at us; record(t, gyro, front) after SETTLE_S.
+        Returns how long it drove and whether it was blocked."""
         self.set_servo(us)
         self.spin(0.4)
         start = time.monotonic()
         blocked = []
 
         def step():
-            if self.front < STOP_M:
+            if (self.back if backward else self.front) < STOP_M:
                 blocked.append(True)
                 return
-            self.drive(RPS)
+            self.drive(-RPS if backward else RPS)
+            if record is None:
+                return
             t = time.monotonic() - start
             if t >= SETTLE_S and self.gyro is not None:
                 record(t, self.gyro, self.front)
@@ -93,8 +102,16 @@ class SteerCalibration:
         while time.monotonic() < end and not blocked:
             rclpy.spin_once(self.node, timeout_sec=0.02)
             step()
+        driven = time.monotonic() - start
         self.stop()
-        return not blocked
+        return driven, not blocked
+
+    def back_up(self, us, seconds):
+        """Back up along the arc just driven (same servo, same time)."""
+        self.spin(0.5)
+        driven, ok = self.run(us, seconds, backward=True)
+        if not ok:
+            print(f'  backing up stopped early (something behind), {driven:.1f} of {seconds:.1f} s')
 
 
 def slope(points):
@@ -122,13 +139,14 @@ def main():
             if cal.front < 1.2:
                 sys.exit(f'Speed run needs >= 1.2 m free in front (now {cal.front:.2f} m), or pass --speed=<m/s>.')
             pts = []
-            cal.run(centre, 2.5, lambda t, g, f: math.isfinite(f) and pts.append((t, f)))
+            driven, _ = cal.run(centre, 2.5, lambda t, g, f: math.isfinite(f) and pts.append((t, f)))
             speed = -slope(pts)
             print(f'speed at {RPS} rps: {speed:.3f} m/s (LiDAR, servo {centre:.0f} us)')
-            cal.spin(1.0)
+            cal.back_up(centre, driven)
         for us in pulses:
             rates = []
-            ok = cal.run(us, RUN_S, lambda t, g, f: rates.append(g - bias))
+            driven, ok = cal.run(us, RUN_S, lambda t, g, f: rates.append(g - bias))
+            cal.back_up(us, driven)
             if not rates:
                 print(f'{us:6.0f} us: no data{" (blocked in front)" if not ok else ""}')
                 continue
@@ -137,7 +155,6 @@ def main():
             radius = speed/w if abs(w) > 1e-3 else math.inf
             print(f'{us:6.0f} us: wheel {delta:+6.2f} deg ({"left" if delta > 0 else "right"}), '
                   f'yaw {math.degrees(w):+6.1f} deg/s, radius {radius:+.2f} m{"" if ok else " (stopped early)"}')
-            cal.spin(0.8)
         cal.set_servo(centre)
     finally:
         cal.stop()
