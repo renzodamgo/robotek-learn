@@ -29,7 +29,7 @@ from geometry_msgs.msg import Twist, Vector3
 from sensor_msgs.msg import Imu, LaserScan
 
 WHEELBASE = 0.1174   # m (robot.yaml)
-MOTOR_PORT = 4        # robot.yaml rrc_motor_port
+MOTOR_PORT = 1        # robot.yaml rrc_motor_port
 MOTOR_SIGN = -1.0    # +rps drives the car backward (robot.yaml rrc_motor_sign)
 RPS = 1.0            # the board's repeatable speed range
 RUN_S = 3.0          # s per pulse; w is averaged after SETTLE_S
