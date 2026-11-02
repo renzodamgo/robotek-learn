@@ -127,7 +127,9 @@ def _description(context):
 def generate_launch_description():
     hardware_config = os.path.join(get_package_share_directory('robotek_hardware'), 'config', 'robot.yaml')
     with open(hardware_config) as stream:
-        default_max_pct = str(yaml.safe_load(stream)['base_adapter']['ros__parameters']['motor_max_pct'])
+        base = yaml.safe_load(stream)['base_adapter']['ros__parameters']
+        default_max_pct = str(base['motor_max_pct'])
+        default_max_rps = str(base.get('motor_max_rps', 0.0))
     return LaunchDescription([
         DeclareLaunchArgument('strategy', default_value='my_open', description='the package with your node'),
         DeclareLaunchArgument('executable', default_value='drive', description='the executable of that package'),
@@ -163,6 +165,8 @@ def generate_launch_description():
                               description='orange line (looks red: hue wraps through 0), same format'),
         DeclareLaunchArgument('camera_wall_mask', default_value='true',
                               description='line detector only looks inside the black walls'),
+        DeclareLaunchArgument('motor_max_rps', default_value=default_max_rps,
+                              description='encoder motor cap in rps (robot.yaml); the board is not linear above 1'),
         DeclareLaunchArgument('motor_max_pct', default_value=default_max_pct,
                               description='motor ceiling in % (robot.yaml). First run on the car: 30, on blocks'),
         DeclareLaunchArgument('battery_guard', default_value='true',
@@ -184,6 +188,8 @@ def generate_launch_description():
         # Your /cmd_vel_raw is the base_adapter's input (in the simulator sim_actuator_model reads the same topic).
         Node(package='robotek_hardware', executable='base_adapter', name='base_adapter', output='screen',
              parameters=[hardware_config, {'motor_max_pct': ParameterValue(LaunchConfiguration('motor_max_pct'),
+                                                                           value_type=float),
+                                           'motor_max_rps': ParameterValue(LaunchConfiguration('motor_max_rps'),
                                                                            value_type=float)}],
              remappings=[('cmd_vel', '/cmd_vel_raw')]),
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
