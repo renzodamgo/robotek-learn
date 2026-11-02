@@ -113,7 +113,7 @@ En el coche, todo menos la estrategia:
 
 ```bash
 ros2 launch robotek_course car.launch.py teleop:=true                  # hasta ~0,2 m/s
-ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=1.3   # más rápido (~0,4 m/s; no pasar de 1,8)
+ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=1.3   # más rápido (tope nominal 1,3/4,8 ≈ 0,27 m/s; no pasar de 1,8)
 ```
 
 En tu ordenador, en la misma Wi-Fi que el coche, una ventana como un juego de carreras: mantén y combina
