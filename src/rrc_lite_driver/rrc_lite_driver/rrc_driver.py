@@ -6,6 +6,7 @@ import signal
 import threading
 import yaml  # 已导入 PyYAML
 from ament_index_python.packages import get_package_share_directory
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from sensor_msgs.msg import Imu, Joy
@@ -452,13 +453,18 @@ def main():
     node = RosRobotController("rrc_driver")
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
-        node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
-        node.destroy_node()
-        rclpy.shutdown()
-        print("shutdown")
+    except (KeyboardInterrupt, ExternalShutdownException):   # Ctrl+C in a launch arrives as ExternalShutdownException
+        pass
     finally:
-        print("shutdown finish")
+        # The board holds the last motor speed: stop the motors on every exit, before the node goes away (1 nov 2026:
+        # after Ctrl+C on the launch the car kept driving at the last speed).
+        node.running = False
+        for _ in range(3):
+            node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
+            time.sleep(0.02)
+        node.destroy_node()
+        rclpy.try_shutdown()
+        print("shutdown finish: motors at 0")
 
 
 if __name__ == "__main__":
