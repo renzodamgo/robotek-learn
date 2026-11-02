@@ -5,7 +5,10 @@
 
 hold:=true (to place the real car, with car.launch.py teleop:=true): the car moves only while w (forward) or s (back)
 is held, at hold_speed m/s (0.2: lower did not move the car on the encoder motor), and stops hold_timeout s after the key is released (the terminal repeats a held key);
-a/d steer, x centres the wheels. Leaving (q or Ctrl+C) sends zero speed.
+a/d steer, x centres the wheels. To move and turn at once (a terminal cannot tell two held keys apart), one key per
+combination, like teleop_twist_keyboard:  u i o  = forward-left, forward, forward-right;  j k l = steer left, stop,
+steer right;  m , .  = back-left, back, back-right (turning keys use hold_steer degrees of wheel angle).
+Leaving (q or Ctrl+C) sends zero speed.
 
 Publishes /cmd_vel_raw like a strategy would: linear.x is the speed and angular.z = speed * tan(steer) / wheelbase.
 """
@@ -33,6 +36,7 @@ class KeyboardDrive(Node):
         self.hold = bool(self.declare_parameter('hold', False).value)
         self.hold_speed = float(self.declare_parameter('hold_speed', 0.2).value)  # 0.15 (0.72 rps) did not move the car
         self.hold_timeout = float(self.declare_parameter('hold_timeout', 0.6).value)
+        self.hold_steer = math.radians(float(self.declare_parameter('hold_steer', 15.0).value))
         self.last_key = 0.0
         self.create_timer(0.05, self.tick)
 
@@ -54,16 +58,21 @@ class KeyboardDrive(Node):
 
     def hold_key(self, ch):
         now = self.get_clock().now().nanoseconds * 1e-9
-        if ch in ('w', 's'):
-            self.speed = self.hold_speed if ch == 'w' else -self.hold_speed
+        moves = {'w': (1, None), 's': (-1, None), 'i': (1, 0.), ',': (-1, 0.),
+                 'u': (1, 1.), 'o': (1, -1.), 'm': (-1, 1.), '.': (-1, -1.)}
+        if ch in moves:
+            direction, turn = moves[ch]
+            self.speed = direction * self.hold_speed
+            if turn is not None:
+                self.steer = max(-REAL_STEER_LIMIT, min(REAL_STEER_LIMIT, turn * self.hold_steer))
             self.last_key = now
-        elif ch == 'a':
+        elif ch in ('a', 'j'):
             self.steer = min(REAL_STEER_LIMIT, self.steer + 0.05)
-        elif ch == 'd':
+        elif ch in ('d', 'l'):
             self.steer = max(-REAL_STEER_LIMIT, self.steer - 0.05)
         elif ch == 'x':
             self.steer = 0.0
-        elif ch == ' ':
+        elif ch in (' ', 'k'):
             self.speed = 0.0
         print(f'\rspeed {self.speed:+.2f} m/s   steer {math.degrees(self.steer):+5.1f} deg   ', end='', flush=True)
 
@@ -83,7 +92,11 @@ def main():
     settings = termios.tcgetattr(sys.stdin)
     rclpy.init()
     node = KeyboardDrive()
-    print('hold: keep w (forward) or s (back) pressed to move; a/d steer, x centre, q quit' if node.hold else HELP)
+    print('hold a key to move, release to stop:\n'
+          '   u i o    forward-left  forward  forward-right\n'
+          '   j k l    steer left    stop     steer right\n'
+          '   m , .    back-left     back     back-right\n'
+          '   w/s forward/back straight-on, a/d steer, x centre, q quit' if node.hold else HELP)
     try:
         tty.setcbreak(sys.stdin.fileno())
         while rclpy.ok():
