@@ -33,7 +33,7 @@ import yaml
 from ament_index_python.packages import PackageNotFoundError, get_package_prefix, get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -53,6 +53,8 @@ def _arg(context, name):
 
 def _check_strategy(context):
     """Before starting anything: is the strategy package built? If not, say how to get one and exit with code 1."""
+    if _arg(context, 'teleop').lower() == 'true':
+        return []
     package = _arg(context, 'strategy')
     try:
         get_package_prefix(package)
@@ -145,6 +147,8 @@ def generate_launch_description():
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
+        DeclareLaunchArgument('teleop', default_value='false',
+                              description='true: no strategy, drive with keyboard_drive (hold:=true) from another terminal'),
         DeclareLaunchArgument('debug', default_value='false',
                               description='true: report states, direction, corners, laps and lines in this terminal'),
         DeclareLaunchArgument('button', default_value='true',
@@ -210,6 +214,7 @@ def generate_launch_description():
         # Your strategy: real clock, waits for /start (the button of the board).
         Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
              output='screen', parameters=[{'use_sim_time': False}],
+             condition=UnlessCondition(LaunchConfiguration('teleop')),
              # robotek_course.vision on the car: ignore the bottom of the image (the LiDAR) and look only inside the walls.
              additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
                              'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
