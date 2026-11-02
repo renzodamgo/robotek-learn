@@ -122,11 +122,30 @@ class BaseAdapter(Node):
         self.send_servo(servo_us(servo, self.servo))
 
     def on_scan(self, msg):
-        self.front = front_distance(msg.ranges, msg.angle_min, msg.angle_increment, float(self.p['wall_half_deg']))
+        front = front_distance(msg.ranges, msg.angle_min, msg.angle_increment, float(self.p['wall_half_deg']))
+        # Very close the LiDAR returns nothing (scan_adapter drops ranges under min_valid_range, ~0.12 m): an
+        # obstacle that was near and vanishes is still there, so keep the last near reading until a finite one.
+        if math.isfinite(front) or self.front >= float(self.p['wall_slow_m']):
+            self.front = front
         self.front_time = self.get_clock().now()
 
+    def top_speed(self):
+        """Fastest the motor can really go (m/s) with the configured cap, inf if uncapped."""
+        p = self.p
+        if self.backend == 'rrc':
+            if float(p['motor_max_rps']) > 0. and float(p['motor_rps_per_mps']) > 0.:
+                return float(p['motor_max_rps'])/float(p['motor_rps_per_mps'])
+            return math.inf
+        if float(p['motor_pct_per_mps']) > 0.:
+            return max(0., (float(p['motor_max_pct'])-float(p['motor_min_pct']))/float(p['motor_pct_per_mps']))
+        return math.inf
+
     def guarded(self, target):
-        """target limited by the wall guard (forward only, and only with a recent scan)."""
+        """target capped at the motor's real top speed, then limited by the wall guard (forward only, and only
+        with a recent scan). Capping first matters: the strategy asks 1.28 m/s, the car does ~0.2, and scaling
+        1.28 down would not slow the car until the very last centimetres (1 nov 2026, it hit a wall)."""
+        top = self.top_speed()
+        target = max(-top, min(top, target))
         if target <= 0. or self.front_time is None or \
                 (self.get_clock().now()-self.front_time).nanoseconds*1e-9 > .5:
             return target
