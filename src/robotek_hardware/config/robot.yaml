@@ -51,7 +51,7 @@ base_adapter:
     brake_rps: 1.0
     brake_hz: 10.0
     brake_s: 1.5
-    brake_min_rps: 1.0
+    brake_min_rps: 0.3               # the Open's finish crawls at ~0.7-1.9 rps: brake after that too
     # Motor: MentorPi A1 310 gear motor (1:90, Hall encoder), 110 rpm no load / 85 rpm rated at the shaft; 1:2 gear up
     # to the wheels (r 30.5 mm, 0.192 m per turn) -> top speed 0.70 m/s no load, 0.54 m/s rated. The board's "rps" is
     # not real turns of this motor (its speed loop uses another motor's encoder model): 1 board rps = 0.209 m/s = ~0.55
