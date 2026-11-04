@@ -50,6 +50,29 @@ def _share(package):
 def _arg(context, name):
     return LaunchConfiguration(name).perform(context)
 
+def _strategy_node(context):
+    """Your node; strategy_params:=<file.yaml> adds its ROS parameters (e.g. inner_gap: 0.35 for the Open v5)."""
+    parameters = [{'use_sim_time': False}]
+    extra = _arg(context, 'strategy_params')
+    if extra:
+        path = os.path.expanduser(extra)
+        if not os.path.isfile(path):
+            raise RuntimeError(f'strategy_params: no such file {path}')
+        parameters.append(path)
+    return [
+        Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
+             output='screen', parameters=parameters,
+             condition=UnlessCondition(LaunchConfiguration('teleop')),
+             # robotek_course.vision on the car: ignore the bottom of the image (the LiDAR) and look only inside the walls.
+             additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
+                             'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
+                             'ROBOTEK_CAMERA_ORANGE': LaunchConfiguration('camera_orange_hsv'),
+                             'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
+                                 ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
+             remappings=[('/scan', '/robotek/scan'), ('scan', '/robotek/scan'),
+                         ('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
+                         ('/camera/image', LaunchConfiguration('camera_topic'))])]
+
 
 def _check_strategy(context):
     """Before starting anything: is the strategy package built? If not, say how to get one and exit with code 1."""
@@ -151,6 +174,8 @@ def generate_launch_description():
         DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
         DeclareLaunchArgument('teleop', default_value='false',
                               description='true: no strategy, drive with keyboard_drive (hold:=true) from another terminal'),
+        DeclareLaunchArgument('strategy_params', default_value='',
+                              description='optional YAML file with ROS parameters for your node (strategy: ros__parameters: ...)'),
         DeclareLaunchArgument('debug', default_value='false',
                               description='true: report states, direction, corners, laps and lines in this terminal'),
         DeclareLaunchArgument('button', default_value='true',
@@ -218,16 +243,5 @@ def generate_launch_description():
              remappings=[('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
                          ('/camera/image', LaunchConfiguration('camera_topic'))]),
         # Your strategy: real clock, waits for /start (the button of the board).
-        Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
-             output='screen', parameters=[{'use_sim_time': False}],
-             condition=UnlessCondition(LaunchConfiguration('teleop')),
-             # robotek_course.vision on the car: ignore the bottom of the image (the LiDAR) and look only inside the walls.
-             additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
-                             'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
-                             'ROBOTEK_CAMERA_ORANGE': LaunchConfiguration('camera_orange_hsv'),
-                             'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
-                                 ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
-             remappings=[('/scan', '/robotek/scan'), ('scan', '/robotek/scan'),
-                         ('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
-                         ('/camera/image', LaunchConfiguration('camera_topic'))]),
+        OpaqueFunction(function=_strategy_node),
     ])
