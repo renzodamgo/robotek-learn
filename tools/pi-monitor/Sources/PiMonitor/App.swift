@@ -260,13 +260,16 @@ struct PanelView: View {
                 Text(title).font(.caption2).foregroundStyle(.secondary)
                 Text(points.last.map { String(format: "%.1f", $0.1) } ?? "—").font(.caption.monospacedDigit())
             }.frame(width: 90, alignment: .leading)
+            let values = points.map(\.1)
             Chart(points, id: \.0) { p in
                 LineMark(x: .value("t", p.0), y: .value(title, p.1)).foregroundStyle(color)
             }
             .chartXAxis(.hidden)
             .chartYScale(domain: .automatic(includesZero: false))
-            .chartYAxis { AxisMarks(position: .trailing, values: .automatic(desiredCount: 2)) }
-            .frame(height: 34)
+            .chartYAxis(.hidden)
+            .frame(height: 30)
+            Text(values.isEmpty ? "" : String(format: "%.1f–%.1f", values.min()!, values.max()!))
+                .font(.caption2.monospacedDigit()).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
         }
     }
 
