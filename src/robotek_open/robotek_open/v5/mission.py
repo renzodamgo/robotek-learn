@@ -1,0 +1,223 @@
+"""Open v5 mission: SETUP -> RUN -> STOP, one heading law for the straights and the arcs.
+
+Inputs every control tick: dt, the latest Scene (a new object per LiDAR stamp), the raw gyro z, the
+distance travelled since the last tick, and the camera's direction vote (+1 ccw, -1 cw, 0 none).
+Output: (speed command, steering angle). The yaw is integrated here from the gyro.
+"""
+import math
+from dataclasses import dataclass
+from statistics import median
+
+from robotek_common.vehicle import REAL_STEER_LIMIT, WHEELBASE
+
+LAPS = 3
+CORNERS = 4 * LAPS
+
+# Speed the car really reaches for each commanded speed (real_car_v1.yaml, measured 8 oct 2026).
+REAL_SPEED = ((0.0, 0.0), (0.15, 0.18), (0.30, 0.27), (0.40, 0.30), (0.60, 0.42), (1.28, 0.60))
+
+STEER = REAL_STEER_LIMIT
+KP = 0.8                    # heading error -> steering
+DAMPING = 0.1               # yaw rate error -> steering (straights and arcs alike)
+EXIT_ANGLE = 0.25           # rad: the arc's feed-forward fades out over the last quarter radian
+TURN_TOLERANCE = 0.12       # rad: arc done within this of the goal heading (0.4 on the last corner)
+LAST_TOLERANCE = 0.4
+CONFIRMATIONS = 2           # consecutive scans with the island end inside the look-ahead
+ARM_DISTANCE = 0.25         # m driven after a corner before the next one can start
+ISLAND_OPEN = 1.0           # m: an island wall farther than this beside the car means it has ended
+END_CLEARANCE = 0.08        # m: the look-ahead shrinks in a narrow lane (inner distance minus this)
+LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
+BRAKE_GAIN = 2.0            # 1/s: speed above the last corner's grows this much per metre of gap
+BRAKE_MARGIN = 0.15         # m
+DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
+
+
+@dataclass
+class Params:
+    cruise_speed: float = 1.28
+    last_corner_speed: float = 0.6
+    inner_gap: float = 0.25               # m kept from the island wall
+    turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
+    corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
+    finish_speed: float = 0.15
+    finish_lead: float = 0.08             # m: brake when the front range is this close to the start's
+    finish_stop_wait: float = 0.9         # s at rest before DONE
+    calibrate_seconds: float = 0.3
+    direction: str = 'auto'               # ccw, cw or auto (camera)
+
+
+def wrap(angle):
+    return math.atan2(math.sin(angle), math.cos(angle))
+
+
+def clamp(value, low, high):
+    return max(low, min(high, value))
+
+
+def real_speed(command):
+    (x0, y0), (x1, y1) = next((a, b) for a, b in zip(REAL_SPEED, REAL_SPEED[1:]) if command <= b[0])
+    return y0 + (y1 - y0) * (min(command, x1) - x0) / (x1 - x0)
+
+
+class OpenMission:
+    def __init__(self, params=None):
+        self.p = params or Params()
+        self.state = 'SETUP'
+        self.stop_reason = ''
+        self.started = False
+        self.direction = self.p.direction if self.p.direction in ('ccw', 'cw') else ''
+        self.yaw = self.goal = self.ref = 0.0     # gyro heading, goal heading and the ramped reference
+        self.gyro = 0.0                            # yaw rate without the bias (rad/s)
+        self.completed = 0                         # corners finished
+        self.arc = False
+        self.armed = True
+        self.travelled = 0.0                       # m since the last corner
+        self._bias = 0.0
+        self._calibrated = False
+        self._gyro, self._fronts = [], []
+        self._start_front = math.inf
+        self._time = self._rest = 0.0
+        self._hits = 0
+        self._scene = None
+        self._braking = False
+
+    # ----------------------------------------------------------------- API
+    def request_start(self):
+        self.started = True
+
+    def operator_stop(self):
+        self._stop('operator_stop')
+
+    @property
+    def label(self):
+        """The name the rest of the system reads (telemetry, judge, LEDs, /robotek/state): the v4 names."""
+        if self.state == 'STOP':
+            return {'done': 'DONE', 'direction_fault': 'DIRECTION_FAULT',
+                    'operator_stop': 'OPERATOR_STOP'}[self.stop_reason]
+        if self.state == 'SETUP':
+            return 'DETECT_DIRECTION' if self._calibrated else 'CALIBRATE' if self.started else 'WAIT_START'
+        return 'FINISH' if self.completed >= CORNERS else 'TURN' if self.arc else 'FOLLOW'
+
+    @property
+    def forward_yaw(self):
+        """The track heading in the car's frame: the front wall is measured along it, not along the car."""
+        return wrap(self.goal - self.yaw) if self.state == 'RUN' else 0.0
+
+    def _stop(self, reason):
+        self.state, self.stop_reason = 'STOP', reason
+
+    # ---------------------------------------------------------------- step
+    def step(self, dt, scene, gyro_z, travelled, camera=0):
+        if self.state == 'SETUP':
+            return self._setup(dt, scene, gyro_z, camera)
+        if self.state == 'STOP':
+            return 0.0, 0.0
+        gyro = self.gyro = gyro_z - self._bias
+        self.yaw += gyro * dt
+        self.travelled += max(0.0, travelled)
+        return self._run(dt, scene, gyro)
+
+    def _setup(self, dt, scene, gyro_z, camera):
+        """Quiet while the gyro bias and the start range are measured, then until the camera gives the direction."""
+        if not self.started:
+            return 0.0, 0.0
+        self._time += dt
+        if not self._calibrated and self._time < self.p.calibrate_seconds:
+            self._gyro.append(gyro_z)
+            self._fronts.append(scene.front_axis)
+        elif not self._calibrated:
+            self._calibrate()
+        else:
+            self._choose_direction(camera)
+        return 0.0, 0.0
+
+    def _calibrate(self):
+        self._calibrated, self._time = True, 0.0
+        self._bias = sum(self._gyro) / len(self._gyro) if self._gyro else 0.0
+        finite = [f for f in self._fronts if math.isfinite(f)]
+        self._start_front = median(finite) if finite else math.inf
+
+    def _choose_direction(self, camera):
+        if not self.direction and camera:
+            self.direction = 'ccw' if camera > 0 else 'cw'
+        if self.direction:
+            self.state, self.travelled = 'RUN', 0.0
+        elif self._time >= DIRECTION_TIMEOUT:
+            self._stop('direction_fault')
+
+    def _run(self, dt, scene, gyro):
+        sign = 1.0 if self.direction == 'ccw' else -1.0
+        inner = scene.left if sign > 0 else scene.right
+        island_open = math.isfinite(inner) and inner > ISLAND_OPEN
+        self._observe(scene, inner)
+        if self.completed >= CORNERS:
+            return self._finish(dt, scene, gyro)
+        last = self.completed == CORNERS - 1
+        corner_speed = self.p.last_corner_speed if last else self.p.cruise_speed
+        if self._turn_due(scene, island_open):
+            self.goal = wrap(self.goal + sign * math.pi / 2)
+            self.arc, self.armed = True, False
+        if self.arc:
+            return corner_speed, self._arc_steer(dt, gyro, sign, corner_speed)
+        bias = self._lateral(inner, island_open, sign)
+        steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
+        return self._straight_speed(scene, last, corner_speed), steer
+
+    def _observe(self, scene, inner):
+        """Count the island-end sightings (one per new scan) and re-arm the next corner."""
+        if scene is not self._scene:
+            self._scene = scene
+            limit = min(self.p.corner_lookahead, max(0.0, inner - END_CLEARANCE))
+            self._hits = self._hits + 1 if 0.0 <= scene.island_end <= limit else 0
+        seen_again = math.isfinite(inner) and inner < ISLAND_OPEN and self.travelled >= ARM_DISTANCE
+        self.armed = self.armed or (seen_again and not self.arc)
+
+    def _turn_due(self, scene, island_open):
+        """Front wall near enough, and the island ended (open side, or its end confirmed ahead)."""
+        return (self.armed and not self.arc and self.travelled >= ARM_DISTANCE
+                and scene.front_axis <= self.p.turn_front_distance
+                and (island_open or self._hits >= CONFIRMATIONS))
+
+    def _lateral(self, inner, island_open, sign):
+        """Heading offset that keeps inner_gap from the island wall (none at a corner)."""
+        if not math.isfinite(inner) or island_open:
+            return 0.0
+        return clamp(sign * LATERAL_GAIN * (inner - self.p.inner_gap), -LATERAL_MAX, LATERAL_MAX)
+
+    def _straight_speed(self, scene, last, corner_speed):
+        speed = self.p.cruise_speed
+        if last and math.isfinite(scene.front_axis):      # slow down for the last corner
+            gap = scene.front_axis - self.p.turn_front_distance - BRAKE_MARGIN
+            speed = min(speed, corner_speed + BRAKE_GAIN * max(0.0, gap))
+        return speed
+
+    def _arc_steer(self, dt, gyro, sign, corner_speed):
+        """The same heading law with the reference ramped at the full-lock yaw rate and a fading feed-forward."""
+        rate = real_speed(corner_speed) * math.tan(STEER) / WHEELBASE
+        ramping = self.ref != self.goal
+        if ramping:
+            gap = wrap(self.goal - self.ref)
+            self.ref = self.goal if abs(gap) <= rate * dt else wrap(self.ref + math.copysign(rate * dt, gap))
+        fade = min(1.0, max(0.0, sign * wrap(self.goal - self.yaw)) / EXIT_ANGLE)
+        feed, expected = (sign * STEER * fade, sign * rate * fade) if ramping else (0.0, 0.0)
+        steer = clamp(KP * wrap(self.ref - self.yaw) + feed - DAMPING * (gyro - expected), -STEER, STEER)
+        tolerance = LAST_TOLERANCE if self.completed == CORNERS - 1 else TURN_TOLERANCE
+        if abs(wrap(self.goal - self.yaw)) <= tolerance:
+            self.arc, self.ref, self.travelled = False, self.goal, 0.0
+            self.completed += 1
+        return steer
+
+    def _finish(self, dt, scene, gyro):
+        """Back in the start section: drive slowly until the front range matches the one seen at Start."""
+        p = self.p
+        steer = clamp(KP * wrap(self.goal - self.yaw) - DAMPING * gyro, -STEER, STEER)
+        if not self._braking:
+            if not math.isfinite(scene.front_axis):
+                return 0.0, steer
+            if math.isfinite(self._start_front) and scene.front_axis > self._start_front + p.finish_lead:
+                return p.finish_speed, steer
+            self._braking = True                           # latched: range noise must not restart the motor
+        self._rest += dt
+        if self._rest >= p.finish_stop_wait:
+            self._stop('done')
+        return 0.0, 0.0

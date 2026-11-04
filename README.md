@@ -40,6 +40,7 @@ ros2 pkg create --build-type ament_python my_open --node-name drive \
 | `src/robotek_evaluation` | Solo simulación: juez de reglas, modelo del servo y del motor, contactos, Open lab |
 | `src/robotek_course` | Lanzadores del simulador y de una ronda, el árbitro, `score`, la clase base de la estrategia |
 | `src/robotek_hardware` | Los nodos del coche real (Raspberry Pi) |
+| `src/robotek_open` | El Open v5, la estrategia del equipo (copia de WRO-Strategies con los valores del coche) |
 | `src/ldlidar_stl_ros2` | Driver del LiDAR LD19 (copia del de LDROBOT, MIT) |
 | `src/rrc_lite_driver`, `src/rrc_lite_msgs` | Driver de la placa RRC Lite (basado en Hiwonder MentorPi, con permiso) |
 | `tools/setup-pi.sh` | Deja un Raspberry Pi listo para el coche real (un solo comando) |
@@ -106,6 +107,30 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 
 `ros2 launch robotek_course open_challenge.launch.py button:=false` arranca solo 12 s después de lanzar
 (`start_delay:=...`), sin pulsar el botón; la primera pulsación del botón ya es la parada. Ctrl+C también para el motor.
+
+### Correr el Open v5 (la estrategia del equipo)
+
+El Open v5 está en `src/robotek_open` y corre con el mismo `car.launch.py`, así que usa la calibración actual del coche
+(`src/robotek_hardware/config/robot.yaml`): la dirección medida el 1 nov 2026 (centro real 1403 µs, ±19° iguales a los
+dos lados, proporcional) y el motor en M1. En el Pi:
+
+```bash
+cd ~/robotek-learn && git pull
+colcon build --symlink-install --packages-select robotek_common robotek_open
+source install/setup.bash
+ros2 launch robotek_course car.launch.py strategy:=robotek_open executable:=open_v5
+```
+
+Espera el botón de la placa (con `button:=false` arranca solo a los 12 s). Usa solo el LiDAR, el giroscopio y la cámara,
+que decide el sentido. La telemetría queda en `~/runs/<fecha>-<hora>-open-v5/`. Los parámetros (velocidad, distancias,
+colores de la cámara) son los valores por defecto de la clase `Params` en `v5/mission.py` y de `v5/settings.py`.
+
+Antes de una ronda de verdad, con las ruedas en el aire primero:
+
+* **Velocidad:** el v5 pide 1,28 m/s en las rectas y `base_adapter` lo limita a `motor_max_rps` (1,3 rps). Con el motor
+  nuevo 1,3 rps todavía no mueven el coche en el suelo: falta medir la escala `motor_rps_per_mps` del motor nuevo.
+* El v5 calcula sus curvas con la velocidad real del motor anterior (`REAL_SPEED` en `v5/mission.py`, 1,28 → 0,60 m/s)
+  y con un tope de dirección de 17,6° (`REAL_STEER_LIMIT`), dentro de los ±19° del coche.
 
 ### Conducir el coche con el teclado (para colocarlo en la salida)
 

@@ -1,0 +1,130 @@
+"""Open v5, layer 1: the mission on hand-made scenes (no simulator)."""
+import math
+
+import pytest
+
+from robotek_common.vehicle import REAL_STEER_LIMIT
+from robotek_open.v5.mission import CORNERS, OpenMission, Params, real_speed
+from robotek_open.v5.scene import Scene
+
+DT = 0.02
+BESIDE = Scene(left=0.45, right=0.55, front_axis=1.8)          # island on the left, far wall ahead
+
+
+def run_setup(mission, scene=BESIDE, camera=0, seconds=0.5):
+    mission.request_start()
+    for _ in range(int(seconds / DT)):
+        mission.step(DT, scene, 0.004, 0.0, camera)
+
+
+def ready(direction='ccw', **params):
+    mission = OpenMission(Params(direction=direction, **params))
+    run_setup(mission)
+    assert mission.state == 'RUN'
+    return mission
+
+
+def test_real_speed_follows_the_measured_table():
+    assert real_speed(1.28) == pytest.approx(0.60)
+    assert real_speed(0.60) == pytest.approx(0.42)
+    assert real_speed(0.45) == pytest.approx(0.3 + 0.12 * 0.05 / 0.2)
+
+
+def test_setup_is_quiet_calibrates_the_gyro_and_remembers_the_start_range():
+    mission = OpenMission(Params(direction='ccw'))
+    assert mission.step(DT, BESIDE, 0.0, 0.0) == (0.0, 0.0) and mission.state == 'SETUP'   # waits for Start
+    run_setup(mission)
+    assert mission.state == 'RUN'
+    assert mission._bias == pytest.approx(0.004)
+    assert mission._start_front == pytest.approx(1.8)
+
+
+def test_the_camera_decides_the_direction_and_without_it_the_mission_stops_after_15_s():
+    mission = OpenMission(Params(direction='auto'))
+    run_setup(mission, camera=-1)
+    assert mission.direction == 'cw' and mission.state == 'RUN'
+    lost = OpenMission(Params(direction='auto'))
+    run_setup(lost, seconds=16.0)
+    assert lost.label == 'DIRECTION_FAULT'
+    assert lost.step(DT, BESIDE, 0.0, 0.0) == (0.0, 0.0)
+
+
+def test_it_drives_straight_at_cruise_speed_and_holds_the_gap_to_the_island():
+    mission = ready()
+    speed, steer = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.8), 0.004, 0.01)
+    assert speed == pytest.approx(1.28)
+    assert steer > 0.0                      # 0.45 m from the island, 0.25 wanted: steer towards it (left, +)
+    _, steer = mission.step(DT, Scene(left=0.12, right=0.9, front_axis=1.8), 0.004, 0.01)
+    assert steer < 0.0                      # too close: steer away
+
+
+def test_a_turn_starts_when_the_front_wall_is_near_and_the_island_has_ended():
+    mission = ready()
+    mission.travelled = 1.0
+    near_but_island_continues = Scene(left=0.45, right=0.55, front_axis=1.0, island_end=2.0)
+    mission.step(DT, near_but_island_continues, 0.004, 0.01)
+    assert not mission.arc                                           # island still beside the car
+    ended = Scene(left=2.4, right=0.55, front_axis=1.0)
+    speed, steer = mission.step(DT, ended, 0.004, 0.01)
+    assert mission.arc and mission.goal == pytest.approx(math.pi / 2)
+    assert steer > 0.1 and steer <= REAL_STEER_LIMIT                  # counter-clockwise: left
+
+
+def test_the_island_end_must_be_seen_in_two_different_scans():
+    mission = ready()
+    mission.travelled = 1.0
+    scan = Scene(left=0.45, right=0.55, front_axis=1.1, island_end=0.2)
+    mission.step(DT, scan, 0.004, 0.0)
+    mission.step(DT, scan, 0.004, 0.0)                               # the same scan again: one sighting
+    assert not mission.arc
+    mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.1, island_end=0.2), 0.004, 0.0)
+    assert mission.arc
+
+
+def test_clockwise_turns_the_other_way():
+    mission = ready('cw')
+    mission.travelled = 1.0
+    _, steer = mission.step(DT, Scene(left=0.55, right=2.4, front_axis=1.0), 0.004, 0.01)
+    assert mission.goal == pytest.approx(-math.pi / 2) and steer < -0.1
+
+
+def finish_arc(mission, ended=Scene(left=2.4, right=0.55, front_axis=1.0)):
+    """Start the next corner and complete it by turning the integrated yaw to the goal."""
+    mission.travelled = 1.0
+    mission.step(DT, ended, 0.004, 0.0)
+    mission.yaw = mission.goal
+    mission.step(DT, BESIDE, 0.004, 0.0)
+
+
+def test_an_arc_ends_when_the_heading_reaches_the_goal_and_the_next_one_needs_the_island_again():
+    mission = ready()
+    finish_arc(mission)
+    assert not mission.arc and mission.completed == 1 and not mission.armed
+    mission.travelled = 1.0
+    mission.step(DT, Scene(left=2.4, right=0.55, front_axis=1.0), 0.004, 0.0)
+    assert not mission.arc                                           # not armed: the island was not seen yet
+    mission.step(DT, BESIDE, 0.004, 0.0)                             # island beside again, far enough on
+    assert mission.armed
+
+
+def test_the_last_corner_is_slower_and_the_car_brakes_towards_it():
+    mission = ready()
+    mission.completed = CORNERS - 1
+    far = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=3.0), 0.004, 0.0)[0]
+    near = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.3), 0.004, 0.0)[0]
+    assert far == pytest.approx(1.28) and 0.6 <= near < far
+
+
+def test_after_the_twelfth_corner_it_stops_where_the_front_range_matches_the_start():
+    mission = ready()
+    mission.completed = CORNERS
+    assert mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.8 + 0.5), 0.004, 0.0)[0] == pytest.approx(0.15)
+    for _ in range(int(1.2 / DT)):
+        speed, _ = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.85), 0.004, 0.0)
+    assert speed == 0.0 and mission.label == 'DONE'
+
+
+def test_the_operator_can_stop_it_for_good():
+    mission = ready()
+    mission.operator_stop()
+    assert mission.label == 'OPERATOR_STOP' and mission.step(DT, BESIDE, 0.0, 0.0) == (0.0, 0.0)
