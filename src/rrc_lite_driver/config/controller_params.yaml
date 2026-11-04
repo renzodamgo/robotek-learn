@@ -4,4 +4,7 @@ rrc_driver:
     init_finish: false
     port: ""          # vacio = /dev/rrc_lite (udev) o /dev/ttyACM0
     acker_channel: 1  # canal PWM del servo de dirección: en el coche del equipo, J4 es el canal 1 (medido 1 nov 2026)
-    motor_type: -1    # -1 = no se envia. Con 2 (JGB27) el motor arranco solo y no paraba con velocidad 0 (1 nov 2026): no usar sin entenderlo
+    # Motor 310 del MentorPi A1 en M1: tipo 0 (JGB520). Medido 4 nov 2026 con la placa sola y -6 rps a 20 Hz: con el
+    # tipo que tenia guardado la placa (desconocido) el motor iba a golpes (1-2 s parado con la orden puesta), con 0 gira
+    # continuo. 2 (JGB27) lo hizo arrancar solo el 1 nov. Se envia en cada arranque. -1 = no enviarlo.
+    motor_type: 0
