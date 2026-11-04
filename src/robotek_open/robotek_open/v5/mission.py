@@ -41,6 +41,7 @@ class Params:
     inner_gap: float = 0.25               # m kept from the island wall
     turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
     corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
+    turn_delay_distance: float = 0.0      # m driven after the island has ended before the turn starts (real car)
     finish_speed: float = 0.15
     finish_lead: float = 0.08             # m: brake when the front range is this close to the start's
     finish_stop_wait: float = 0.9         # s at rest before DONE
@@ -80,6 +81,7 @@ class OpenMission:
         self._start_front = math.inf
         self._time = self._rest = 0.0
         self._hits = 0
+        self._ended_at = None                      # travelled when the island was last seen ending
         self._scene = None
         self._braking = False
         self._wrong_side, self._check_scene = 0, None
@@ -159,6 +161,11 @@ class OpenMission:
             return self._finish(dt, scene, gyro)
         last = self.completed == CORNERS - 1
         corner_speed = self.p.last_corner_speed if last else self.p.cruise_speed
+        ended = island_open or self._hits >= CONFIRMATIONS
+        if not ended:
+            self._ended_at = None
+        elif self._ended_at is None:
+            self._ended_at = self.travelled
         if self._turn_due(scene, island_open):
             self.goal = wrap(self.goal + sign * math.pi / 2)
             self.arc, self.armed = True, False
@@ -211,7 +218,13 @@ class OpenMission:
         """The three conditions of a turn, (armed, front wall near, island ended); also shown in RViz."""
         return (self.armed and not self.arc and self.travelled >= ARM_DISTANCE,
                 scene.front_axis <= self.p.turn_front_distance,
-                island_open or self._hits >= CONFIRMATIONS)
+                (island_open or self._hits >= CONFIRMATIONS) and self._past_island_end())
+
+    def _past_island_end(self):
+        """Driven turn_delay_distance since the island ended (always, with the default 0)."""
+        if self.p.turn_delay_distance <= 0.0:
+            return True
+        return self._ended_at is not None and self.travelled - self._ended_at >= self.p.turn_delay_distance
 
     def _lateral(self, inner, island_open, sign):
         """Heading offset that keeps inner_gap from the island wall (none at a corner)."""
@@ -238,7 +251,7 @@ class OpenMission:
         steer = clamp(KP * wrap(self.ref - self.yaw) + feed - DAMPING * (gyro - expected), -STEER, STEER)
         tolerance = LAST_TOLERANCE if self.completed == CORNERS - 1 else TURN_TOLERANCE
         if abs(wrap(self.goal - self.yaw)) <= tolerance:
-            self.arc, self.ref, self.travelled = False, self.goal, 0.0
+            self.arc, self.ref, self.travelled, self._ended_at = False, self.goal, 0.0, None
             self.completed += 1
         return steer
 

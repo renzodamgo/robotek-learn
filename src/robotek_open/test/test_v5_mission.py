@@ -156,3 +156,15 @@ def test_the_direction_check_ignores_a_normal_corner_and_stops_after_the_first_o
     mission.arc = False
     corner_scans(mission, Scene(left=0.45, right=5.0, front_axis=1.8), 5)    # after corner 1: never flips
     assert mission.direction == 'ccw'
+
+
+def test_turn_delay_distance_waits_after_the_island_has_ended():
+    mission = ready('cw', turn_delay_distance=0.25)
+    mission.travelled = 1.0
+    ended = Scene(left=0.55, right=2.4, front_axis=0.9)
+    mission.step(DT, ended, 0.004, 0.10)
+    assert not mission.arc                                   # island just ended: keep going
+    mission.step(DT, Scene(left=0.55, right=2.4, front_axis=0.8), 0.004, 0.10)
+    assert not mission.arc                                   # 0.10 m past the end
+    mission.step(DT, Scene(left=0.55, right=2.4, front_axis=0.7), 0.004, 0.16)
+    assert mission.arc and mission.goal == pytest.approx(-math.pi / 2)   # 0.26 m: turn
