@@ -57,7 +57,9 @@ class LidarOdometry:
     def scan(self, msg, yaw):
         points = scan_points(msg)
         moved = None
-        if self.prev is not None and len(points) >= self.min_matches:
+        # Both scans need points: an empty or nearly empty scan (LiDAR covered or glitching) would leave _align
+        # nothing to match against (argmin of an empty sequence killed open_v5 on the car, 4 nov 2026).
+        if self.prev is not None and min(len(points), len(self.prev)) >= self.min_matches:
             dth = math.atan2(math.sin(yaw-self.prev_yaw), math.cos(yaw-self.prev_yaw))
             moved = self._align(points, dth)
         if moved is None:
