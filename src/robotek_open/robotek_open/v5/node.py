@@ -14,13 +14,14 @@ import os
 import signal
 import time
 
+import cv2
 from geometry_msgs.msg import Twist
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from rclpy.signals import SignalHandlerOptions
 from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import Image, Imu, LaserScan
+from sensor_msgs.msg import CompressedImage, Image, Imu, LaserScan
 from std_msgs.msg import Bool, String
 
 from robotek_common.lidar_odometry import LidarOdometry
@@ -70,6 +71,8 @@ class OpenV5Node(Node):
 
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_raw', 10)   # base_adapter's input (car.launch.py)
         self._vision_pub = self.create_publisher(Image, '/camera/direction_debug', 2)
+        # The same image as JPEG, for RViz over Wi-Fi (the raw one is ~0.9 MB per frame); encoded only while watched.
+        self._vision_jpeg_pub = self.create_publisher(CompressedImage, '/camera/direction_debug/compressed', 2)
         self._state_pub = self.create_publisher(
             String, '/robotek/state', QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(LaserScan, 'scan', self.on_scan, qos_profile_sensor_data)
@@ -96,6 +99,10 @@ class OpenV5Node(Node):
         debug = self._bridge.cv2_to_imgmsg(self.vision.overlay, encoding='bgr8')
         debug.header = msg.header
         self._vision_pub.publish(debug)
+        if self._vision_jpeg_pub.get_subscription_count():
+            ok, jpeg = cv2.imencode('.jpg', self.vision.overlay, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            if ok:
+                self._vision_jpeg_pub.publish(CompressedImage(header=msg.header, format='jpeg', data=jpeg.tobytes()))
         self.recording.record_camera(stamp, self.vision)
 
     def on_scan(self, msg):

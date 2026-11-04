@@ -113,13 +113,20 @@ class OpenVision:
         self.candidate = candidate
         self.direction = candidate if self.hits >= self.confirmations else 0
         self.overlay = bgr.copy()
+        # Darken what the detector ignores (the top strip and, with the floor mask, everything above the black wall),
+        # so the image shows that only the floor below the wall counts.
+        ignored = np.zeros(bgr.shape[:2], dtype=bool)
+        ignored[:top] = True
+        if floor is not None:
+            ignored |= above
+        self.overlay[ignored] //= 4
         self.overlay[blue != 0] = (255, 0, 0)
         self.overlay[orange != 0] = (0, 128, 255)
         cv2.line(self.overlay, (0, top), (bgr.shape[1] - 1, top), (0, 255, 0), 1)
         if floor is not None:
             points = np.stack([np.arange(bgr.shape[1]), np.minimum(floor, bgr.shape[0] - 1)], axis=1)
-            cv2.polylines(self.overlay, [points.astype(np.int32)], False, (0, 255, 255), 1)
-        cv2.putText(self.overlay,
-                    f'B={self.blue_length:.0f} O={self.orange_length:.0f} '
-                    f'conf={self.confidence:.2f} dir={self.direction:+d}',
-                    (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 2)
+            cv2.polylines(self.overlay, [points.astype(np.int32)], False, (0, 255, 255), 2)
+        text = (f'B={self.blue_length:.0f} O={self.orange_length:.0f} '
+                f'conf={self.confidence:.2f} dir={self.direction:+d}')
+        cv2.putText(self.overlay, text, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 4)
+        cv2.putText(self.overlay, text, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1)
