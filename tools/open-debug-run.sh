@@ -3,7 +3,8 @@
 #
 #   bash tools/open-debug-run.sh [extra launch arguments]      # e.g. motor_max_rps:=6 start_delay:=8
 #
-# Stops the autostart service (tools/car-autostart.sh) so the board and the LiDAR are free, starts a rosbag and
+# Stops the autostart service (tools/car-autostart.sh) and every leftover car node (tools/car-clean.sh) so the
+# board and the LiDAR are free, starts a rosbag and
 # launches car.launch.py with the Open v5, button:=false (the car starts by itself after start_delay, 12 s by
 # default; the board button then STOPS it) and debug:=true. Ctrl-C ends the launch and closes the bag.
 # Everything goes to ~/runs/<date>-<time>-open-debug/:
@@ -20,14 +21,8 @@ OUT=$HOME/runs/$(date +%Y%m%d-%H%M%S)-open-debug
 mkdir -p "$OUT"
 
 bash "$REPO/tools/car-autostart.sh" stop 2>/dev/null || true
-# Nodes left over from an earlier launch (killed before its children stopped) would run next to the new ones: two
-# strategies and two board drivers (4 nov 2026). Refuse to start until they are gone.
-LEFT=$(ps -eo pid,args | grep -E "[r]obotek_hardware/lib|[r]obotek_course/lib|[r]rc_lite_driver/lib|[r]obotek_open/lib|[l]dlidar_stl_ros2/lib" | awk '{print $1}')
-if [ -n "$LEFT" ]; then
-    echo "Car nodes from an earlier launch are still running (PIDs: $(echo $LEFT)). Stop them first: kill -INT $(echo $LEFT)" >&2
-    rmdir "$OUT" 2>/dev/null
-    exit 1
-fi
+# Every car node of an earlier launch out first (they would run next to the new ones: 4 nov 2026).
+bash "$REPO/tools/car-clean.sh"
 set +u
 source /opt/ros/jazzy/setup.bash
 source "$REPO/install/setup.bash"

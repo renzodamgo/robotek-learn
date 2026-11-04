@@ -147,7 +147,10 @@ Es un servicio de usuario de systemd (`robotek-car.service`, sin sudo). Al encen
 y lanza `car.launch.py`: el driver de la placa (con la batería en `/rrc/battery`), el LiDAR, la cámara y la
 estrategia, que **espera el botón de la placa**. `button:=false` no se acepta aquí: el coche saldría solo a los 12 s de
 cada arranque. Sin argumentos usa el Open v5; `on` otra vez cambia los argumentos (`~/.config/robotek/autostart-args`).
-Antes de lanzar algo a mano, `stop`: dos launches a la vez pelean por la placa y el LiDAR. Tras un `git pull` y
+Antes de lanzar algo a mano, `stop`: dos launches a la vez pelean por la placa y el LiDAR. Cada arranque y cada `stop`
+pasan antes por `tools/car-clean.sh`, que para todos los nodos del coche que hayan quedado de un launch anterior y deja
+los motores a 0 (un launch parado desde un script o por ssh puede dejar sus nodos vivos; el 4 nov 2026 eso puso dos
+estrategias a la vez y frenó el Open hasta chocar). Úsalo también a mano antes de cualquier prueba. Tras un `git pull` y
 `colcon build`, el código nuevo entra en el siguiente arranque (o con `stop` y `start`).
 
 ### Conducir el coche con el teclado (para colocarlo en la salida)

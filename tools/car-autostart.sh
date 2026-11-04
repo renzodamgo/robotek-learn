@@ -3,7 +3,8 @@
 #
 #   bash tools/car-autostart.sh on [launch arguments]   # e.g. on motor_max_rps:=6 (default: the Open v5)
 #   bash tools/car-autostart.sh off                     # stop it and do not start it at boot any more
-#   bash tools/car-autostart.sh start | stop            # now, without changing the boot setting
+#   bash tools/car-autostart.sh start | stop            # now, without changing the boot setting (both clean
+#                                                       # leftover car nodes first: tools/car-clean.sh)
 #   bash tools/car-autostart.sh status | log            # is it running, its output (journalctl)
 #
 # It always waits for the board button: button:=false is refused here, because the car would drive off
@@ -32,6 +33,8 @@ run() {
     set -u
     export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_DOMAIN_ID=1 ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
     read -r -a args < "$ARGS_FILE"
+    # Nothing of an earlier launch may run next to this one (two strategies, two board drivers: 4 nov 2026).
+    bash "$REPO/tools/car-clean.sh"
     echo "robotek-car: ros2 launch robotek_course car.launch.py ${args[*]}"
     exec ros2 launch robotek_course car.launch.py "${args[@]}"
 }
@@ -71,13 +74,17 @@ EOF
         systemctl --user disable --now "$UNIT" 2>/dev/null || true
         echo "Autostart off."
         ;;
-    start | stop | status)
+    start | status)
         systemctl --user "$1" "$UNIT" ;;
+    stop)
+        # The launch can leave children behind: clean them too (tools/car-clean.sh).
+        systemctl --user stop "$UNIT"
+        bash "$REPO/tools/car-clean.sh" ;;
     log)
         journalctl --user -u "$UNIT" -b --no-pager | tail -n "${2:-60}" ;;
     run)
         run ;;
     *)
-        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
         exit 1 ;;
 esac
