@@ -28,7 +28,7 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_DOMAIN_ID=1 ROS_AUTOMATIC_DISCO
 TOPICS=(/cmd_vel_raw /rrc/pwm_servo/set_state /rrc/acker_servo/set_state /rrc/set_motor /robotek/scan /robotek/imu /rrc/imu_raw /rrc/battery
         /robotek/state /start /robotek/stop /robotek/estop /open/steer /open/turn /joint_states /camera/direction_debug/compressed
         /tf_static /rosout)
-ros2 bag record -o "$OUT/bag" "${TOPICS[@]}" > "$OUT/bag.log" 2>&1 &
+ros2 bag record --max-bag-duration 5 -o "$OUT/bag" "${TOPICS[@]}" > "$OUT/bag.log" 2>&1 &
 BAG=$!
 
 finish() {
