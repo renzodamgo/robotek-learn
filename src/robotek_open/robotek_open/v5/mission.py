@@ -147,8 +147,7 @@ class OpenMission:
 
     def _run(self, dt, scene, gyro):
         sign = 1.0 if self.direction == 'ccw' else -1.0
-        inner = scene.left if sign > 0 else scene.right
-        island_open = math.isfinite(inner) and inner > ISLAND_OPEN
+        inner, island_open = self.island_side(scene)
         self._observe(scene, inner)
         if self.completed >= CORNERS:
             return self._finish(dt, scene, gyro)
@@ -163,20 +162,33 @@ class OpenMission:
         steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
         return self._straight_speed(scene, last, corner_speed), steer
 
+    def island_side(self, scene):
+        """Distance to the island wall beside the car, and whether it has ended (open side)."""
+        inner = scene.left if self.direction == 'ccw' else scene.right
+        return inner, math.isfinite(inner) and inner > ISLAND_OPEN
+
+    def lookahead(self, inner):
+        """How far ahead (base_link x) the island end must be seen to count: shorter in a narrow lane."""
+        return min(self.p.corner_lookahead, max(0.0, inner - END_CLEARANCE))
+
     def _observe(self, scene, inner):
         """Count the island-end sightings (one per new scan) and re-arm the next corner."""
         if scene is not self._scene:
             self._scene = scene
-            limit = min(self.p.corner_lookahead, max(0.0, inner - END_CLEARANCE))
+            limit = self.lookahead(inner)
             self._hits = self._hits + 1 if 0.0 <= scene.island_end <= limit else 0
         seen_again = math.isfinite(inner) and inner < ISLAND_OPEN and self.travelled >= ARM_DISTANCE
         self.armed = self.armed or (seen_again and not self.arc)
 
     def _turn_due(self, scene, island_open):
         """Front wall near enough, and the island ended (open side, or its end confirmed ahead)."""
-        return (self.armed and not self.arc and self.travelled >= ARM_DISTANCE
-                and scene.front_axis <= self.p.turn_front_distance
-                and (island_open or self._hits >= CONFIRMATIONS))
+        return all(self.turn_checks(scene, island_open))
+
+    def turn_checks(self, scene, island_open):
+        """The three conditions of a turn, (armed, front wall near, island ended); also shown in RViz."""
+        return (self.armed and not self.arc and self.travelled >= ARM_DISTANCE,
+                scene.front_axis <= self.p.turn_front_distance,
+                island_open or self._hits >= CONFIRMATIONS)
 
     def _lateral(self, inner, island_open, sign):
         """Heading offset that keeps inner_gap from the island wall (none at a corner)."""

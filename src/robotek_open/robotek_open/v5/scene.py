@@ -26,9 +26,7 @@ class Scene:
 
 def scene_from_scan(scan, forward_yaw=0.0, direction='ccw'):
     """One LaserScan (ranges, angle_min, angle_increment, range_min, range_max) -> Scene."""
-    ranges = np.asarray(scan.ranges, dtype=float)
-    angles = scan.angle_min + np.arange(ranges.size) * scan.angle_increment
-    ok = np.isfinite(ranges) & (ranges >= scan.range_min) & (ranges <= scan.range_max)
+    angles, ranges, ok = scan_arrays(scan)
     sign = 1.0 if direction == 'ccw' else -1.0
     return Scene(
         left=_median_range(angles, ranges, ok, math.pi / 2),
@@ -61,23 +59,44 @@ def island_end(angles, ranges, ok, sign):
     towards the front: the end is the last beam on the line before the range jumps. inf when the wall does not end
     inside the view (it continues to the front bearing limit) or there is no wall beside the car.
     """
+    return island_wall(angles, ranges, ok, sign).end
+
+
+@dataclass(frozen=True)
+class IslandWall:
+    """The island wall line in the LiDAR frame, island side positive (y = slope * x + offset), and its end."""
+    slope: float = 0.0
+    offset: float = math.inf       # inf: no island wall beside the car
+    end: float = math.inf          # as Scene.island_end (base_link x)
+
+
+def island_wall(angles, ranges, ok, sign):
+    """The fitted island wall and its end (island_end's work, also drawn in RViz)."""
     bearing = sign * angles                                  # positive towards the island side
     side = ok & (np.abs(bearing - math.pi / 2) <= FIT_HALF)
     side &= ranges <= 1.5 * np.median(ranges[side]) if side.any() else side     # not beams past the wall's end
     if side.sum() < 10:
-        return math.inf
+        return IslandWall()
     with np.errstate(invalid='ignore'):                      # lost beams are inf
         x, y = ranges * np.cos(bearing), ranges * np.sin(bearing)
     slope, offset = np.polyfit(x[side], y[side], 1)
     if abs(slope) > MAX_SLOPE or not LATERAL_RANGE[0] < offset < LATERAL_RANGE[1]:
-        return math.inf                                      # no island wall beside the car
+        return IslandWall()                                  # no island wall beside the car
     order = np.argsort(-bearing)                             # from the side beams towards the front
     with np.errstate(invalid='ignore'):
         on_wall = ok & (np.abs(y - (slope * x + offset)) <= WALL_TOLERANCE)
     last = _last_on_wall(order[(bearing[order] <= math.pi / 2) & (bearing[order] >= END_FROM)], on_wall)
     if last is None or bearing[last] <= END_FROM + 0.05:
-        return math.inf                                      # still on the wall at the limit: no end in view
-    return float(x[last]) + LIDAR_OFFSET_X
+        return IslandWall(float(slope), float(offset))       # still on the wall at the limit: no end in view
+    return IslandWall(float(slope), float(offset), float(x[last]) + LIDAR_OFFSET_X)
+
+
+def scan_arrays(scan):
+    """angles, ranges and the valid-beam mask of a LaserScan (as scene_from_scan reads it)."""
+    ranges = np.asarray(scan.ranges, dtype=float)
+    angles = scan.angle_min + np.arange(ranges.size) * scan.angle_increment
+    ok = np.isfinite(ranges) & (ranges >= scan.range_min) & (ranges <= scan.range_max)
+    return angles, ranges, ok
 
 
 def _last_on_wall(beams, on_wall):
