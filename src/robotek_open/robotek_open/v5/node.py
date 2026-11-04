@@ -36,6 +36,7 @@ from .scene import Scene, island_wall, scan_arrays, scene_from_scan
 from .settings import PARAMETERS
 
 CONTROL_RATE = 50.0
+MAX_CONTROL_DT = 0.2       # s: the longest step a late control tick integrates
 
 
 class OpenV5Node(Node):
@@ -67,6 +68,7 @@ class OpenV5Node(Node):
         self._scan_time = self._imu_time = self._image_time = self._image_stamp = None
         self._clock_received, self.sim_seconds, self.travelled = False, 0.0, 0.0
         self._done_mark, self._done_clock, self._state_sent = None, 'wall', None
+        self._control_time = None
         self.get_logger().info(
             f'Open v5 | direction={self.mission.p.direction} cruise={self.mission.p.cruise_speed} m/s'
             f' | telemetry {telemetry or "off"}')
@@ -163,8 +165,11 @@ class OpenV5Node(Node):
 
     # --------------------------------------------------------------- control
     def control(self):
-        dt = 1.0 / CONTROL_RATE
         now = self.get_clock().now().nanoseconds * 1e-9
+        # The real time since the last tick, not 1/CONTROL_RATE: on the car's Pi the timer ran at 33-39 Hz, and the gyro
+        # integrated with 1/50 s per tick saw a 115 deg corner as 90 deg (4 nov 2026). Capped so a stall is not a leap.
+        last, self._control_time = self._control_time, now
+        dt = 1.0 / CONTROL_RATE if last is None else min(max(now - last, 0.0), MAX_CONTROL_DT)
         camera = 0
         if self._image_time is not None and now - self._image_time <= 0.5:
             camera = self.vision.direction
