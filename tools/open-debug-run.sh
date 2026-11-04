@@ -9,7 +9,8 @@
 # Everything goes to ~/runs/<date>-<time>-open-debug/:
 #   launch.log   the terminal output (debug: states, direction, corners, laps)
 #   bag/         commands (/cmd_vel_raw), servo pulses and motor speed sent to the board, LiDAR, IMU,
-#                battery, mission state, start/stop, steering arrow and the detector image (JPEG)
+#                battery, mission state, start/stop and steering arrow (5 s chunks)
+#   cpu.log      top every second (8 busiest processes)
 #   telemetry    link to the strategy's telemetry.csv (~/runs/<date>-<time>-open-v5/)
 # The autostart is NOT turned back on: bash tools/car-autostart.sh start (or the next boot does it).
 set -uo pipefail
@@ -33,14 +34,20 @@ source "$REPO/install/setup.bash"
 set -u
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_DOMAIN_ID=1 ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 
-TOPICS=(/cmd_vel_raw /rrc/pwm_servo/set_state /rrc/acker_servo/set_state /rrc/set_motor /robotek/scan /robotek/imu /rrc/imu_raw /rrc/battery
-        /robotek/state /start /robotek/stop /robotek/estop /open/steer /open/turn /joint_states /camera/direction_debug/compressed
-        /tf_static /rosout)
+# Not the detector JPEG nor /open/turn: the strategy only builds them while someone subscribes, and in its single thread
+# that work slowed the control loop (33-39 Hz instead of 50, 4 nov 2026). RViz can still show them; DEBUG_BAG_ALL=1 adds them.
+TOPICS=(/cmd_vel_raw /rrc/acker_servo/set_state /rrc/set_motor /robotek/scan /robotek/imu /rrc/imu_raw /rrc/battery
+        /robotek/state /start /robotek/stop /robotek/estop /open/steer /joint_states /tf_static /rosout)
+[ "${DEBUG_BAG_ALL:-0}" = 1 ] && TOPICS+=(/camera/direction_debug/compressed /open/turn)
 ros2 bag record --max-bag-duration 5 -o "$OUT/bag" "${TOPICS[@]}" > "$OUT/bag.log" 2>&1 &
 BAG=$!
+# CPU per process every second (top), to see what slows the strategy.
+top -b -d 1 -o %CPU -w 160 | grep --line-buffered -E "^top -|^ *[0-9]+ " | awk '/^top -/{print; n=0; next} n++<8' > "$OUT/cpu.log" &
+TOP=$!
 
 finish() {
     # A background job of a script may ignore SIGINT: fall back to SIGTERM (rosbag2 closes the bag on both).
+    kill "$TOP" 2>/dev/null
     kill -INT "$BAG" 2>/dev/null
     for _ in $(seq 10); do kill -0 "$BAG" 2>/dev/null || break; sleep 0.5; done
     kill -TERM "$BAG" 2>/dev/null
