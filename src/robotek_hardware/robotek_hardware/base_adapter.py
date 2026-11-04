@@ -23,6 +23,11 @@ full-power start lifts the front wheels and a hard stop makes the wheels skid
 /robotek/stop (Bool true, second press of the board button) does the same and holds the
 motor at 0, ignoring cmd_vel speed, until /robotek/stop false or a restart.
 
+Brake (rrc backend, brake_rps > 0): the RRC Lite did not hold 0 with the 310 motor (it ran on, sped up or rolled
+back, 4 nov 2026). When the speed goes to 0 after moving (target 0, the board button, estop or the watchdog),
+the ramp is skipped and the motor gets +-brake_rps alternating at brake_hz for brake_s (reverse first), then 0
+(mapping.DitherBrake): on the floor that stopped the car ~12 cm after the order, 3 times out of 3.
+
 The strategy's angle is the wheel angle. With wheel_table_* (robot.yaml) the servo gets
 the angle that really produces it on each side (measured by driving circles: at 25 deg
 of servo the wheels reach ~19.7 deg left, ~17.6 deg right), clamped to wheel_limit_deg so
@@ -38,7 +43,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Bool, Float32
 
-from .mapping import (MotorCalibration, ServoCalibration, front_distance, motor_pct, motor_rps, rate_limit,
+from .mapping import (DitherBrake, MotorCalibration, ServoCalibration, front_distance, motor_pct, motor_rps, rate_limit,
                       servo_for_wheel, servo_us, steer_from_twist, wall_speed_factor)
 
 TICK = .02  # s, motor update period
@@ -63,6 +68,7 @@ class BaseAdapter(Node):
             wheel_limit_deg=0., servo_measured=True,
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
             motor_rps_per_mps=0., motor_max_rps=0.,
+            brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1.,
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
         servo_pts = [math.radians(float(x)) for x in p['wheel_table_servo_deg'] if float(x) > 0.]
         n = len(servo_pts)
@@ -111,6 +117,11 @@ class BaseAdapter(Node):
         self.stopped = False              # latched operator stop
         self.steer = 0.
         self.target = self.speed = 0.     # commanded and rate-limited speed (m/s)
+        self.brake = DitherBrake(p['brake_rps'], p['brake_hz'], p['brake_s'], p['brake_min_rps']) \
+            if self.backend == 'rrc' else DitherBrake()
+        if self.brake.enabled:
+            self.get_logger().info(f"Brake: +-{self.brake.amp:.1f} rps at {self.brake.hz:.0f} Hz for "
+                                   f"{self.brake.duration:.1f} s when stopping after moving.")
         self.last = self.get_clock().now()
         self.create_timer(TICK, self.on_tick)
 
@@ -170,6 +181,7 @@ class BaseAdapter(Node):
             rps_per_mps = float(p['motor_rps_per_mps'])
             rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign'])) \
                 if rps_per_mps > 0. else 0.
+            rps = self.brake.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
             self.motor_pub.publish(MotorsState(data=[MotorState(id=int(p['rrc_motor_port']), rps=float(rps))]))
         else:
             self.motor_pub.publish(Float32(data=float(motor_pct(speed, self.motor))))
@@ -186,6 +198,8 @@ class BaseAdapter(Node):
             self.target = 0.               # commands stopped: slow down to 0 (decel_limit)
         if self.stopped:
             self.target = self.speed = 0.
+        if self.brake.enabled and self.target == 0.:
+            self.speed = 0.                # no ramp: the brake takes over from the last real speed
         self.speed = rate_limit(self.speed, self.guarded(self.target), float(self.p['accel_limit']),
                                 float(self.p['decel_limit']), TICK)
         if self.target == 0. and abs(self.speed) < 1e-3:

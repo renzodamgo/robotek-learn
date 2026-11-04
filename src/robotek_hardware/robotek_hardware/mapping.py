@@ -236,3 +236,40 @@ def estimate_axes(rest, push):
         result[name], errors[name] = _snap(vector)
     result['error_deg'] = {k: round(v, 1) for k, v in errors.items()}
     return result
+
+
+class DitherBrake:
+    """Stop for an encoder motor whose board does not hold 0 (RRC Lite with the 310 motor, 4 nov 2026).
+
+    Sent 0, the board's speed loop let that motor run on, accelerate or roll back (any motor type, a single 0,
+    a ramp, a reverse pulse). What stopped it, 3 times out of 3 on the floor: right after the car was moving,
+    alternate +-amp_rps (reverse first) at hz for duration_s, then 0. The car stops ~12 cm after the order.
+    rps(now, requested) returns what to send instead of `requested`. amp_rps 0 disables it.
+    """
+
+    def __init__(self, amp_rps=0., hz=10., duration_s=1.5, min_rps=1.):
+        self.amp, self.hz, self.duration, self.min_rps = float(amp_rps), float(hz), float(duration_s), float(min_rps)
+        self.start = None             # time the brake began
+        self.direction = 0.           # sign of the last motion (rps)
+
+    @property
+    def enabled(self):
+        return self.amp > 0. and self.duration > 0. and self.hz > 0.
+
+    def braking(self, now):
+        return self.start is not None and now - self.start < self.duration
+
+    def rps(self, now, requested):
+        if not self.enabled:
+            return requested
+        if requested != 0.:
+            self.start = None
+            self.direction = math.copysign(1., requested) if abs(requested) >= self.min_rps else 0.
+            return requested
+        if self.start is None and self.direction != 0.:
+            self.start = now          # just told to stop after moving: brake
+        if self.braking(now):
+            half = int((now - self.start) * self.hz * 2.)
+            return -self.direction * self.amp * (1. if half % 2 == 0 else -1.)
+        self.start, self.direction = None, 0.
+        return 0.

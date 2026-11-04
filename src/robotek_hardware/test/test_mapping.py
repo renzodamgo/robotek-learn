@@ -177,3 +177,26 @@ def test_front_distance_only_looks_ahead():
     assert front_distance(ranges, 0., inc, 15.) == pytest.approx(.4)
     ranges[10] = .2                                  # 10 deg left, inside the cone
     assert front_distance(ranges, 0., inc, 15.) == pytest.approx(.2)
+
+
+def test_dither_brake_alternates_after_moving_then_holds_zero():
+    from robotek_hardware.mapping import DitherBrake
+    brake = DitherBrake(amp_rps=1.0, hz=10., duration_s=1.5, min_rps=1.)
+    assert brake.rps(0.0, 4.0) == 4.0                   # driving forward: unchanged
+    seen = [brake.rps(1.0 + k * 0.025, 0.0) for k in range(60)]   # told to stop
+    assert seen[0] == -1.0                               # reverse first
+    assert set(seen) == {-1.0, 1.0}                      # alternates for the whole 1.5 s
+    assert seen[1] == -1.0 and seen[2] == 1.0 and seen[4] == -1.0   # 0.05 s half periods at 10 Hz
+    assert brake.rps(2.6, 0.0) == 0.0 and brake.rps(3.0, 0.0) == 0.0   # then 0
+
+
+def test_dither_brake_does_nothing_when_idle_disabled_or_cancelled():
+    from robotek_hardware.mapping import DitherBrake
+    assert DitherBrake().rps(0.0, 0.0) == 0.0 and DitherBrake().rps(0.0, 3.0) == 3.0   # off by default
+    brake = DitherBrake(amp_rps=1.0)
+    assert brake.rps(0.0, 0.0) == 0.0                    # never moved: plain 0
+    brake.rps(1.0, 0.5)                                  # creeping below min_rps: no brake
+    assert brake.rps(1.1, 0.0) == 0.0
+    brake.rps(2.0, -3.0)                                 # reversing
+    assert brake.rps(2.1, 0.0) == 1.0                    # brake starts forward
+    assert brake.rps(2.2, 2.0) == 2.0                    # a new command cancels the brake
