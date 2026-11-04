@@ -124,7 +124,7 @@ final class Monitor: ObservableObject {
     private func handle(_ s: PiSample) {
         if state != .online {
             let down = lastSeen.map { " tras \(Self.duration(Date().timeIntervalSince($0))) sin datos" } ?? ""
-            if !events.isEmpty || lastSeen != nil { log("online", "En línea en \(host ?? "?")\(down)") }
+            if lastSeen != nil { log("online", "En línea en \(host ?? "?")\(down)") }
         }
         if let prev = previous {
             if prev.bootID != s.bootID {
