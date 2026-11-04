@@ -19,6 +19,14 @@ OUT=$HOME/runs/$(date +%Y%m%d-%H%M%S)-open-debug
 mkdir -p "$OUT"
 
 bash "$REPO/tools/car-autostart.sh" stop 2>/dev/null || true
+# Nodes left over from an earlier launch (killed before its children stopped) would run next to the new ones: two
+# strategies and two board drivers (4 nov 2026). Refuse to start until they are gone.
+LEFT=$(ps -eo pid,args | grep -E "[r]obotek_hardware/lib|[r]rc_lite_driver/lib|[r]obotek_open/lib|[l]dlidar_stl_ros2/lib" | awk '{print $1}')
+if [ -n "$LEFT" ]; then
+    echo "Car nodes from an earlier launch are still running (PIDs: $(echo $LEFT)). Stop them first: kill -INT $(echo $LEFT)" >&2
+    rmdir "$OUT" 2>/dev/null
+    exit 1
+fi
 set +u
 source /opt/ros/jazzy/setup.bash
 source "$REPO/install/setup.bash"
