@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>robotek_obstacle_v3</name>
+  <version>0.1.0</version>
+  <description>
+    Obstacle v3 de WRO-Strategies como estrategia del curso (ObstacleStrategyBase): tres vueltas esquivando las
+    señales y aparcamiento en paralelo, solo con LiDAR, giroscopio y cámara. Solución de referencia, no un paso de la guía.
+  </description>
+  <maintainer email="renzo.damian.go@gmail.com">Renzo Damian</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>python3-numpy</depend>
+  <depend>robotek_common</depend>
+  <depend>robotek_course</depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
