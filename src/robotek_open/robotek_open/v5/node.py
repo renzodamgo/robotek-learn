@@ -18,7 +18,7 @@ import cv2
 from geometry_msgs.msg import Twist
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from rclpy.signals import SignalHandlerOptions
 from rosgraph_msgs.msg import Clock
 from geometry_msgs.msg import Point
@@ -82,7 +82,10 @@ class OpenV5Node(Node):
         self.create_subscription(Bool, 'start', self.on_start, 10)
         self.create_subscription(Bool, '/robotek/stop', self.on_operator_stop, 10)
         self.create_subscription(Clock, '/clock', self.on_clock, 10)
-        self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
+        # Reliable, not best effort: a 640x480 frame is ~0.9 MB, and with the Pi's default socket buffer (208 KB) a
+        # best-effort reader lost every frame once the car was busy (4 nov 2026: no direction, detector frozen).
+        self.create_subscription(Image, '/camera/image', self.on_image,
+                                 QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE))
         self.create_timer(1.0 / CONTROL_RATE, self.control)
         # RViz only: the commanded steering as an arrow, and as the front wheels' angle on /joint_states when nothing
         # else publishes them (on the car; Gazebo publishes its own). Decided once, 3 s after start.
