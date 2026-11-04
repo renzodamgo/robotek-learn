@@ -44,6 +44,7 @@ ros2 pkg create --build-type ament_python my_open --node-name drive \
 | `src/ldlidar_stl_ros2` | Driver del LiDAR LD19 (copia del de LDROBOT, MIT) |
 | `src/rrc_lite_driver`, `src/rrc_lite_msgs` | Driver de la placa RRC Lite (basado en Hiwonder MentorPi, con permiso) |
 | `tools/setup-pi.sh` | Deja un Raspberry Pi listo para el coche real (un solo comando) |
+| `tools/pi-monitor` | App de la barra de menús del Mac: batería, temperatura, CPU, Wi-Fi y ROS del Pi del coche, con historial de caídas |
 | `course/tests` | Pruebas de cada paso (`pytest`, sin ROS ni Gazebo) |
 | `course/verify_step.py` | Comprobación de cada paso en Gazebo |
 
