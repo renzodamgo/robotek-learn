@@ -21,14 +21,16 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from rclpy.signals import SignalHandlerOptions
 from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import CompressedImage, Image, Imu, LaserScan
-from std_msgs.msg import Bool, String
+from geometry_msgs.msg import Point
+from sensor_msgs.msg import CompressedImage, Image, Imu, JointState, LaserScan
+from std_msgs.msg import Bool, ColorRGBA, String
+from visualization_msgs.msg import Marker
 
 from robotek_common.lidar_odometry import LidarOdometry
 from robotek_common.vehicle import DISTANCE_MODEL_ACCEL, WHEELBASE
 from ..open_mission_clock import mission_clock
 from ..open_vision import OpenVision
-from .mission import OpenMission, Params
+from .mission import CORNERS, LAPS, OpenMission, Params
 from .recording import V5Recording
 from .scene import Scene, scene_from_scan
 from .settings import PARAMETERS
@@ -82,6 +84,11 @@ class OpenV5Node(Node):
         self.create_subscription(Clock, '/clock', self.on_clock, 10)
         self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
         self.create_timer(1.0 / CONTROL_RATE, self.control)
+        # RViz only: the commanded steering as an arrow, and as the front wheels' angle on /joint_states when nothing
+        # else publishes them (on the car; Gazebo publishes its own). Decided once, 3 s after start.
+        self._steer_pub = self.create_publisher(Marker, '/open/steer', 2)
+        self._joint_pub = None
+        self._joint_check = self.create_timer(3.0, self._check_joint_states)
 
     # ------------------------------------------------------------- callbacks
     def on_image(self, msg):
@@ -96,11 +103,12 @@ class OpenV5Node(Node):
         self._image_stamp = stamp
         self._image_time = self.get_clock().now().nanoseconds * 1e-9
         self.vision.update(frame, stamp)
-        debug = self._bridge.cv2_to_imgmsg(self.vision.overlay, encoding='bgr8')
+        overlay = self._with_progress(self.vision.overlay)
+        debug = self._bridge.cv2_to_imgmsg(overlay, encoding='bgr8')
         debug.header = msg.header
         self._vision_pub.publish(debug)
         if self._vision_jpeg_pub.get_subscription_count():
-            ok, jpeg = cv2.imencode('.jpg', self.vision.overlay, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            ok, jpeg = cv2.imencode('.jpg', overlay, [cv2.IMWRITE_JPEG_QUALITY, 70])
             if ok:
                 self._vision_jpeg_pub.publish(CompressedImage(header=msg.header, format='jpeg', data=jpeg.tobytes()))
         self.recording.record_camera(stamp, self.vision)
@@ -168,6 +176,7 @@ class OpenV5Node(Node):
         cmd.linear.x = 0.0 if blind else float(speed)
         cmd.angular.z = 0.0 if blind else float(speed * math.tan(steer) / WHEELBASE)
         self.cmd_pub.publish(cmd)
+        self._publish_steer(0.0 if blind else steer)
         label = self.mission.label
         if label != self._state_sent:
             self._state_sent = label
@@ -176,6 +185,43 @@ class OpenV5Node(Node):
             sim_seconds=self.sim_seconds, mission=self.mission, gyro=self.mission.gyro, scene=self.scene,
             vision=self.vision, odometry=self.odometry, command=cmd, travelled=self.travelled)
         self.finish_if_done()
+
+    # ------------------------------------------------------------------ RViz
+    def _with_progress(self, image):
+        """The detector image with the mission's state, lap and corners in small print at the bottom."""
+        done = self.mission.completed
+        text = f'{self.mission.label}  vuelta {min(done // 4 + 1, LAPS)}/{LAPS}  giros {done}/{CORNERS}'
+        image = image.copy()
+        y = image.shape[0] - 10
+        cv2.putText(image, text, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 3)
+        cv2.putText(image, text, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+        return image
+
+    def _check_joint_states(self):
+        self._joint_check.cancel()
+        if self.count_publishers('/joint_states') == 0:
+            self._joint_pub = self.create_publisher(JointState, '/joint_states', 10)
+
+    def _publish_steer(self, steer):
+        """Arrow from the front axle (base_link) along the commanded wheel angle; front wheels turned on /joint_states."""
+        stamp = self.get_clock().now().to_msg()
+        if self._steer_pub.get_subscription_count():
+            arrow = Marker(type=Marker.ARROW, action=Marker.ADD, ns='steer')
+            arrow.header.frame_id, arrow.header.stamp = 'base_link', stamp
+            arrow.pose.orientation.w = 1.0
+            arrow.scale.x, arrow.scale.y, arrow.scale.z = 0.02, 0.045, 0.06
+            arrow.color = ColorRGBA(r=0.1, g=0.8, b=1.0, a=1.0)
+            front = WHEELBASE / 2.0
+            arrow.points = [Point(x=front, y=0.0, z=0.09),
+                            Point(x=front + 0.28 * math.cos(steer), y=0.28 * math.sin(steer), z=0.09)]
+            self._steer_pub.publish(arrow)
+        if self._joint_pub is not None:
+            joints = JointState(name=['front_left_steering_joint', 'front_right_steering_joint',
+                                      'front_left_wheel_joint', 'front_right_wheel_joint',
+                                      'rear_left_wheel_joint', 'rear_right_wheel_joint'],
+                                position=[float(steer)] * 2 + [0.0] * 4)
+            joints.header.stamp = stamp
+            self._joint_pub.publish(joints)
 
     def finish_if_done(self):
         if self.mission.label == 'DONE':
