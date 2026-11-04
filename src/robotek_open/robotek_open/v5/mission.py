@@ -30,7 +30,7 @@ LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
 BRAKE_GAIN = 2.0            # 1/s: speed above the last corner's grows this much per metre of gap
 BRAKE_MARGIN = 0.15         # m
 DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
-WRONG_SIDE_OPEN = 1.5       # m: before the first corner, the side away from the island wider than this (outer walls
+WRONG_SIDE_OPEN = 1.2       # m: before the first corner, the side away from the island wider than this (outer walls
 WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the island stays beside: the direction is wrong
 
 
