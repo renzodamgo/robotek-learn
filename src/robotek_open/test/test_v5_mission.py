@@ -128,3 +128,31 @@ def test_the_operator_can_stop_it_for_good():
     mission = ready()
     mission.operator_stop()
     assert mission.label == 'OPERATOR_STOP' and mission.step(DT, BESIDE, 0.0, 0.0) == (0.0, 0.0)
+
+
+def corner_scans(mission, scene, n):
+    for _ in range(n):
+        mission.step(DT, Scene(**{f.name: getattr(scene, f.name) for f in scene.__dataclass_fields__.values()}),
+                     0.004, 0.01)
+
+
+def test_a_wrong_camera_direction_is_corrected_when_the_other_side_opens_before_the_first_corner():
+    mission = ready('cw')                                    # the camera said cw: the island is expected on the right
+    mission.travelled = 1.0
+    corner_scans(mission, Scene(left=5.5, right=0.34, front_axis=1.0), 2)
+    assert mission.direction == 'cw' and not mission.arc    # two scans are not enough
+    corner_scans(mission, Scene(left=5.5, right=0.34, front_axis=1.0), 1)
+    assert mission.direction == 'ccw' and mission.direction_flipped
+    mission.step(DT, Scene(left=5.5, right=0.34, front_axis=1.0), 0.004, 0.01)
+    assert mission.arc and mission.goal == pytest.approx(math.pi / 2)   # and it turns left
+
+
+def test_the_direction_check_ignores_a_normal_corner_and_stops_after_the_first_one():
+    mission = ready('ccw')
+    mission.travelled = 1.0
+    corner_scans(mission, Scene(left=2.4, right=0.55, front_axis=1.0), 5)    # island (left) ends: a normal corner
+    assert mission.direction == 'ccw' and not mission.direction_flipped and mission.arc
+    mission.completed = 1
+    mission.arc = False
+    corner_scans(mission, Scene(left=0.45, right=5.0, front_axis=1.8), 5)    # after corner 1: never flips
+    assert mission.direction == 'ccw'

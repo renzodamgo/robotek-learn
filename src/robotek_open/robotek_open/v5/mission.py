@@ -30,6 +30,8 @@ LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
 BRAKE_GAIN = 2.0            # 1/s: speed above the last corner's grows this much per metre of gap
 BRAKE_MARGIN = 0.15         # m
 DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
+WRONG_SIDE_OPEN = 1.5       # m: before the first corner, the side away from the island wider than this (outer walls
+WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the island stays beside: the direction is wrong
 
 
 @dataclass
@@ -80,6 +82,8 @@ class OpenMission:
         self._hits = 0
         self._scene = None
         self._braking = False
+        self._wrong_side, self._check_scene = 0, None
+        self.direction_flipped = False             # the LiDAR overruled the camera's direction before corner 1
 
     # ----------------------------------------------------------------- API
     def request_start(self):
@@ -146,6 +150,8 @@ class OpenMission:
             self._stop('direction_fault')
 
     def _run(self, dt, scene, gyro):
+        if self.completed == 0 and not self.arc:
+            self._check_direction(scene)
         sign = 1.0 if self.direction == 'ccw' else -1.0
         inner, island_open = self.island_side(scene)
         self._observe(scene, inner)
@@ -161,6 +167,23 @@ class OpenMission:
         bias = self._lateral(inner, island_open, sign)
         steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
         return self._straight_speed(scene, last, corner_speed), steer
+
+    def _check_direction(self, scene):
+        """Before corner 1: the side that opens is the island's. If it is the other one, the camera got it wrong.
+
+        4 nov 2026, real car: glare hid the blue line, the camera chose cw on a ccw track, and the car drove into the
+        wall waiting for an island end on the right while the corner opened on the left.
+        """
+        if scene is self._check_scene:
+            return
+        self._check_scene = scene
+        inner, _ = self.island_side(scene)
+        outer = scene.right if self.direction == 'ccw' else scene.left
+        wrong = math.isfinite(outer) and outer > WRONG_SIDE_OPEN and math.isfinite(inner) and inner < ISLAND_OPEN
+        self._wrong_side = self._wrong_side + 1 if wrong else 0
+        if self._wrong_side >= WRONG_SIDE_SCANS:
+            self.direction = 'cw' if self.direction == 'ccw' else 'ccw'
+            self.direction_flipped, self._wrong_side, self._hits = True, 0, 0
 
     def island_side(self, scene):
         """Distance to the island wall beside the car, and whether it has ended (open side)."""
