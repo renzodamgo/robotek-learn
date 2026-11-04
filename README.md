@@ -127,8 +127,9 @@ colores de la cámara) son los valores por defecto de la clase `Params` en `v5/m
 
 Antes de una ronda de verdad, con las ruedas en el aire primero:
 
-* **Velocidad:** el v5 pide 1,28 m/s en las rectas y `base_adapter` lo limita a `motor_max_rps` (1,3 rps). Con el motor
-  nuevo 1,3 rps todavía no mueven el coche en el suelo: falta medir la escala `motor_rps_per_mps` del motor nuevo.
+* **Velocidad:** el v5 pide 1,28 m/s en las rectas; `base_adapter` lo convierte con `motor_rps_per_mps` (4,8, medido
+  con el motor anterior) en ~6,1 rps de la placa, por debajo del tope `motor_max_rps` (7 rps). Con el motor nuevo no se
+  sabe aún qué velocidad real dan: hay que medirla con las ruedas en el aire y luego en el suelo.
 * El v5 calcula sus curvas con la velocidad real del motor anterior (`REAL_SPEED` en `v5/mission.py`, 1,28 → 0,60 m/s)
   y con un tope de dirección de 17,6° (`REAL_STEER_LIMIT`), dentro de los ±19° del coche.
 
@@ -138,7 +139,7 @@ En el coche, todo menos la estrategia:
 
 ```bash
 ros2 launch robotek_course car.launch.py teleop:=true                  # hasta ~0,2 m/s
-ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=1.3   # más rápido (tope nominal 1,3/4,8 ≈ 0,27 m/s; no pasar de 1,8)
+ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=3   # otro tope para conducir (el de robot.yaml es 7 rps)
 ```
 
 En tu ordenador, en la misma Wi-Fi que el coche, una ventana como un juego de carreras: mantén y combina
