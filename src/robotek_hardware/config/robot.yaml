@@ -43,7 +43,8 @@ base_adapter:
     # the motor at 0). motor_max_rps 0 = no cap.
     motor_backend: rrc
     rrc_motor_port: 1                # 1 nov 2026: new 310 motor plugged into M1 (the old one burnt out after a frontal crash)
-    rrc_motor_sign: -1.0             # measured 1 nov 2026 on the floor with the LiDAR: +rps on M4 drives the car BACKWARD (the gears invert)
+    rrc_motor_sign: 1.0              # 4 nov 2026, 310 motor on M1 with motor_type 2: -rps drove the car BACKWARD (Open v5, front wall
+                                     # 1.39 -> 1.97 m in 1.2 s). Was -1 (1 nov, old motor on M4). Re-check it if the motor type changes.
     # Motor: MentorPi A1 310 gear motor (1:90, Hall encoder), 110 rpm no load / 85 rpm rated at the shaft; 1:2 gear up
     # to the wheels (r 30.5 mm, 0.192 m per turn) -> top speed 0.70 m/s no load, 0.54 m/s rated. The board's "rps" is
     # not real turns of this motor (its speed loop uses another motor's encoder model): 1 board rps = 0.209 m/s = ~0.55
