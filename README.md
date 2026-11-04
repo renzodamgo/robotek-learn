@@ -134,6 +134,22 @@ Antes de una ronda de verdad, con las ruedas en el aire primero:
 * El v5 calcula sus curvas con la velocidad real del motor anterior (`REAL_SPEED` en `v5/mission.py`, 1,28 → 0,60 m/s)
   y con un tope de dirección de 17,6° (`REAL_STEER_LIMIT`), dentro de los ±19° del coche.
 
+### Que arranque solo al encender el Pi
+
+```bash
+bash tools/car-autostart.sh on motor_max_rps:=6   # a cada arranque: el Open v5 con esos argumentos
+bash tools/car-autostart.sh status                # ¿está corriendo?   ... log: su salida
+bash tools/car-autostart.sh stop                  # pararlo ahora (p. ej. para lanzar otra cosa a mano)
+bash tools/car-autostart.sh off                   # que no arranque más al encender
+```
+
+Es un servicio de usuario de systemd (`robotek-car.service`, sin sudo). Al encender el Pi espera el Wi-Fi (hasta 60 s)
+y lanza `car.launch.py`: el driver de la placa (con la batería en `/rrc/battery`), el LiDAR, la cámara y la
+estrategia, que **espera el botón de la placa**. `button:=false` no se acepta aquí: el coche saldría solo a los 12 s de
+cada arranque. Sin argumentos usa el Open v5; `on` otra vez cambia los argumentos (`~/.config/robotek/autostart-args`).
+Antes de lanzar algo a mano, `stop`: dos launches a la vez pelean por la placa y el LiDAR. Tras un `git pull` y
+`colcon build`, el código nuevo entra en el siguiente arranque (o con `stop` y `start`).
+
 ### Conducir el coche con el teclado (para colocarlo en la salida)
 
 En el coche, todo menos la estrategia:
