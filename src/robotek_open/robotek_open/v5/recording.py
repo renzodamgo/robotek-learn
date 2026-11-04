@@ -16,7 +16,7 @@ class V5Recording(OpenRecording):
         nan = math.nan
         sample = dict.fromkeys(TELEMETRY_COLUMNS, nan)
         sample.update({
-            'turn_timeouts': 0, 'turn_reason': '', 'direction_reason': '', 'wall_valid': '', 'wall_yaw': 0.0,
+            'turn_timeouts': 0, 'turn_reason': '', 'direction_reason': '', 'wall_valid': '', 'wall_yaw': scene.wall_heading,
             'limited_yaw_rate': 0.0, 'front': scene.front_axis, 'visual_age': 0.0,
             'wall_time': time.time(), 'sim_time': sim_seconds, 'state': mission.label,
             'turns': mission.completed, 'yaw_imu': mission.yaw, 'gyro': gyro,

@@ -168,3 +168,23 @@ def test_turn_delay_distance_waits_after_the_island_has_ended():
     assert not mission.arc                                   # 0.10 m past the end
     mission.step(DT, Scene(left=0.55, right=2.4, front_axis=0.7), 0.004, 0.16)
     assert mission.arc and mission.goal == pytest.approx(-math.pi / 2)   # 0.26 m: turn
+
+
+def test_wall_heading_pulls_the_gyro_yaw_towards_the_walls_on_a_straight():
+    mission = ready('cw', wall_heading_gain=0.5)
+    mission.travelled = 1.0
+    mission.yaw = mission.goal                                  # the gyro believes it is straight
+    for _ in range(10):                                         # the walls say 10 deg to the right
+        mission.step(DT, Scene(left=0.55, right=0.45, front_axis=1.8, wall_heading=math.radians(-10)), 0.004, 0.01)
+    assert math.degrees(mission.yaw - mission.goal) == pytest.approx(-10, abs=0.1)
+
+
+def test_wall_heading_is_off_by_default_and_ignores_big_differences():
+    mission = ready('cw')
+    mission.travelled = 1.0
+    mission.step(DT, Scene(left=0.55, right=0.45, front_axis=1.8, wall_heading=math.radians(-10)), 0.004, 0.0)
+    assert mission.yaw == pytest.approx(mission.goal, abs=1e-3)
+    on = ready('cw', wall_heading_gain=0.5)
+    on.travelled = 1.0
+    on.step(DT, Scene(left=0.55, right=0.45, front_axis=1.8, wall_heading=math.radians(-40)), 0.004, 0.0)
+    assert on.yaw == pytest.approx(on.goal, abs=1e-3)           # 40 deg: a bad fit, not drift

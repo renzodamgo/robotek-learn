@@ -13,6 +13,8 @@ WALL_TOLERANCE = 0.03             # m: a beam is on the island wall within this 
 FIT_HALF = math.radians(20.0)     # the wall line is fitted to the beams within this of the side bearing
 MAX_SLOPE = math.tan(0.30)        # rad: steeper than this is not a wall beside the car
 LATERAL_RANGE = (0.15, 0.90)      # m: plausible distance from the car to the island wall
+WALL_SIDE_RANGE = (0.12, 1.20)    # m: plausible distance to a side wall used for the heading
+WALL_MAX_SLOPE = math.tan(math.radians(30.0))   # steeper than this is not the wall beside the car (heading)
 MAX_GAP_BEAMS = 2                 # beams lost to dropouts that do not end the wall
 
 
@@ -22,6 +24,7 @@ class Scene:
     right: float = math.inf
     front_axis: float = math.inf   # distance to the wall ahead along the track axis
     island_end: float = math.inf   # x of the visible end of the island wall, base_link frame (m)
+    wall_heading: float = math.inf  # car heading relative to the side walls (rad, + = left), inf when none fits
 
 
 def scene_from_scan(scan, forward_yaw=0.0, direction='ccw'):
@@ -32,7 +35,8 @@ def scene_from_scan(scan, forward_yaw=0.0, direction='ccw'):
         left=_median_range(angles, ranges, ok, math.pi / 2),
         right=_median_range(angles, ranges, ok, -math.pi / 2),
         front_axis=_front_axis(angles, ranges, ok, forward_yaw),
-        island_end=island_end(angles, ranges, ok, sign))
+        island_end=island_end(angles, ranges, ok, sign),
+        wall_heading=wall_heading(angles, ranges, ok))
 
 
 def _window(angles, ok, centre, half):
@@ -89,6 +93,33 @@ def island_wall(angles, ranges, ok, sign):
     if last is None or bearing[last] <= END_FROM + 0.05:
         return IslandWall(float(slope), float(offset))       # still on the wall at the limit: no end in view
     return IslandWall(float(slope), float(offset), float(x[last]) + LIDAR_OFFSET_X)
+
+
+def wall_heading(angles, ranges, ok):
+    """The car's heading relative to the straight walls beside it (rad, + = turned left), from a line fitted on each side.
+
+    Each side uses the beams within FIT_HALF of +-90 deg (not past the wall's end); a side counts when its line is
+    straight (median residual within WALL_TOLERANCE), not too steep and at a plausible distance. Both sides are averaged
+    by their number of beams. inf when neither side fits (at a corner, or blind).
+    """
+    total, weight = 0.0, 0
+    with np.errstate(invalid='ignore'):
+        x, y = ranges * np.cos(angles), ranges * np.sin(angles)
+    for side in (1.0, -1.0):
+        beams = ok & (np.abs(np.arctan2(np.sin(angles - side * math.pi / 2),
+                                        np.cos(angles - side * math.pi / 2))) <= FIT_HALF)
+        if beams.sum() < 10:
+            continue
+        beams &= ranges <= 1.5 * np.median(ranges[beams])
+        if beams.sum() < 10:
+            continue
+        slope, offset = np.polyfit(x[beams], y[beams], 1)
+        if (abs(slope) > WALL_MAX_SLOPE or not WALL_SIDE_RANGE[0] < side * offset < WALL_SIDE_RANGE[1]
+                or np.median(np.abs(y[beams] - (slope * x[beams] + offset))) > WALL_TOLERANCE):
+            continue
+        total += -math.atan(slope) * int(beams.sum())
+        weight += int(beams.sum())
+    return total / weight if weight else math.inf
 
 
 def scan_arrays(scan):

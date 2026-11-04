@@ -30,6 +30,7 @@ LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
 BRAKE_GAIN = 2.0            # 1/s: speed above the last corner's grows this much per metre of gap
 BRAKE_MARGIN = 0.15         # m
 DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
+WALL_HEADING_MAX = math.radians(25.0)   # rad: a larger gyro-vs-walls difference is a bad fit, not drift
 WRONG_SIDE_OPEN = 1.2       # m: before the first corner, the side away from the island wider than this (outer walls
 WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the island stays beside: the direction is wrong
 
@@ -42,6 +43,7 @@ class Params:
     turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
     corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
     turn_delay_distance: float = 0.0      # m driven after the island has ended before the turn starts (real car)
+    wall_heading_gain: float = 0.0        # share of the gyro-vs-walls heading difference corrected per scan (0 = off)
     finish_speed: float = 0.15
     finish_lead: float = 0.08             # m: brake when the front range is this close to the start's
     finish_stop_wait: float = 0.9         # s at rest before DONE
@@ -82,6 +84,7 @@ class OpenMission:
         self._time = self._rest = 0.0
         self._hits = 0
         self._ended_at = None                      # travelled when the island was last seen ending
+        self._wall_scene = None
         self._scene = None
         self._braking = False
         self._wrong_side, self._check_scene = 0, None
@@ -157,6 +160,7 @@ class OpenMission:
         sign = 1.0 if self.direction == 'ccw' else -1.0
         inner, island_open = self.island_side(scene)
         self._observe(scene, inner)
+        self._correct_heading(scene)
         if self.completed >= CORNERS:
             return self._finish(dt, scene, gyro)
         last = self.completed == CORNERS - 1
@@ -191,6 +195,20 @@ class OpenMission:
         if self._wrong_side >= WRONG_SIDE_SCANS:
             self.direction = 'cw' if self.direction == 'ccw' else 'ccw'
             self.direction_flipped, self._wrong_side, self._hits = True, 0, 0
+
+    def _correct_heading(self, scene):
+        """On a straight, pull the gyro yaw towards the heading the side walls show (once per scan).
+
+        4 nov 2026, real car: each corner turned 4-6 deg more than the gyro measured, and after two laps the car drove
+        35-40 deg towards the island while the mission believed it was straight.
+        """
+        if (self.p.wall_heading_gain <= 0.0 or self.arc or self.travelled < ARM_DISTANCE
+                or scene is self._wall_scene or not math.isfinite(scene.wall_heading)):
+            return
+        self._wall_scene = scene
+        difference = wrap(scene.wall_heading - wrap(self.yaw - self.goal))
+        if abs(difference) <= WALL_HEADING_MAX:
+            self.yaw += self.p.wall_heading_gain * difference
 
     def island_side(self, scene):
         """Distance to the island wall beside the car, and whether it has ended (open side)."""

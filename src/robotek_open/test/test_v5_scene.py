@@ -17,9 +17,9 @@ def scan_at(x, y=-1.15, yaw=0.0, inner=INNER, noise=0.0, seed=1):
     return square_scan.make_scan(ranges, angle_min, increment, 0)
 
 
-def test_the_scene_is_immutable_and_has_four_numbers():
+def test_the_scene_is_immutable_and_has_five_numbers():
     scene = scene_from_scan(scan_at(0.0))
-    assert [f.name for f in dataclasses.fields(Scene)] == ['left', 'right', 'front_axis', 'island_end']
+    assert [f.name for f in dataclasses.fields(Scene)] == ['left', 'right', 'front_axis', 'island_end', 'wall_heading']
     with pytest.raises(dataclasses.FrozenInstanceError):
         scene.left = 1.0
 
@@ -72,3 +72,14 @@ def test_a_car_that_is_not_parallel_to_the_wall_still_finds_the_island_end(yaw):
     scene = scene_from_scan(scan_at(x, yaw=yaw), forward_yaw=0.0)
     expected = (INNER - x) * math.cos(yaw) + (-INNER + 1.15) * math.sin(yaw)
     assert scene.island_end == pytest.approx(expected, abs=0.03)
+
+
+@pytest.mark.parametrize('yaw', [-0.3, -0.1, 0.0, 0.05, 0.2])
+def test_the_wall_heading_is_the_car_yaw_relative_to_the_straight(yaw):
+    scene = scene_from_scan(scan_at(-0.3, yaw=yaw))
+    assert scene.wall_heading == pytest.approx(yaw, abs=0.02)
+
+
+def test_the_wall_heading_with_lidar_noise_stays_within_a_degree():
+    errors = [abs(scene_from_scan(scan_at(-0.3, yaw=0.1, noise=0.008, seed=s)).wall_heading - 0.1) for s in range(20)]
+    assert max(errors) < math.radians(1.5)
