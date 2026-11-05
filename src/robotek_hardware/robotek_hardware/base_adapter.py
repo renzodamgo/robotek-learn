@@ -37,11 +37,11 @@ import math
 
 import rclpy
 from geometry_msgs.msg import Twist
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from std_msgs.msg import Bool, Empty, Float32
+from std_msgs.msg import Bool, Empty, Float32, String
 
 from .mapping import (DitherBrake, MotorCalibration, ServoCalibration, front_distance, motor_pct, motor_rps, rate_limit,
                       servo_for_wheel, servo_us, steer_from_twist, wall_speed_factor)
@@ -69,6 +69,7 @@ class BaseAdapter(Node):
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
             motor_rps_per_mps=0., motor_max_rps=0.,
             brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1., brake_reset=False,
+            brake_reset_states='FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT',
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
         servo_pts = [math.radians(float(x)) for x in p['wheel_table_servo_deg'] if float(x) > 0.]
         n = len(servo_pts)
@@ -124,13 +125,32 @@ class BaseAdapter(Node):
         self.brake_reset = bool(p['brake_reset']) and self.brake.enabled
         self.reset_pub = self.create_publisher(Empty, '/rrc/reset', 1) if self.brake_reset else None
         self.reset_sent = False
+        # Only at the end (4 nov 2026, test 26): a mid-round stop (the strategy braking for a stale IMU) reset the
+        # board, which cut the IMU for 2.5 s more and kept the car stopped ~4 s. The reset now needs one of these
+        # /robotek/state values (FINISH: the final stop starts there, DONE comes after the car is at rest), the
+        # board button stop or the watchdog; any other stop is a plain 0. '' = every stop after moving (before).
+        self.reset_states = {s.strip() for s in str(p['brake_reset_states']).split(',') if s.strip()}
+        self.state = ''
+        self.create_subscription(String, '/robotek/state', self.on_state,
+                                 QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         if self.brake_reset:
-            self.get_logger().info('Brake: board reset (/rrc/reset) when stopping after moving.')
+            self.get_logger().info('Brake: board reset (/rrc/reset) when stopping after moving'
+                                   + (f" in {', '.join(sorted(self.reset_states))}, the button stop or the watchdog;"
+                                      ' other stops send 0.' if self.reset_states else '.'))
         elif self.brake.enabled:
             self.get_logger().info(f"Brake: +-{self.brake.amp:.1f} rps at {self.brake.hz:.0f} Hz for "
                                    f"{self.brake.duration:.1f} s when stopping after moving.")
         self.last = self.get_clock().now()
         self.create_timer(TICK, self.on_tick)
+
+    def on_state(self, msg):
+        self.state = msg.data
+
+    def final_stop(self):
+        """A stop the board reset may do: the end of the round, the button stop or lost commands."""
+        if not self.reset_states or self.stopped or self.state in self.reset_states:
+            return True
+        return (self.get_clock().now()-self.last).nanoseconds*1e-9 > self.p['watchdog']
 
     def on_cmd(self, msg):
         self.last = self.get_clock().now()
@@ -190,8 +210,8 @@ class BaseAdapter(Node):
                 if rps_per_mps > 0. else 0.
             rps = self.brake.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
             if self.brake_reset:
-                if self.brake.start is not None:      # braking: one board reset, then plain 0
-                    if not self.reset_sent:
+                if self.brake.start is not None:      # braking: one board reset (at the end), else plain 0
+                    if not self.reset_sent and self.final_stop():
                         self.reset_pub.publish(Empty())
                         self.reset_sent = True
                         self.get_logger().warning('Stopping after moving: board reset.')
