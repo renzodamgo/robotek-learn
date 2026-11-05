@@ -2,15 +2,16 @@
 
 Solo para el **coche real** (Raspberry Pi). Conecta tu estrategia con el hardware del coche de Robotek:
 tu nodo `drive` lee `/scan`, `/imu`, `/camera/image` y `/start` y publica `Twist` en `/cmd_vel_raw`, igual que en
-el simulador. Estos nodos traducen esos nombres a la placa HiWonder RRC Lite (servo, IMU, botón, LEDs), al motor
-(puente TB6612) y al LiDAR LD19, y al revés. Tu código no cambia entre el simulador y el coche.
+el simulador. Estos nodos traducen esos nombres a la placa HiWonder RRC Lite (servo, motor, IMU, botón, LEDs) y al
+LiDAR LD19, y al revés. Tu código no cambia entre el simulador y el coche.
 
 ```
 LiDAR LD19  -> /scan (driver)        -> scan_adapter -> /robotek/scan  (0 rad al frente, +-110 grados) -> tu /scan
 IMU de la RRC Lite -> /rrc/imu_raw   -> imu_adapter  -> /robotek/imu   (x adelante, y izquierda, z arriba) -> tu /imu
 Cámara USB -> /usb_cam/image_raw                                                                         -> tu /camera/image
 Botón de la RRC Lite -> start_button -> /start (primera pulsación), /robotek/stop (las siguientes)
-tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_state) + /motor_vel -> motor_driver (TB6612)
+tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_state) + motor (rps, /rrc/set_motor, puerto M1)
+                                     y al parar después de moverse: /rrc/reset (el freno, ver Motor)
 ```
 
 Se lanza todo con `ros2 launch robotek_course car.launch.py strategy:=my_open` (ver
@@ -31,7 +32,7 @@ source install/setup.bash && ros2 launch robotek_course open_challenge.launch.py
 Si el script te añadió a grupos nuevos (`dialout`, `video`, `gpio`), cierra la sesión y vuelve a entrar antes del último comando.
 Espera a que los LED de la placa se pongan **verdes** y pulsa el **botón de la placa una vez**: es el Start (`/start`) y el
 coche hace las tres vueltas de la ronda Open; una segunda pulsación lo detiene (`/robotek/stop`). Ver los límites de
-velocidad y por qué la primera vez conviene `motor_max_pct:=30`, más abajo. Para tu propia estrategia: crea tu paquete como en
+velocidad y por qué conviene `motor_max_rps:=2.5`, más abajo. Para tu propia estrategia: crea tu paquete como en
 el paso 0 de la guía y lanza `car.launch.py strategy:=<tu paquete>`. Sin `src/my_open`, el launch lo dice y sale con
 código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de seguridad `src/my_open.bak-FECHA`) tu paquete por el de referencia.
 
@@ -39,13 +40,13 @@ código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de segurid
 
 | Nodo | Qué hace |
 |---|---|
-| `base_adapter` | `/cmd_vel_raw` (`Twist`) a servo de la RRC Lite (µs, tabla de ruedas medida, tope de 25 grados) y motor (% con signo, calibrado). Limita aceleración (`accel_limit`) y deceleración (`decel_limit`) y para el motor si dejan de llegar comandos (`watchdog`) |
-| `motor_driver` | Puente TB6612FNG por GPIO (`lgpio`) con marcha atrás: `/motor_vel` de -100 a 100 %, pone STBY en alto, parada suave en rampa (`stop_ramp_s`), parada de emergencia `/robotek/estop` |
+| `base_adapter` | `/cmd_vel_raw` (`Twist`) a servo de la RRC Lite (µs, tabla de ruedas medida, tope de 25 grados) y motor (rps de la placa en `/rrc/set_motor`, `motor_backend: rrc`). Limita aceleración (`accel_limit`) y deceleración (`decel_limit`), para el motor si dejan de llegar comandos (`watchdog`) y, al parar después de moverse, frena reiniciando la placa (`brake_reset`, ver Motor) |
+| `motor_driver` | Solo con `motor_backend: tb6612` (el montaje anterior al 1 nov 2026): puente TB6612FNG por GPIO (`lgpio`), `/motor_vel` de -100 a 100 %. Con el motor en la RRC Lite arranca pero no mueve nada |
 | `scan_adapter` | El scan del driver del LD19 (su cero apunta hacia atrás) a `/robotek/scan` con 0 rad al frente. Descarta lo que el coche no ve (más allá de +-110 grados los rayos pegan en el propio coche) |
 | `imu_adapter` | IMU de la placa a ejes del coche (x adelante, y izquierda, z arriba). Las estrategias integran el giroscopio z, así que los ejes tienen que estar bien |
 | `start_button` | Botón de la placa: primera pulsación publica `/start` (y pita), cualquier otra publica `/robotek/stop` y el coche queda parado hasta lanzar de nuevo |
 | `battery_guard` | Si la batería de la placa (`/rrc/battery`) baja de 6,8 V durante 5 lecturas seguidas, avisa en rojo parpadeante (`status_leds`). No para el coche |
-| `status_leds` | Los dos LED RGB de la placa muestran el estado: verde = listo para Start, rojo + color = falta un sensor (azul LiDAR, magenta IMU, amarillo cámara), azul = calibrando, apagado = en ronda, verde parpadeante = terminó |
+| `status_leds` | Los dos LED RGB de la placa: verde = listo para el botón, azul = pulsado (la ronda corre, terminó o se paró), rojo parpadeando = batería baja. Solo lee `/robotek/state` y `/robotek/battery_low` |
 | `imu_axes` | Herramienta de calibración: con el coche quieto y un empujón hacia adelante imprime los ejes de `imu_adapter` |
 | `camera_publisher` | Cámara USB (YUYV 640x480, 15 fps) a `/usb_cam/image_raw`; busca la cámara sola y, si no está o se desconecta, avisa y reintenta (también publica el JPEG `.../compressed` solo si alguien lo pide) |
 | `servo_steer` | Prueba en banco: un ángulo (`Float32`, rad, + izquierda) mueve **solo el servo**, nunca el motor |
@@ -80,12 +81,12 @@ Hace, en orden:
 Todo lo que necesita ese comando (dependencias, drivers, reglas) está descrito aquí abajo por si algo falla.
 
 > **Seguridad: la primera vez, el coche sobre soportes (ruedas en el aire).** Ni `setup-pi.sh` ni el launch mueven
-> el motor por su cuenta: el motor solo se mueve si llega `/motor_vel`, que `base_adapter` calcula a partir de
-> `/cmd_vel_raw` de tu estrategia, y la estrategia espera el Start (la pulsación del botón de la placa). Aun así:
-> `base_adapter` limita la aceleración (`accel_limit`, 1 m/s²) y la deceleración (`decel_limit`), el motor no pasa de
-> `motor_max_pct` (50 %), un `watchdog` de 0,3 s lo para si dejan de llegar comandos, la dirección se limita a
+> el motor por su cuenta: el motor solo se mueve si llega `/cmd_vel_raw` de tu estrategia, y la estrategia espera el
+> Start (la pulsación del botón de la placa). Aun así: `base_adapter` limita la aceleración (`accel_limit`, 1 m/s²), no
+> pide más de `motor_max_rps`, un `watchdog` de 0,3 s lo para si dejan de llegar comandos, la dirección se limita a
 > ±25° y una segunda pulsación del botón (`/robotek/stop`) lo deja parado hasta lanzar de nuevo. Un
-> `/robotek/estop` (`Bool` verdadero) lo corta de golpe.
+> `/robotek/estop` (`Bool` verdadero) también lo para. **Con el motor 310, la placa no siempre se queda en 0**: por eso
+> el freno reinicia la placa (sección Motor). Si el motor sigue girando, apaga la placa con su interruptor.
 
 ## Drivers de terceros (incluidos en este repositorio)
 
@@ -105,12 +106,18 @@ Cambios del equipo respecto a MentorPi (solo se incluye lo que necesita el coche
    `rrc_lite_msgs` y los tópicos `~/imu_raw`, `~/button`... a `/rrc/imu_raw`, `/rrc/button`... (los que escuchan
    estos nodos).
 2. Un mensaje nuevo, `SetAckerServoState` (`float64 duration`, `uint16 position` en microsegundos), y un
-   suscriptor `/rrc/acker_servo/set_state` que mueve el **servo PWM 2** de la placa: el servo de dirección va
-   conectado al puerto 2.
+   suscriptor `/rrc/acker_servo/set_state` que mueve el servo PWM de la dirección (`acker_channel`; en el coche del
+   equipo, el canal 1 = conector J4).
 3. El puerto serie es el parámetro `port` (`ros2 launch rrc_lite_driver controller.launch.py port:=/dev/...`). Vacío
    (por defecto) = `/dev/rrc_lite` (regla de udev) o `/dev/ttyACM0`.
-4. Sin la placa enchufada el nodo no se cae con un traceback: avisa y reintenta cada 3 s. Si el USB se cae durante
-   una corrida, el puerto se reabre solo.
+4. Sin la placa enchufada el nodo no se cae con un traceback: avisa y reintenta cada 3 s. Si el USB se cae **durante**
+   una corrida, el nodo muere (`TypeError` en `recv_task`) y hay que relanzar: pasó el 4 nov 2026 por ruido eléctrico
+   (`disabled by hub (EMI?)` en el kernel).
+6. `motor_type` (en `config/controller_params.yaml`, 2 en el coche del equipo) se manda al arrancar y otra vez cada 3 s
+   mientras los motores están parados: una placa que se reinició (su interruptor, un reset) vuelve a su tipo por
+   defecto.
+7. `/rrc/reset` (`std_msgs/Empty`): reinicia la placa (la línea RTS de su chip USB va a RESET), el motor se para, y
+   2,5 s después la vuelve a preparar (recepción, tipo de motor, motores a 0). Es el freno de `base_adapter`.
 5. Los desplazamientos de los servos (`config/servo_config.yaml`) se leen del paquete instalado, no de una ruta fija.
 
 Qué hace falta para cada cosa:
@@ -128,9 +135,9 @@ Qué hace falta para cada cosa:
 * **LiDAR LD19**: adaptador CP210x (USB `10c4:ea60`), aparece como `/dev/ttyUSB0` a 230400 baudios, que es lo que
   abre el `ld19.launch.py` del driver; la regla de udev añade `/dev/ldlidar`. Si en tu Pi es otro puerto, arranca el
   driver tú y lanza con `lidar_package:=''`.
-* **Motor**: el motor va al canal B del TB6612 (motor 2: BO1 y BO2) y el puente, por GPIO del Pi 5 (`gpiochip` 4;
-  GPIO12 a PWMB, GPIO5 a BIN1, GPIO6 a BIN2, STBY 13 en `config/robot.yaml`, donde se llaman `pwm_a`, `ain1`, `ain2`). Hace falta `python3-lgpio` y el grupo `gpio`. Sin `lgpio` o sin acceso a `/dev/gpiochip4` el
-  nodo arranca, avisa («GPIO chip 4 not usable» o «lgpio missing») y reintenta, sin mover nada.
+* **Motor**: desde el 1 nov 2026, un motor 310 con encoder (reductora 1:90) en el puerto **M1** de la RRC Lite
+  (`rrc_motor_port: 1`). La placa lo mueve en «rps» con el tipo de motor 2. Antes iba un motor sin encoder por un
+  puente TB6612 en los GPIO del Pi (`motor_backend: tb6612`, `motor_driver`).
 * **Cámara**: `camera_publisher` busca la primera `/dev/v4l/by-id/*-video-index0` (en el Pi 5 hay muchos
   `/dev/videoN` y el número cambia: mejor la ruta estable; se fija con `video_device:=` en el launch). YUYV 640x480.
   Sin cámara avisa y reintenta cada segundo.
@@ -147,38 +154,38 @@ source install/setup.bash
 ros2 launch robotek_course open_challenge.launch.py      # = car.launch.py strategy:=my_open
 ```
 
-Espera a que los LED de la placa se pongan **verdes** (LiDAR, IMU y cámara reciben datos), pon el coche en la
-posición de salida y pulsa el botón una vez: es el Start (`/start`). Pulsa otra vez para parar: el motor queda
-en 0 hasta que lances de nuevo. Con las ruedas en el aire se pueden probar los nodos antes de poner el coche en
+Espera a que los LED de la placa se pongan **verdes** (la estrategia espera el botón), pon el coche en la posición de
+salida y pulsa el botón una vez: es el Start (`/start`) y los LED pasan a azul. Pulsa otra vez para parar: el freno
+reinicia la placa y el motor queda en 0 hasta que lances de nuevo. Con las ruedas en el aire se pueden probar los nodos antes de poner el coche en
 la pista. `ros2 launch robotek_course car.launch.py --show-args` muestra las opciones (`battery_guard:=false`,
-`status_leds:=false`, `motor_max_pct:=30`, `camera:=false`, `camera_driver:=usb_cam`, `video_device:=/dev/v4l/by-id/...`,
+`status_leds:=false`, `motor_max_rps:=2.5`, `strategy_params:=<archivo.yaml>`, `camera:=false`, `camera_driver:=usb_cam`, `video_device:=/dev/v4l/by-id/...`,
 `lidar_package:=''`...).
 
 Si falta algún driver o algún aparato, el launch lo dice y sigue: se puede probar en un portátil sin hardware. Cada
-nodo avisa con un mensaje claro y reintenta, sin mover nada: la placa («RRC Lite board not found»), el motor
-(«GPIO chip 4 not usable»), la cámara («Camara no encontrada»), el LiDAR (el driver del LD19 lo dice y termina; relanza
+nodo avisa con un mensaje claro y reintenta, sin mover nada: la placa («RRC Lite board not found»), la cámara («Camara no encontrada»), el LiDAR (el driver del LD19 lo dice y termina; relanza
 cuando esté enchufado).
 
-### Qué velocidad se obtiene y por qué la primera vez `motor_max_pct:=30`
+### Motor: velocidad y freno
 
 La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo publica en `/cmd_vel_raw`: `linear.x` en m/s y
 `angular.z = v·tan(dirección)/0,1174` en rad/s). `base_adapter` lo convierte así:
 
-* **Motor**: `% = motor_min_pct + motor_pct_per_mps·v = 6,5 + 73·1,28 ≈ 100 %`, pero se recorta a `motor_max_pct`
-  (50 %). Con la calibración medida (`v = 0,0137·(% − 6,5)` m/s) 50 % da **≈ 0,6 m/s**, que es lo que el simulador
-  llama «el coche real llega a 0,6» (`real_speed(1.28)`). La estrategia cree que va a 1,28 m/s y lo mide con el LiDAR,
-  no con el mando. Esa calibración se midió con la batería baja y **solo hasta 30 %** (0,32 m/s): de 30 a 50 % es una
-  extrapolación, y con la batería cargada el coche irá más rápido.
-* **Aceleración**: `accel_limit` 1 m/s² (arranque suave); si se pide parar, `decel_limit` 0,6 m/s² y el motor frena en
-  rampa de 0,6 s.
+* **Motor**: `rps = v·motor_rps_per_mps` (4,8, medido con el motor anterior), con el signo `rrc_motor_sign` (+1: con el
+  tipo 2, +rps es hacia delante) y recortado a `motor_max_rps`. Esas «rps» no son vueltas reales: con el motor 310 y el
+  tipo 2 el coche va a **~0,45–0,5 m/s con 2,5 rps** y a ~0,75 m/s con 4 o 6 rps (el tope del motor) (4 nov 2026). El
+  Open del equipo corre con `motor_max_rps:=2.5`.
+* **Freno**: con este motor, mandar 0 no basta (sigue de largo, acelera o va hacia atrás; ningún tipo de motor lo
+  arregla: probablemente la placa no lee bien su encoder). Con `brake_reset: true` (en `robot.yaml`), al pasar a 0
+  después de moverse `base_adapter` publica `/rrc/reset` y el coche se para ~17 cm después de la orden. Durante los
+  2,5 s del reset no llegan la IMU ni la batería. `brake_rps` es un freno anterior (adelante/atrás alternando), que no
+  fue fiable.
+* **Aceleración**: `accel_limit` 1 m/s² (arranque suave). Sin el freno por reset, al parar sigue `decel_limit`
+  (0,6 m/s²).
 * **Dirección**: el ángulo de rueda del Twist pasa por la tabla `wheel_table_*` al servo (µs) y se limita a 17,6° (el
-  máximo que alcanzan las dos ruedas, igual que `STEER_LIMIT` de la estrategia). **Ojo: `servo_measured: false`**: el
-  centro, el signo y la tabla son los de la montura vieja del servo; mídelos (sección Calibración) antes de ponerlo en
-  el suelo. En cuanto la estrategia publica (aunque esté parada esperando el Start) el servo va al centro configurado.
-* **Primera vez**: con las ruedas en el aire y `motor_max_pct:=30` (`ros2 launch robotek_course open_challenge.launch.py
-  motor_max_pct:=30`, 0,32 m/s, el límite de lo medido). Comprueba que el motor gira hacia adelante, que la dirección
-  sigue al servo y que la segunda pulsación del botón lo para. Sube a 40 y a 50 % solo con el coche en la pista y con la
-  batería a la vista.
+  máximo que alcanzan las dos ruedas, igual que `STEER_LIMIT` de la estrategia). Medida el 1 nov 2026
+  (`servo_measured: true`). En cuanto la estrategia publica (aunque esté parada esperando el Start) el servo va al centro.
+* **Primera vez**: con las ruedas en el aire y `motor_max_rps:=2.5`. Comprueba que el motor gira hacia adelante, que la
+  dirección sigue al servo y que la segunda pulsación del botón lo para.
 
 ### El camino del botón al motor
 
@@ -186,9 +193,9 @@ La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo public
 `strategy` imprime `Start` y su estado (`/robotek/state`, transient local, lo leen `status_leds`) pasa de `WAIT_START` a
 `CALIBRATE` y `DETECT_DIRECTION`. Los sensores llegan por las remapeos del launch (`/scan` → `/robotek/scan`, `/imu` →
 `/robotek/imu`, `/camera/image` → `/usb_cam/image_raw`) y el mando vuelve por `/cmd_vel_raw → base_adapter → servo
-(/rrc/acker_servo/set_state) + /motor_vel → motor_driver`. La segunda pulsación publica `/robotek/stop`: `strategy` pasa a
-`OPERATOR_STOP` y `base_adapter` y `motor_driver` dejan el motor en 0. El nodo usa el reloj del nodo (en el coche
-`use_sim_time` es falso, es reloj de pared), así que `CONTROL_RATE` = 50 Hz funciona igual que en Gazebo. Si el LiDAR (0,35 s)
+(/rrc/acker_servo/set_state) + /rrc/set_motor → rrc_driver`. La segunda pulsación publica `/robotek/stop`: `strategy` pasa a
+`OPERATOR_STOP` y `base_adapter` frena (reset de la placa) y deja el motor en 0. El nodo usa el reloj del nodo (en el coche
+`use_sim_time` es falso, es reloj de pared). Ojo: en el Pi el temporizador de `CONTROL_RATE` = 50 Hz va a ~35–40 Hz; si integras el giroscopio con 1/50 s fijo el rumbo sale corto (el Open v5 usa el tiempo real entre ciclos). Si el LiDAR (0,35 s)
 o el giroscopio (0,2 s) dejan de llegar, el log dice `A sensor went quiet: braking until it is back` y la velocidad es 0.
 
 ## Calibración
@@ -200,8 +207,9 @@ tuyos** antes de confiar en ellos:
   sentido (`servo_sign`) y la tabla `wheel_table_*` (ángulo real de la rueda por cada ángulo de servo, medido
   dando círculos). Mientras `servo_measured: false` el nodo avisa en cada arranque: cuando lo midas, ponlo en
   `true`. Prueba el servo solo con `ros2 run robotek_hardware servo_steer` y publicando en `/steer`.
-* **Motor** (`motor_pct_per_mps`, `motor_min_pct`, `motor_max_pct`): se midió con la batería baja y solo hasta
-  30 % (0,32 m/s). Empieza con velocidades bajas y mide de nuevo con la batería cargada.
+* **Motor** (`motor_backend: rrc`, `rrc_motor_port`, `rrc_motor_sign`, `motor_rps_per_mps`, `motor_max_rps`, `brake_*`)
+  y `motor_type` en `src/rrc_lite_driver/config/controller_params.yaml`. Si cambias el tipo de motor, vuelve a comprobar
+  el sentido. Mide la velocidad con el LiDAR (distancia a una pared antes y después) con pulsos cortos.
 * **Distancia entre ejes** (`wheelbase`, 0,1174 m): tiene que coincidir con `WHEELBASE` de
   `robotek_common/vehicle.py`, que usa tu estrategia.
 * **Ejes de la IMU** (`imu_adapter`): con el Pi y la placa de pie los ejes cambian. Con el coche quieto lanza

@@ -73,7 +73,7 @@ ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3
 
 Para seguir los estados en esa terminal, añadir `debug:=true`. El nodo publica su estado en `/robotek/state` y lo
 escribe en la terminal. `/obstacle/pose` lleva x, y, rumbo y progreso. **Nunca se ha probado en el coche real.**
-La primera vez, probarlo sobre tacos y con el motor limitado (`motor_max_pct:=30`).
+La primera vez, probarlo sobre tacos y con el motor limitado (`motor_max_rps:=2.5`; el motor 310 no siempre se para con 0: ver el freno en `src/robotek_hardware/README.md`).
 
 Antes de la primera ronda real, revisar esto:
 

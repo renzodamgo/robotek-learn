@@ -81,7 +81,7 @@ source install/setup.bash && ros2 launch robotek_course open_challenge.launch.py
 Si el script te añadió a grupos nuevos (`dialout`, `video`, `gpio`), cierra la sesión y vuelve a entrar antes del último comando.
 Espera a que los LED de la placa se pongan **verdes** y pulsa el **botón de la placa una vez**: es el Start (`/start`) y el
 coche hace las tres vueltas de la ronda Open; una segunda pulsación lo detiene (`/robotek/stop`). Ver los límites de
-velocidad y por qué la primera vez conviene `motor_max_pct:=30`, más abajo. Para tu propia estrategia: crea tu paquete como en
+velocidad en `src/robotek_hardware/README.md` (con el motor 310, `motor_max_rps:=2.5`). Para tu propia estrategia: crea tu paquete como en
 el paso 0 de la guía y lanza `car.launch.py strategy:=<tu paquete>`. Sin `src/my_open`, el launch lo dice y sale con
 código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de seguridad `src/my_open.bak-FECHA`) tu paquete por el de referencia.
 
