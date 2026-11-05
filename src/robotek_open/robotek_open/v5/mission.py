@@ -49,6 +49,7 @@ class Params:
     finish_stop_wait: float = 0.9         # s at rest before DONE
     calibrate_seconds: float = 0.3
     direction: str = 'auto'               # ccw, cw or auto (camera)
+    laps: int = LAPS                      # 3 in a round; fewer only for tests on the car (e.g. the finish and brake)
 
 
 def wrap(angle):
@@ -67,6 +68,7 @@ def real_speed(command):
 class OpenMission:
     def __init__(self, params=None):
         self.p = params or Params()
+        self.corners = 4 * max(1, int(self.p.laps))
         self.state = 'SETUP'
         self.stop_reason = ''
         self.started = False
@@ -105,7 +107,7 @@ class OpenMission:
                     'operator_stop': 'OPERATOR_STOP'}[self.stop_reason]
         if self.state == 'SETUP':
             return 'DETECT_DIRECTION' if self._calibrated else 'CALIBRATE' if self.started else 'WAIT_START'
-        return 'FINISH' if self.completed >= CORNERS else 'TURN' if self.arc else 'FOLLOW'
+        return 'FINISH' if self.completed >= self.corners else 'TURN' if self.arc else 'FOLLOW'
 
     @property
     def forward_yaw(self):
@@ -161,9 +163,9 @@ class OpenMission:
         inner, island_open = self.island_side(scene)
         self._observe(scene, inner)
         self._correct_heading(scene)
-        if self.completed >= CORNERS:
+        if self.completed >= self.corners:
             return self._finish(dt, scene, gyro)
-        last = self.completed == CORNERS - 1
+        last = self.completed == self.corners - 1
         corner_speed = self.p.last_corner_speed if last else self.p.cruise_speed
         ended = island_open or self._hits >= CONFIRMATIONS
         if not ended:
@@ -267,7 +269,7 @@ class OpenMission:
         fade = min(1.0, max(0.0, sign * wrap(self.goal - self.yaw)) / EXIT_ANGLE)
         feed, expected = (sign * STEER * fade, sign * rate * fade) if ramping else (0.0, 0.0)
         steer = clamp(KP * wrap(self.ref - self.yaw) + feed - DAMPING * (gyro - expected), -STEER, STEER)
-        tolerance = LAST_TOLERANCE if self.completed == CORNERS - 1 else TURN_TOLERANCE
+        tolerance = LAST_TOLERANCE if self.completed == self.corners - 1 else TURN_TOLERANCE
         if abs(wrap(self.goal - self.yaw)) <= tolerance:
             self.arc, self.ref, self.travelled, self._ended_at = False, self.goal, 0.0, None
             self.completed += 1

@@ -30,7 +30,7 @@ from robotek_common.lidar_odometry import LidarOdometry
 from robotek_common.vehicle import DISTANCE_MODEL_ACCEL, LIDAR_OFFSET_X, WHEELBASE
 from ..open_mission_clock import mission_clock
 from ..open_vision import OpenVision
-from .mission import CONFIRMATIONS, CORNERS, LAPS, OpenMission, Params
+from .mission import CONFIRMATIONS, OpenMission, Params
 from .recording import V5Recording
 from .scene import Scene, island_wall, scan_arrays, scene_from_scan
 from .settings import PARAMETERS
@@ -202,7 +202,8 @@ class OpenV5Node(Node):
     def _with_progress(self, image):
         """The detector image with the mission's state, lap and corners in small print at the bottom."""
         done = self.mission.completed
-        text = f'{self.mission.label}  vuelta {min(done // 4 + 1, LAPS)}/{LAPS}  giros {done}/{CORNERS}'
+        laps = self.mission.corners // 4
+        text = f'{self.mission.label}  vuelta {min(done // 4 + 1, laps)}/{laps}  giros {done}/{self.mission.corners}'
         image = image.copy()
         y = image.shape[0] - 10
         cv2.putText(image, text, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 3)
@@ -293,7 +294,7 @@ class OpenV5Node(Node):
         text = marker(Marker.TEXT_VIEW_FACING, 'turn_text', ColorRGBA(r=1.0, g=1.0, b=1.0, a=1.0), 0.07)
         text.pose.position = Point(x=0.0, y=0.0, z=0.35)
         text.text = (f'delante {yes(front_ok)} {front}/{p.turn_front_distance:.2f} m | isla {yes(island_ok)} '
-                     f'({island}) | armado {yes(armed)} | giro {mission.completed}/{CORNERS} {mission.label}')
+                     f'({island}) | armado {yes(armed)} | giro {mission.completed}/{mission.corners} {mission.label}')
         self._turn_pub.publish(MarkerArray(markers=markers))
 
     def finish_if_done(self):
