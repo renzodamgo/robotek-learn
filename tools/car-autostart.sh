@@ -35,7 +35,18 @@ run() {
     read -r -a args < "$ARGS_FILE"
     # Nothing of an earlier launch may run next to this one (two strategies, two board drivers: 4 nov 2026).
     bash "$REPO/tools/car-clean.sh"
-    echo "robotek-car: ros2 launch robotek_course car.launch.py ${args[*]}"
+    # Every round leaves its evidence in ~/runs/<date>-<time>-autostart/ (4 nov 2026: a round that failed in its last
+    # corner left nothing to explain it): launch.log (this output), kernel.log (USB drops of the board, "disabled by
+    # hub (EMI?)") and bag/, a light rosbag in 5 s chunks that starts at Start (not while the car waits).
+    local out=$HOME/runs/$(date +%Y%m%d-%H%M%S)-autostart
+    mkdir -p "$out"
+    journalctl -k -f -n 0 > "$out/kernel.log" 2>&1 &
+    (ros2 topic echo --once /start > /dev/null 2>&1 &&
+        exec ros2 bag record --max-bag-duration 5 -o "$out/bag" /cmd_vel_raw /rrc/acker_servo/set_state /rrc/set_motor \
+            /rrc/reset /robotek/scan /robotek/imu /rrc/imu_raw /rrc/battery /robotek/state /start /robotek/stop \
+            /robotek/estop /open/steer /tf_static /rosout > "$out/bag.log" 2>&1) &
+    exec > >(tee "$out/launch.log") 2>&1
+    echo "robotek-car: ros2 launch robotek_course car.launch.py ${args[*]} (recording to $out)"
     exec ros2 launch robotek_course car.launch.py "${args[@]}"
 }
 
