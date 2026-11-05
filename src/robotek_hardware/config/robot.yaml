@@ -42,8 +42,10 @@ base_adapter:
     # values above. motor_rps_per_mps = motor revolutions per second per m/s of the car: MEASURE IT (until then 0 keeps
     # the motor at 0). motor_max_rps 0 = no cap.
     motor_backend: rrc
-    rrc_motor_port: 1                # 1 nov 2026: new 310 motor plugged into M1 (the old one burnt out after a frontal crash)
-    rrc_motor_sign: 1.0              # 4 nov 2026, 310 motor on M1 with motor_type 2: -rps drove the car BACKWARD (Open v5, front wall
+    rrc_motor_port: 2                # 4 nov 2026 ~20:30: the 310 motor moved from M1 to M2 (MentorPi uses M2/M4); 1 nov: M1
+                                     # (new motor; the old one burnt out after a frontal crash). On M2 a plain 0 does not stop
+                                     # it either (test 23): keep brake_reset.
+    rrc_motor_sign: 1.0              # 4 nov 2026, 310 motor on M1 (same on M2) with motor_type 2: -rps drove the car BACKWARD (Open v5, front wall
                                      # 1.39 -> 1.97 m in 1.2 s). Was -1 (1 nov, old motor on M4). Re-check it if the motor type changes.
     # Brake (4 nov 2026): with the 310 motor the board does not hold 0 (runs on, speeds up or rolls back). Stopping after
     # moving, the motor gets +-brake_rps alternating at brake_hz for brake_s, then 0: on the floor the car stopped

@@ -10,7 +10,7 @@ LiDAR LD19  -> /scan (driver)        -> scan_adapter -> /robotek/scan  (0 rad al
 IMU de la RRC Lite -> /rrc/imu_raw   -> imu_adapter  -> /robotek/imu   (x adelante, y izquierda, z arriba) -> tu /imu
 Cámara USB -> /usb_cam/image_raw                                                                         -> tu /camera/image
 Botón de la RRC Lite -> start_button -> /start (primera pulsación), /robotek/stop (las siguientes)
-tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_state) + motor (rps, /rrc/set_motor, puerto M1)
+tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_state) + motor (rps, /rrc/set_motor, puerto M2)
                                      y al parar después de moverse: /rrc/reset (el freno, ver Motor)
 ```
 
@@ -135,8 +135,8 @@ Qué hace falta para cada cosa:
 * **LiDAR LD19**: adaptador CP210x (USB `10c4:ea60`), aparece como `/dev/ttyUSB0` a 230400 baudios, que es lo que
   abre el `ld19.launch.py` del driver; la regla de udev añade `/dev/ldlidar`. Si en tu Pi es otro puerto, arranca el
   driver tú y lanza con `lidar_package:=''`.
-* **Motor**: desde el 1 nov 2026, un motor 310 con encoder (reductora 1:90) en el puerto **M1** de la RRC Lite
-  (`rrc_motor_port: 1`). La placa lo mueve en «rps» con el tipo de motor 2. Antes iba un motor sin encoder por un
+* **Motor**: desde el 1 nov 2026, un motor 310 con encoder (reductora 1:90) en el puerto **M2** de la RRC Lite
+  (`rrc_motor_port: 2`; en M1 hasta el 4 nov 2026). La placa lo mueve en «rps» con el tipo de motor 2. Antes iba un motor sin encoder por un
   puente TB6612 en los GPIO del Pi (`motor_backend: tb6612`, `motor_driver`).
 * **Cámara**: `camera_publisher` busca la primera `/dev/v4l/by-id/*-video-index0` (en el Pi 5 hay muchos
   `/dev/videoN` y el número cambia: mejor la ruta estable; se fija con `video_device:=` en el launch). YUYV 640x480.

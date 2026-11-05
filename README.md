@@ -113,7 +113,7 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 
 El Open v5 está en `src/robotek_open` y corre con el mismo `car.launch.py`, así que usa la calibración actual del coche
 (`src/robotek_hardware/config/robot.yaml`): la dirección medida el 1 nov 2026 (centro 1403 µs, ±19°) y el motor 310 en
-M1 con el tipo 2 de la placa (`src/rrc_lite_driver/config/controller_params.yaml`). El 4 nov 2026 hizo rondas completas
+M2 con el tipo 2 de la placa (`src/rrc_lite_driver/config/controller_params.yaml`). El 4 nov 2026 hizo rondas completas
 de 3 vueltas en ~30 s en el campo del equipo. En el Pi:
 
 ```bash
@@ -162,7 +162,8 @@ todo grabado: `bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=
 * **Velocidad:** con el tipo 2, ~0,45–0,5 m/s a 2,5 rps y ~0,75 m/s a 4–6 rps (el tope del motor). Corre con
   `motor_max_rps:=2.5`.
 * **Freno:** con el motor 310 la placa no se queda en 0. `base_adapter` (`brake_reset: true`) reinicia la placa por
-  `/rrc/reset` al parar después de moverse; el coche se para ~17 cm después. Pendiente: revisar el encoder de M1.
+  `/rrc/reset` al parar después de moverse; el coche se para ~17 cm después. Con el motor en M2 tampoco para con un 0
+  (4 nov). Pendiente: revisar el encoder y el cable del motor.
 * **Luces:** verde = listo para el botón; azul = pulsado; rojo parpadeando = batería baja.
 
 ### Que arranque solo al encender el Pi
