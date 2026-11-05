@@ -23,6 +23,7 @@ try:
 except ImportError:  # only installed on the robot (HiWonder image)
     RGBState = RGBStates = None
 
+RESEND = 1.0   # s
 LATCHED = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 
 
@@ -34,6 +35,7 @@ class StatusLeds(Node):
             ('rate', 4.0))}           # Hz: updates and blink (blinks at rate/2)
         self.level = int(p['level'])
         self.state, self.battery_low, self.blink, self.last = '', False, False, None
+        self.last_sent = 0.0
         if RGBStates is None:
             self.get_logger().error('rrc_lite_msgs missing: no RGB output.')
             return
@@ -55,9 +57,12 @@ class StatusLeds(Node):
 
     def show(self, colors, force=False):
         colors = tuple(scaled(c, self.level) for c in colors)
-        if colors == self.last and not force:
-            return   # the board keeps the colour: only send changes
-        self.last = colors
+        now = time.monotonic()
+        # Changes at once, and the same colour again every RESEND s: a single lost message left the LEDs green for a
+        # whole round (4 nov 2026, tests 25-26), and a board reset (the brake) turns them off.
+        if colors == self.last and not force and now - self.last_sent < RESEND:
+            return
+        self.last, self.last_sent = colors, now
         msg = RGBStates()
         for index, (r, g, b) in enumerate(colors, start=1):
             state = RGBState()
