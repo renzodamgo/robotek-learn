@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
@@ -21,6 +23,11 @@ Parameter Description:
       which is [135.0, 225.0], angle unit is degress.
 '''
 
+# The stable name from tools/99-robotek.rules (robotek): after a USB drop the CP210x comes back as /dev/ttyUSB1 and
+# /dev/ttyUSB0 no longer exists (4 nov 2026, the LiDAR did not start).
+PORT = '/dev/ldlidar' if os.path.exists('/dev/ldlidar') else '/dev/ttyUSB0'
+
+
 def generate_launch_description():
   # LDROBOT LiDAR publisher node
   ldlidar_node = Node(
@@ -32,7 +39,7 @@ def generate_launch_description():
         {'product_name': 'LDLiDAR_LD19'},
         {'topic_name': 'scan'},
         {'frame_id': 'base_laser'},
-        {'port_name': '/dev/ttyUSB0'},
+        {'port_name': PORT},
         {'port_baudrate': 230400},
         {'laser_scan_dir': True},
         {'enable_angle_crop_func': False},

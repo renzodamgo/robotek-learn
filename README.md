@@ -136,6 +136,19 @@ strategy:
     # laps: 1                  # solo para probar la llegada y el freno
 ```
 
+Con la cámara IMX708 en el flex (`camera_driver:=picam`), el detector usa otros colores: esta cámara ve el muro negro
+azulado (V 40-60), el naranja con H ≈ 7 (la USB lo veía rosado) y el rojo de un pilar con H ≈ 177. En
+`~/.config/robotek/open_v5_car_picam.yaml`, los mismos ajustes de arriba más estos (medidos el 4 nov 2026):
+
+```yaml
+    vision_blue_h_min: 95
+    vision_blue_v_min: 60      # el pie del muro sale azul oscuro (V ≈ 45)
+    vision_orange_h_min: 2     # naranja de verdad, no el rojo de un pilar (H ≈ 177)
+    vision_orange_h_max: 25
+    vision_orange_v_min: 60
+    vision_wall_v_max: 70      # el muro llega a V ≈ 60 con esta cámara
+```
+
 Espera el botón de la placa. Usa solo el LiDAR, el giroscopio y la cámara, que decide el sentido (el LiDAR lo
 comprueba antes de la primera esquina). La telemetría queda en `~/runs/<fecha>-<hora>-open-v5/`. Prueba sin botón y con
 todo grabado: `bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml`.

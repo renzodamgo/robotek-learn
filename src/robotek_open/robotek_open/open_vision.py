@@ -67,7 +67,9 @@ class OpenVision:
         """First floor row per column: below the lowest dark band (the black field wall).
 
         Everything above it (wall, room, people) cannot be a field line. Columns
-        without a wall band keep the whole image.
+        without a wall band take it from the nearest columns that have one (a pillar
+        or a light object in front of the wall breaks the band; 4 nov 2026, IMX708);
+        the whole image is kept only when no column shows the wall.
         """
         dark = (hsv[..., 2] <= self.wall_v_max).astype(np.uint8)
         # Keep only dark runs at least wall_min_rows tall: thin printed lines are not walls.
@@ -76,6 +78,10 @@ class OpenVision:
         lowest = np.where(dark != 0, rows, -1).max(axis=0)
         # Bridge short gaps in the wall band (glare, the island's end) with neighbouring columns.
         lowest = cv2.dilate(lowest.astype(np.float32)[None, :], np.ones((1, 15), np.uint8))[0]
+        found = lowest >= 0
+        if found.any() and not found.all():
+            columns = np.arange(lowest.size)
+            lowest = np.interp(columns, columns[found], lowest[found])
         return lowest.astype(int) + 1
 
     def update(self, bgr, stamp):
