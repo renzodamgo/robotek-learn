@@ -226,11 +226,9 @@ def generate_launch_description():
         Node(package='robotek_hardware', executable='battery_guard', name='battery_guard', output='screen',
              condition=IfCondition(LaunchConfiguration('battery_guard')),
              parameters=[{'min_voltage': ParameterValue(LaunchConfiguration('battery_min_v'), value_type=float)}]),
+        # Green = ready for the button, blue = pressed (the round runs), red blinking = battery low.
         Node(package='robotek_hardware', executable='status_leds', name='status_leds', output='screen',
-             condition=IfCondition(LaunchConfiguration('status_leds')),
-             parameters=[{'imu_topic': LaunchConfiguration('imu_topic'),
-                          'camera_topic': LaunchConfiguration('camera_topic'),
-                          'camera_required': ParameterValue(LaunchConfiguration('camera'), value_type=bool)}]),
+             condition=IfCondition(LaunchConfiguration('status_leds'))),
         OpaqueFunction(function=_description),
         # debug:=true: live report of the round (states, direction, corners, laps, lines) in this terminal.
         Node(package='robotek_course', executable='round_reporter', name='round_reporter', output='screen',
