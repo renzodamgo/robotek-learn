@@ -33,6 +33,7 @@ setup(
             'battery_guard = robotek_hardware.battery_guard:main',
             'status_leds = robotek_hardware.status_leds:main',
             'camera_publisher = robotek_hardware.camera_publisher:main',
+            'pi_camera_publisher = robotek_hardware.pi_camera_publisher:main',
         ],
     },
 )
