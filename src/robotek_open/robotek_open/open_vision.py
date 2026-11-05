@@ -67,7 +67,7 @@ class OpenVision:
         return (cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([179, 255, 255]))
                 | cv2.inRange(hsv, np.array([0, s_min, v_min]), np.array([h_max, 255, 255])))
 
-    def contrast_masks(self, bgr):
+    def contrast_masks(self, bgr, value=None):
         """Blue and orange masks of thin lines that are darker than the floor around them, by their tint.
 
         Far away (the corner lines seen from the start, ~1.5 m) a line is only a few pixels wide and its colour mixes
@@ -78,7 +78,9 @@ class OpenVision:
         """
         size = max(5, int(round(15 * bgr.shape[0] / 720))) | 1
         kernel = np.ones((size, size), np.uint8)
-        darker = cv2.morphologyEx(bgr.max(axis=2), cv2.MORPH_BLACKHAT, kernel)
+        if value is None:                   # the HSV V channel: max(B, G, R)
+            value = cv2.max(cv2.max(bgr[..., 0], bgr[..., 1]), bgr[..., 2])
+        darker = cv2.morphologyEx(value, cv2.MORPH_BLACKHAT, kernel)
         floor = cv2.morphologyEx(bgr, cv2.MORPH_CLOSE, kernel).astype(np.int16)
         pixel = bgr.astype(np.int16)
         tint = (pixel[..., 0] - pixel[..., 2]) - (floor[..., 0] - floor[..., 2])
@@ -117,7 +119,7 @@ class OpenVision:
         blue = self.colour_mask(hsv, *self.blue_hsv)
         orange = self.colour_mask(hsv, *self.orange_hsv)
         if self.line_contrast > 0:
-            thin_blue, thin_orange = self.contrast_masks(bgr)
+            thin_blue, thin_orange = self.contrast_masks(bgr, hsv[..., 2])
             blue |= thin_blue
             orange |= thin_orange
         kernel = np.ones((3, 5), dtype=np.uint8)
@@ -153,7 +155,8 @@ class OpenVision:
         ignored[:top] = True
         if floor is not None:
             ignored |= above
-        self.overlay[ignored] //= 4
+        # cv2.copyTo with a mask: boolean indexing of the whole image took ~13 ms per 1280x720 frame on the Mac.
+        cv2.copyTo(bgr // 4, ignored.astype(np.uint8), self.overlay)
         self.overlay[blue != 0] = (255, 0, 0)
         self.overlay[orange != 0] = (0, 128, 255)
         cv2.line(self.overlay, (0, top), (bgr.shape[1] - 1, top), (0, 255, 0), 1)
