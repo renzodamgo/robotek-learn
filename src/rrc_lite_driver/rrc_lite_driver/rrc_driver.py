@@ -10,7 +10,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from sensor_msgs.msg import Imu, Joy
-from std_msgs.msg import UInt16, Bool
+from std_msgs.msg import UInt16, Bool, Empty
 from rrc_lite_driver.rrc_lite_driver_sdk import Board, PacketReportKeyEvents
 from rrc_lite_msgs.srv import GetBusServoState, GetPWMServoState
 from rrc_lite_msgs.msg import (
@@ -62,7 +62,7 @@ class RosRobotController(Node):
         # Encoder motor model for the board's speed control (0 JGB520, 1 JGB37, 2 JGB27, 3 JGB528; -1 = leave the
         # board's own setting). Sent at every start: it is not known whether the board keeps it.
         self.declare_parameter("motor_type", -1)
-        motor_type = int(self.get_parameter("motor_type").value)
+        motor_type = self.motor_type = int(self.get_parameter("motor_type").value)
         if motor_type >= 0:
             self.board.set_motor_type(motor_type)
             self.get_logger().info(f"Motor type {motor_type} sent to the board.")
@@ -82,6 +82,10 @@ class RosRobotController(Node):
         self.create_subscription(MotorsState, "rrc/set_motor", self.set_motor_state, 10)
         self.create_timer(0.1, self.check_motor_watchdog)
         self.create_subscription(Bool, "rrc/enable_reception", self.enable_reception, 1)
+        # Board reset from software (the RTS line of its USB serial chip is wired to RESET): the only stop the 310 drive
+        # motor obeyed on the floor (4 nov 2026). The board comes back ~2.5 s later; it is then set up again.
+        self.create_subscription(Empty, "rrc/reset", self.reset_board, 1)
+        self.reset_timer = None
         self.create_subscription(
             SetBusServoState, "rrc/bus_servo/set_state", self.set_bus_servo_state, 10
         )
@@ -111,6 +115,31 @@ class RosRobotController(Node):
         threading.Thread(target=self.pub_callback, daemon=True).start()
         self.create_service(Trigger, "rrc/init_finish", self.get_node_state)
         self.get_logger().info("\033[1;32m%s\033[0m" % "start")
+
+    def reset_board(self, _msg=None):
+        """Pulse RTS (board RESET): the motors lose their speed set point at once. Set up again 2.5 s later."""
+        if self.reset_timer is not None:
+            return                                  # a reset is already in progress
+        try:
+            self.board.port.rts = True
+            time.sleep(0.1)
+            self.board.port.rts = False
+        except Exception as error:
+            self.get_logger().error("Board reset failed: %s" % error)
+            return
+        self.get_logger().warning("Board reset (RTS): drive motor stopped; setting the board up again in 2.5 s.")
+        self.reset_timer = self.create_timer(2.5, self.after_reset)
+
+    def after_reset(self):
+        self.reset_timer.cancel()
+        self.destroy_timer(self.reset_timer)
+        self.reset_timer = None
+        self.board.enable_reception()
+        if self.motor_type >= 0:
+            self.board.set_motor_type(self.motor_type)
+        self.load_servo_offsets()
+        self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
+        self.get_logger().info("Board set up again after the reset.")
 
     def open_board(self, port):
         """Open the serial port of the board; log what is wrong and retry every 3 s until it works."""

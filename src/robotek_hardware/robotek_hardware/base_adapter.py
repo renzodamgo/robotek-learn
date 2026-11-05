@@ -41,7 +41,7 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from std_msgs.msg import Bool, Float32
+from std_msgs.msg import Bool, Empty, Float32
 
 from .mapping import (DitherBrake, MotorCalibration, ServoCalibration, front_distance, motor_pct, motor_rps, rate_limit,
                       servo_for_wheel, servo_us, steer_from_twist, wall_speed_factor)
@@ -68,7 +68,7 @@ class BaseAdapter(Node):
             wheel_limit_deg=0., servo_measured=True,
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
             motor_rps_per_mps=0., motor_max_rps=0.,
-            brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1.,
+            brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1., brake_reset=False,
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
         servo_pts = [math.radians(float(x)) for x in p['wheel_table_servo_deg'] if float(x) > 0.]
         n = len(servo_pts)
@@ -119,7 +119,14 @@ class BaseAdapter(Node):
         self.target = self.speed = 0.     # commanded and rate-limited speed (m/s)
         self.brake = DitherBrake(p['brake_rps'], p['brake_hz'], p['brake_s'], p['brake_min_rps']) \
             if self.backend == 'rrc' else DitherBrake()
-        if self.brake.enabled:
+        # brake_reset: instead of the back-and-forth, reset the board (rrc_driver /rrc/reset, RTS = RESET): the stop
+        # the 310 motor obeyed every time (4 nov 2026). The board is set up again ~2.5 s later.
+        self.brake_reset = bool(p['brake_reset']) and self.brake.enabled
+        self.reset_pub = self.create_publisher(Empty, '/rrc/reset', 1) if self.brake_reset else None
+        self.reset_sent = False
+        if self.brake_reset:
+            self.get_logger().info('Brake: board reset (/rrc/reset) when stopping after moving.')
+        elif self.brake.enabled:
             self.get_logger().info(f"Brake: +-{self.brake.amp:.1f} rps at {self.brake.hz:.0f} Hz for "
                                    f"{self.brake.duration:.1f} s when stopping after moving.")
         self.last = self.get_clock().now()
@@ -182,6 +189,15 @@ class BaseAdapter(Node):
             rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign'])) \
                 if rps_per_mps > 0. else 0.
             rps = self.brake.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
+            if self.brake_reset:
+                if self.brake.start is not None:      # braking: one board reset, then plain 0
+                    if not self.reset_sent:
+                        self.reset_pub.publish(Empty())
+                        self.reset_sent = True
+                        self.get_logger().warning('Stopping after moving: board reset.')
+                    rps = 0.
+                else:
+                    self.reset_sent = False
             self.motor_pub.publish(MotorsState(data=[MotorState(id=int(p['rrc_motor_port']), rps=float(rps))]))
         else:
             self.motor_pub.publish(Float32(data=float(motor_pct(speed, self.motor))))
