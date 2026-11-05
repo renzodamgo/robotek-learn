@@ -50,6 +50,28 @@ def _share(package):
 def _arg(context, name):
     return LaunchConfiguration(name).perform(context)
 
+def _camera_topic(context):
+    """camera_topic, or by default the topic of the chosen camera driver (picam: /picam/image_raw)."""
+    topic = _arg(context, 'camera_topic')
+    if topic:
+        return topic
+    return '/picam/image_raw' if _arg(context, 'camera_driver') == 'picam' else '/usb_cam/image_raw'
+
+
+def _reporter_node(context):
+    """debug:=true: the live report of the round, on the same camera as the strategy."""
+    return [
+    Node(package='robotek_course', executable='round_reporter', name='round_reporter', output='screen',
+         condition=IfCondition(LaunchConfiguration('debug')),
+         additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
+                         'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
+                         'ROBOTEK_CAMERA_ORANGE': LaunchConfiguration('camera_orange_hsv'),
+                         'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
+                             ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
+         remappings=[('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
+                     ('/camera/image', _camera_topic(context))])]
+
+
 def _strategy_node(context):
     """Your node; strategy_params:=<file.yaml> adds its ROS parameters (e.g. inner_gap: 0.35 for the Open v5)."""
     parameters = [{'use_sim_time': False}]
@@ -71,7 +93,7 @@ def _strategy_node(context):
                                  ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
              remappings=[('/scan', '/robotek/scan'), ('scan', '/robotek/scan'),
                          ('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
-                         ('/camera/image', LaunchConfiguration('camera_topic'))])]
+                         ('/camera/image', _camera_topic(context))])]
 
 
 def _check_strategy(context):
@@ -126,7 +148,16 @@ def _drivers(context):
                                                  'image_height': 480, 'framerate': 30.0, 'pixel_format': 'yuyv'}]))
             else:
                 actions.append(LogInfo(msg='[car] usb_cam not found (sudo apt install ros-jazzy-usb-cam): '
-                                           'the camera must publish ' + _arg(context, 'camera_topic')))
+                                           'the camera must publish ' + _camera_topic(context)))
+        elif _arg(context, 'camera_driver') == 'picam':
+            # The Raspberry Pi camera on the CSI ribbon (IMX708): full-sensor field, 640x360 at 30 fps.
+            actions.append(Node(package='robotek_hardware', executable='pi_camera_publisher',
+                                name='pi_camera_publisher', output='screen',
+                                parameters=[{'topic': _camera_topic(context),
+                                             'rotation': int(_arg(context, 'picam_rotation')),
+                                             'width': int(_arg(context, 'picam_width')),
+                                             'height': int(_arg(context, 'picam_height')),
+                                             'fps': float(_arg(context, 'picam_fps'))}]))
         else:
             # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
             actions.append(Node(package='robotek_hardware', executable='camera_publisher', name='camera_publisher',
@@ -166,12 +197,19 @@ def generate_launch_description():
         DeclareLaunchArgument('imu_topic', default_value='/rrc/imu_raw', description='what the RRC Lite driver publishes'),
         DeclareLaunchArgument('camera', default_value='true', description='start the camera node'),
         DeclareLaunchArgument('camera_driver', default_value='camera_publisher',
-                              description="'camera_publisher' (robotek_hardware, retries if the camera is missing) "
-                                          "or 'usb_cam' (the ROS package)"),
+                              description="'camera_publisher' (USB camera, robotek_hardware), 'usb_cam' (the ROS "
+                                          "package) or 'picam' (the Raspberry Pi camera on the CSI ribbon, IMX708)"),
+        DeclareLaunchArgument('picam_rotation', default_value='180',
+                              description='picam: 180 = mounted upside down (the team car), 0 = upright'),
+        DeclareLaunchArgument('picam_width', default_value='640'),
+        DeclareLaunchArgument('picam_height', default_value='360'),
+        DeclareLaunchArgument('picam_fps', default_value='30.0'),
         DeclareLaunchArgument('video_device', default_value='',
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),
-        DeclareLaunchArgument('camera_topic', default_value='/usb_cam/image_raw'),
+        DeclareLaunchArgument('camera_topic', default_value='',
+                              description='the camera image for the strategy; empty = that of camera_driver '
+                                          '(/usb_cam/image_raw, or /picam/image_raw with picam)'),
         DeclareLaunchArgument('teleop', default_value='false',
                               description='true: no strategy, drive with keyboard_drive (hold:=true) from another terminal'),
         DeclareLaunchArgument('strategy_params', default_value='',
@@ -231,15 +269,7 @@ def generate_launch_description():
              condition=IfCondition(LaunchConfiguration('status_leds'))),
         OpaqueFunction(function=_description),
         # debug:=true: live report of the round (states, direction, corners, laps, lines) in this terminal.
-        Node(package='robotek_course', executable='round_reporter', name='round_reporter', output='screen',
-             condition=IfCondition(LaunchConfiguration('debug')),
-             additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
-                             'ROBOTEK_CAMERA_BLUE': LaunchConfiguration('camera_blue_hsv'),
-                             'ROBOTEK_CAMERA_ORANGE': LaunchConfiguration('camera_orange_hsv'),
-                             'ROBOTEK_CAMERA_WALL_MASK': PythonExpression(
-                                 ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
-             remappings=[('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
-                         ('/camera/image', LaunchConfiguration('camera_topic'))]),
+        OpaqueFunction(function=_reporter_node),
         # Your strategy: real clock, waits for /start (the button of the board).
         OpaqueFunction(function=_strategy_node),
     ])
