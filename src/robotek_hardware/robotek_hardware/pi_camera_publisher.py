@@ -17,6 +17,7 @@ third of the CPU and energy per frame.
   ros2 run robotek_hardware pi_camera_publisher --ros-args -p width:=640 -p height:=360 -p fps:=30.0
 """
 import os
+import select
 import shutil
 import signal
 import subprocess
@@ -30,6 +31,11 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
 from sensor_msgs.msg import CompressedImage, Image
 from std_msgs.msg import String
+
+
+FRAME_TIMEOUT = 3.0     # s without a frame: rpicam is restarted (4 nov 2026: a loose ribbon gave "Camera frontend
+                        # has timed out" and rpicam-vid hung without frames; the Open waited 15 s and failed)
+LOG = '/tmp/pi_camera_rpicam.log'
 
 
 class PiCameraPublisher(Node):
@@ -104,21 +110,47 @@ class PiCameraPublisher(Node):
                 continue
             cmd = self.command()
             self.get_logger().info('Pi camera: ' + ' '.join(cmd))
-            self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                            bufsize=self.frame_bytes, env=self.camera_env())
-            stream = self.process.stdout
+            with open(LOG, 'w') as log:
+                self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log, bufsize=0,
+                                                env=self.camera_env())
+            fd = self.process.stdout.fileno()
             while self.running and self.active():
-                data = stream.read(self.frame_bytes)
-                if data is None or len(data) < self.frame_bytes:
+                data = self.read_frame(fd)
+                if data is None:
                     break
                 self.publish(data)
             if self.process.poll() is None:
                 self.process.terminate()
             self.process.wait()
             if self.running and self.active():
-                self.get_logger().warning('Pi camera stopped (busy, or no camera on the ribbon: rpicam-hello '
-                                          '--list-cameras); retrying in 2 s.', throttle_duration_sec=30.)
+                self.get_logger().warning(f'Pi camera stopped ({self.rpicam_error()}); retrying in 2 s. Busy, or the '
+                                          'ribbon (rpicam-hello --list-cameras).', throttle_duration_sec=30.)
                 time.sleep(2.0)
+
+    def read_frame(self, fd):
+        """One whole frame from the pipe, or None if rpicam ended or gave nothing for FRAME_TIMEOUT s."""
+        chunks, missing = [], self.frame_bytes
+        while missing:
+            if not select.select([fd], [], [], FRAME_TIMEOUT)[0]:
+                self.get_logger().error(f'Pi camera: no frame in {FRAME_TIMEOUT:.0f} s ({self.rpicam_error()}); '
+                                        'restarting rpicam.', throttle_duration_sec=10.)
+                return None
+            chunk = os.read(fd, missing)
+            if not chunk:
+                return None
+            chunks.append(chunk)
+            missing -= len(chunk)
+        return b''.join(chunks)
+
+    @staticmethod
+    def rpicam_error():
+        """The last ERROR line of rpicam-vid (its output goes to LOG)."""
+        try:
+            with open(LOG) as log:
+                errors = [line.strip() for line in log if 'ERROR' in line]
+        except OSError:
+            return 'no rpicam log'
+        return errors[-1][-160:] if errors else 'no error from rpicam'
 
     def publish(self, data):
         yuv = np.frombuffer(data, np.uint8).reshape(self.height * 3 // 2, self.width)

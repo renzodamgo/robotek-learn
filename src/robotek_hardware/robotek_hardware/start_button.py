@@ -4,6 +4,8 @@ debounced like the team's robot_node (1.5 s).
 Any press after the first one publishes /robotek/stop (Bool true, two beeps): base_adapter
 and motor_driver hold the motor at 0 and the Open strategy stops for good. Restart the
 launch to run again. (8 Oct 2026: the car hit a wall and could not be stopped.)
+Presses in the first stop_lockout seconds (default 5) after the start are ignored: on 4 nov 2026 a start pressed twice
+by mistake stopped the round before the car moved.
 
 auto_start_delay > 0 (car.launch button:=false, for quick tests): the node starts by itself that many seconds after it
 comes up, as if the button had been pressed, so the FIRST real press is already the stop."""
@@ -27,6 +29,8 @@ class StartButton(Node):
         self.stop_pub = self.create_publisher(Bool, '/robotek/stop', 10)
         self.last = None
         self.started = False
+        self.started_at = None
+        self.stop_lockout = float(self.declare_parameter('stop_lockout', 5.0).value)
         delay = float(self.declare_parameter('auto_start_delay', 0.0).value)
         if delay > 0.:
             self.auto_timer = self.create_timer(delay, self.auto_start)
@@ -48,6 +52,7 @@ class StartButton(Node):
                 self.auto_timer.cancel()
                 return
             self.started = True
+            self.started_at = self.get_clock().now().nanoseconds*1e-9
             self.get_logger().info('Start (no button).')
         self.pub.publish(Bool(data=True))
         self.auto_count += 1
@@ -61,12 +66,17 @@ class StartButton(Node):
         if self.last is not None and now-self.last < DEBOUNCE:
             return
         self.last = now
+        if self.started and self.started_at is not None and now-self.started_at < self.stop_lockout:
+            self.get_logger().warning(f'Press ignored: {now-self.started_at:.1f} s after the start '
+                                      f'(a stop needs {self.stop_lockout:.0f} s).')
+            return
         if self.started:
             self.stop_pub.publish(Bool(data=True))
             self.beep(repeat=2)
             self.get_logger().warning('Stop (button pressed again).')
             return
         self.started = True
+        self.started_at = now
         self.pub.publish(Bool(data=True))
         self.beep(repeat=1)
         self.get_logger().info('Start.')
