@@ -4,7 +4,7 @@ from dataclasses import dataclass, fields
 
 @dataclass
 class Params:
-    cruise_speed: float = 0.35      # m/s on a clear lane
+    cruise_speed: float = 0.28      # m/s on a clear lane (0.35 until 4 nov 2026: with the real car of the lab, --car real_v2, reg1-ccw hit red sign 2 at 8.7 s on every seed; 0.28 gave 10/10, Gazebo car 10/10 too)
     pillar_speed: float = 0.30      # m/s while passing a sign or changing lane
     finish_speed: float = 0.15      # m/s on the last metres and the stop
     pillar_clearance: float = 0.18  # m from the sign box to the car's side
