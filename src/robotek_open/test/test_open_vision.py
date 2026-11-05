@@ -89,3 +89,17 @@ def test_orange_range_can_wrap_through_red():
     sim = OpenVision(); sim.update(image, 0.0)
     real = OpenVision(orange_hsv=(158, 4, 60, 40)); real.update(image, 0.0)
     assert sim.orange_length == 0.0 and real.orange_length > 150
+
+
+def test_contrast_masks_find_thin_washed_out_lines():
+    """IMX708 from the start (4 nov 2026): 2-px lines, navy-grey and brownish, that no HSV range separates."""
+    import numpy as np
+    from robotek_open.open_vision import OpenVision
+    frame = np.full((720, 1280, 3), (216, 214, 211), np.uint8)      # white floor (measured BGR)
+    frame[300:302, 100:700] = (103, 100, 89)                          # far blue line (measured)
+    frame[400:402, 100:700] = (102, 112, 122)                         # far orange line (measured)
+    vision = OpenVision(line_contrast=30, line_tint=8)
+    blue, orange = vision.contrast_masks(frame)
+    assert vision.line_length(blue[290:310]) > 500 and not blue[390:410].any()
+    assert vision.line_length(orange[390:410]) > 500 and not orange[290:310].any()
+    assert not blue[500:].any() and not orange[500:].any()          # plain floor stays clear

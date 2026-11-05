@@ -8,6 +8,9 @@ Pi's ISP, as raw YUV420 from a pipe, then publishes them:
   <topic>/compressed   sensor_msgs/CompressedImage, JPEG, only while someone subscribes (RViz over Wi-Fi)
 
 By default it uses the whole sensor (mode 2304:1296, the widest field; up to 56 fps) scaled to 640x360 at 30 fps.
+With active_states (e.g. 'WAIT_START,CALIBRATE,DETECT_DIRECTION' for the Open) the camera runs only while
+/robotek/state is one of them (or not published yet): the Open needs it only to choose the direction, and after Start
+rpicam is stopped to save the battery (4 nov 2026). It starts again when the state is one of them again.
 Measured on 4 nov 2026 against the USB camera: about 1.8 times the horizontal field, 56 fps against 13, and about a
 third of the CPU and energy per frame.
 
@@ -24,7 +27,9 @@ import cv2
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
 from sensor_msgs.msg import CompressedImage, Image
+from std_msgs.msg import String
 
 
 class PiCameraPublisher(Node):
@@ -39,7 +44,8 @@ class PiCameraPublisher(Node):
             ('topic', '/picam/image_raw'),
             ('frame_id', 'camera'),
             ('jpeg_quality', 70),
-            ('extra_args', ''))}           # more rpicam-vid options, e.g. '--shutter 8000'
+            ('extra_args', ''),            # more rpicam-vid options, e.g. '--shutter 8000'
+            ('active_states', ''))}        # comma-separated /robotek/state values to run in ('' = always)
         self.p = p
         self.width, self.height = int(p['width']), int(p['height'])
         if self.width % 64 or self.height % 2:
@@ -49,12 +55,26 @@ class PiCameraPublisher(Node):
         self.jpeg_pub = self.create_publisher(CompressedImage, p['topic'] + '/compressed', 2)
         self.process = None
         self.running = True
+        self.active_states = {state.strip() for state in str(p['active_states']).split(',') if state.strip()}
+        self.state = ''
+        if self.active_states:
+            self.create_subscription(String, '/robotek/state', self.on_state,
+                                     QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.frames, self.rate_since = 0, time.monotonic()
         if shutil.which('rpicam-vid') is None:
             self.get_logger().error('rpicam-vid not found: install rpicam-apps (Raspberry Pi camera tools).')
             return
         threading.Thread(target=self.capture_loop, daemon=True).start()
         self.create_timer(10.0, self.report_rate)
+
+    def on_state(self, msg):
+        was = self.active()
+        self.state = msg.data
+        if self.active() != was:
+            self.get_logger().info(f'Pi camera {"on" if self.active() else "off"} (state {self.state}).')
+
+    def active(self):
+        return not self.active_states or not self.state or self.state in self.active_states
 
     def command(self):
         p = self.p
@@ -79,12 +99,15 @@ class PiCameraPublisher(Node):
     def capture_loop(self):
         """Run rpicam-vid and publish every frame; start it again if it stops (camera busy, cable)."""
         while self.running and rclpy.ok():
+            if not self.active():
+                time.sleep(0.2)
+                continue
             cmd = self.command()
             self.get_logger().info('Pi camera: ' + ' '.join(cmd))
             self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                             bufsize=self.frame_bytes, env=self.camera_env())
             stream = self.process.stdout
-            while self.running:
+            while self.running and self.active():
                 data = stream.read(self.frame_bytes)
                 if data is None or len(data) < self.frame_bytes:
                     break
@@ -92,7 +115,7 @@ class PiCameraPublisher(Node):
             if self.process.poll() is None:
                 self.process.terminate()
             self.process.wait()
-            if self.running:
+            if self.running and self.active():
                 self.get_logger().warning('Pi camera stopped (busy, or no camera on the ribbon: rpicam-hello '
                                           '--list-cameras); retrying in 2 s.', throttle_duration_sec=30.)
                 time.sleep(2.0)
@@ -117,6 +140,9 @@ class PiCameraPublisher(Node):
 
     def report_rate(self):
         now = time.monotonic()
+        if not self.active():
+            self.frames, self.rate_since = 0, now
+            return
         rate = self.frames / (now - self.rate_since)
         self.frames, self.rate_since = 0, now
         self.get_logger().info(f'Pi camera: {rate:.1f} frames/s at {self.width}x{self.height}.',

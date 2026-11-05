@@ -11,7 +11,7 @@ class OpenVision:
 
     def __init__(self, min_length=40.0, min_confidence=0.25, confirmations=5,
                  blue_hsv=(90, 135, 60, 60), orange_hsv=(5, 28, 60, 60),
-                 floor_mask=False, wall_v_max=40, wall_min_rows=8):
+                 floor_mask=False, wall_v_max=40, wall_min_rows=8, line_contrast=0, line_tint=8):
         self.min_length = min_length
         self.min_confidence = min_confidence
         self.confirmations = confirmations
@@ -21,6 +21,9 @@ class OpenVision:
         self.floor_mask = floor_mask
         self.wall_v_max = wall_v_max
         self.wall_min_rows = wall_min_rows
+        # Thin-line detection (0 = off): see contrast_masks.
+        self.line_contrast = line_contrast
+        self.line_tint = line_tint
         self.blue_length = 0.0
         self.orange_length = 0.0
         self.confidence = 0.0
@@ -40,7 +43,8 @@ class OpenVision:
             orange_hsv=(cfg.vision_orange_h_min, cfg.vision_orange_h_max,
                         cfg.vision_orange_s_min, cfg.vision_orange_v_min),
             floor_mask=cfg.vision_floor_mask, wall_v_max=cfg.vision_wall_v_max,
-            wall_min_rows=cfg.vision_wall_min_rows)
+            wall_min_rows=cfg.vision_wall_min_rows,
+            line_contrast=getattr(cfg, 'vision_line_contrast', 0), line_tint=getattr(cfg, 'vision_line_tint', 8))
 
     @staticmethod
     def line_length(mask):
@@ -62,6 +66,26 @@ class OpenVision:
             return cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, 255, 255]))
         return (cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([179, 255, 255]))
                 | cv2.inRange(hsv, np.array([0, s_min, v_min]), np.array([h_max, 255, 255])))
+
+    def contrast_masks(self, bgr):
+        """Blue and orange masks of thin lines that are darker than the floor around them, by their tint.
+
+        Far away (the corner lines seen from the start, ~1.5 m) a line is only a few pixels wide and its colour mixes
+        with the white floor: on the IMX708 the blue line is navy-grey (S ~30-110) and the white floor next to the
+        black wall is tinted blue as much (4 nov 2026), so no HSV range separates them. A line is instead a thin dark
+        feature (black-hat: darker than the floor within a window of ~15 px at 720 rows) whose blue-minus-red differs
+        from the floor's around it: higher on the blue line, lower on the orange one.
+        """
+        size = max(5, int(round(15 * bgr.shape[0] / 720))) | 1
+        kernel = np.ones((size, size), np.uint8)
+        darker = cv2.morphologyEx(bgr.max(axis=2), cv2.MORPH_BLACKHAT, kernel)
+        floor = cv2.morphologyEx(bgr, cv2.MORPH_CLOSE, kernel).astype(np.int16)
+        pixel = bgr.astype(np.int16)
+        tint = (pixel[..., 0] - pixel[..., 2]) - (floor[..., 0] - floor[..., 2])
+        line = darker >= self.line_contrast
+        blue = (line & (tint >= self.line_tint)).astype(np.uint8) * 255
+        orange = (line & (tint <= -self.line_tint)).astype(np.uint8) * 255
+        return blue, orange
 
     def floor_rows(self, hsv):
         """First floor row per column: below the lowest dark band (the black field wall).
@@ -92,6 +116,10 @@ class OpenVision:
         hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
         blue = self.colour_mask(hsv, *self.blue_hsv)
         orange = self.colour_mask(hsv, *self.orange_hsv)
+        if self.line_contrast > 0:
+            thin_blue, thin_orange = self.contrast_masks(bgr)
+            blue |= thin_blue
+            orange |= thin_orange
         kernel = np.ones((3, 5), dtype=np.uint8)
         blue = cv2.morphologyEx(blue, cv2.MORPH_CLOSE, kernel)
         orange = cv2.morphologyEx(orange, cv2.MORPH_CLOSE, kernel)

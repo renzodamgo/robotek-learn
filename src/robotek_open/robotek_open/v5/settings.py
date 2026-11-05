@@ -19,6 +19,7 @@ VISION = {
     'vision_blue_h_min': 100, 'vision_blue_h_max': 135, 'vision_blue_s_min': 80, 'vision_blue_v_min': 25,
     'vision_orange_h_min': 158, 'vision_orange_h_max': 4, 'vision_orange_s_min': 60, 'vision_orange_v_min': 40,
     'vision_floor_mask': True, 'vision_wall_v_max': 40, 'vision_wall_min_rows': 8,
+    'vision_line_contrast': 0, 'vision_line_tint': 8,
 }
 PARAMETERS = {**asdict(Params()), **OPERATION, **VISION}
 

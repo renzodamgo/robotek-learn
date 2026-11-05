@@ -50,6 +50,16 @@ def _share(package):
 def _arg(context, name):
     return LaunchConfiguration(name).perform(context)
 
+
+def _picam_states(context):
+    """picam_active_states, or for the Open by default only until the direction is chosen (the camera is not used
+    after that; stopping it saves the battery)."""
+    states = _arg(context, 'picam_active_states')
+    if states == 'auto':
+        return 'WAIT_START,CALIBRATE,DETECT_DIRECTION' if _arg(context, 'strategy') == 'robotek_open' else ''
+    return states
+
+
 def _camera_topic(context):
     """camera_topic, or by default the topic of the chosen camera driver (picam: /picam/image_raw)."""
     topic = _arg(context, 'camera_topic')
@@ -157,7 +167,8 @@ def _drivers(context):
                                              'rotation': int(_arg(context, 'picam_rotation')),
                                              'width': int(_arg(context, 'picam_width')),
                                              'height': int(_arg(context, 'picam_height')),
-                                             'fps': float(_arg(context, 'picam_fps'))}]))
+                                             'fps': float(_arg(context, 'picam_fps')),
+                                             'active_states': _picam_states(context)}]))
         else:
             # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
             actions.append(Node(package='robotek_hardware', executable='camera_publisher', name='camera_publisher',
@@ -201,9 +212,13 @@ def generate_launch_description():
                                           "package) or 'picam' (the Raspberry Pi camera on the CSI ribbon, IMX708)"),
         DeclareLaunchArgument('picam_rotation', default_value='180',
                               description='picam: 180 = mounted upside down (the team car), 0 = upright'),
-        DeclareLaunchArgument('picam_width', default_value='640'),
-        DeclareLaunchArgument('picam_height', default_value='360'),
-        DeclareLaunchArgument('picam_fps', default_value='30.0'),
+        # 1280x720: from the start the corner lines are ~1.5 m away and only 1 px wide at 640x360 (4 nov 2026).
+        DeclareLaunchArgument('picam_width', default_value='1280'),
+        DeclareLaunchArgument('picam_height', default_value='720'),
+        DeclareLaunchArgument('picam_fps', default_value='10.0'),
+        DeclareLaunchArgument('picam_active_states', default_value='auto',
+                              description="picam: /robotek/state values the camera runs in ('' = always; auto = "
+                                          "the Open only until the direction is chosen)"),
         DeclareLaunchArgument('video_device', default_value='',
                               description='your camera; empty = the first /dev/v4l/by-id/*-video-index0, else '
                                           '/dev/video0. A stable by-id path is better than /dev/videoN'),

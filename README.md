@@ -147,7 +147,13 @@ azulado (V 40-60), el naranja con H ≈ 7 (la USB lo veía rosado) y el rojo de 
     vision_orange_h_max: 25
     vision_orange_v_min: 60
     vision_wall_v_max: 70      # el muro llega a V ≈ 60 con esta cámara
+    vision_line_contrast: 30   # líneas finas más oscuras que el suelo (desde la salida están a ~1,5 m)
+    vision_line_tint: 8        # y su tinte respecto al suelo: azul o naranja
 ```
+
+Desde la salida, las líneas de la esquina están a ~1,5 m. A 640x360 ocupan 1 px y casi no tienen color, así que
+`camera_driver:=picam` usa por defecto 1280x720 a 10 fps. La cámara solo funciona hasta que se elige el sentido
+(`picam_active_states:=auto` en el Open): después de Start se para `rpicam-vid` y no gasta batería ni CPU.
 
 Espera el botón de la placa. Usa solo el LiDAR, el giroscopio y la cámara, que decide el sentido (el LiDAR lo
 comprueba antes de la primera esquina). La telemetría queda en `~/runs/<fecha>-<hora>-open-v5/`. Prueba sin botón y con

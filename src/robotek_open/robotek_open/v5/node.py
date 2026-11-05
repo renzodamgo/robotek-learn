@@ -54,7 +54,8 @@ class OpenV5Node(Node):
             orange_hsv=(cfg['vision_orange_h_min'], cfg['vision_orange_h_max'],
                         cfg['vision_orange_s_min'], cfg['vision_orange_v_min']),
             floor_mask=cfg['vision_floor_mask'], wall_v_max=cfg['vision_wall_v_max'],
-            wall_min_rows=cfg['vision_wall_min_rows'])
+            wall_min_rows=cfg['vision_wall_min_rows'],
+            line_contrast=cfg['vision_line_contrast'], line_tint=cfg['vision_line_tint'])
         from cv_bridge import CvBridge
         self._bridge = CvBridge()
         self.odometry = LidarOdometry(accel=DISTANCE_MODEL_ACCEL)
