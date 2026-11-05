@@ -27,6 +27,8 @@ Brake (rrc backend, brake_rps > 0): the RRC Lite did not hold 0 with the 310 mot
 back, 4 nov 2026). When the speed goes to 0 after moving (target 0, the board button, estop or the watchdog),
 the ramp is skipped and the motor gets +-brake_rps alternating at brake_hz for brake_s (reverse first), then 0
 (mapping.DitherBrake): on the floor that stopped the car ~12 cm after the order, 3 times out of 3.
+With brake_reset the board is reset instead, only at the end of the round (brake_reset_states, the button stop or
+the watchdog); after that reset no motor command is sent until the node restarts.
 
 The strategy's angle is the wheel angle. With wheel_table_* (robot.yaml) the servo gets
 the angle that really produces it on each side (measured by driving circles: at 25 deg
@@ -125,6 +127,10 @@ class BaseAdapter(Node):
         self.brake_reset = bool(p['brake_reset']) and self.brake.enabled
         self.reset_pub = self.create_publisher(Empty, '/rrc/reset', 1) if self.brake_reset else None
         self.reset_sent = False
+        # After the final board reset nothing more goes to the drive motor until a restart (the coach's request,
+        # 4 nov 2026): the reset is the stop, and a later command (the strategy still publishing, a stale brake)
+        # must not start the motor again.
+        self.motor_halted = False
         # Only at the end (4 nov 2026, test 26): a mid-round stop (the strategy braking for a stale IMU) reset the
         # board, which cut the IMU for 2.5 s more and kept the car stopped ~4 s. The reset now needs one of these
         # /robotek/state values (FINISH: the final stop starts there, DONE comes after the car is at rest), the
@@ -205,6 +211,8 @@ class BaseAdapter(Node):
         """Car speed (m/s) to the drive motor of the chosen backend."""
         p = self.p
         if self.backend == 'rrc':
+            if self.motor_halted:
+                return
             rps_per_mps = float(p['motor_rps_per_mps'])
             rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign'])) \
                 if rps_per_mps > 0. else 0.
@@ -213,8 +221,9 @@ class BaseAdapter(Node):
                 if self.brake.start is not None:      # braking: one board reset (at the end), else plain 0
                     if not self.reset_sent and self.final_stop():
                         self.reset_pub.publish(Empty())
-                        self.reset_sent = True
-                        self.get_logger().warning('Stopping after moving: board reset.')
+                        self.reset_sent = self.motor_halted = True
+                        self.get_logger().warning('Stopping after moving: board reset. No more motor commands '
+                                                  'until a restart.')
                     rps = 0.
                 else:
                     self.reset_sent = False
