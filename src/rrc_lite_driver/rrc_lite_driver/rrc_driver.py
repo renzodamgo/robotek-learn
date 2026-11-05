@@ -31,6 +31,7 @@ from rrc_lite_msgs.msg import (
 
 
 PORT_CANDIDATES = ("/dev/rrc_lite", "/dev/ttyACM0")
+REBOOT_GAP = 1.0   # s without IMU data from the board: it rebooted (check_reboot)
 
 
 class RosRobotController(Node):
@@ -140,6 +141,19 @@ class RosRobotController(Node):
             return
         self.get_logger().warning("Board reset (RTS): drive motor stopped; setting the board up again in 2.5 s.")
         self.reset_timer = self.create_timer(2.5, self.after_reset)
+
+    def check_reboot(self):
+        """IMU data back after a gap of more than REBOOT_GAP s with no reset of ours: the board rebooted by itself and
+        forgot the motor type. Send it at once, also while the motors run (4 nov 2026, test 28: after a 2.5 s gap
+        mid-round the car drove backwards with the board's default type; resend_motor_type waits for a stop)."""
+        now = time.monotonic()
+        last, self.last_imu = getattr(self, 'last_imu', None), now
+        if last is None or now - last < REBOOT_GAP or self.reset_timer is not None or self.motor_type < 0:
+            return
+        self.board.set_motor_type(self.motor_type)
+        self.load_servo_offsets()
+        self.get_logger().warning(f"Board data back after {now - last:.1f} s (the board rebooted?): motor type "
+                                  f"{self.motor_type} and servo offsets sent again.")
 
     def after_reset(self):
         self.reset_timer.cancel()
@@ -435,6 +449,7 @@ class RosRobotController(Node):
     def pub_imu_data(self, pub):
         data = self.board.get_imu()
         if data is not None:
+            self.check_reboot()
             ax, ay, az, gx, gy, gz = data
             msg = Imu()
             msg.header.frame_id = self.IMU_FRAME
