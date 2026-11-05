@@ -60,6 +60,16 @@ def _picam_states(context):
     return states
 
 
+def _picam_size(context):
+    """picam_width, picam_height, picam_fps; 'auto' = 1280x720 at 10 fps for the Open (its corner lines are ~1.5 m
+    away and 1 px wide at 640x360) and 640x360 at 30 fps otherwise (the Obstacle's signs are large and need fresh
+    frames while driving)."""
+    is_open = _arg(context, 'strategy') == 'robotek_open'
+    auto = dict(picam_width='1280' if is_open else '640', picam_height='720' if is_open else '360',
+                picam_fps='10.0' if is_open else '30.0')
+    return [_arg(context, name) if _arg(context, name) != 'auto' else value for name, value in auto.items()]
+
+
 def _camera_topic(context):
     """camera_topic, or by default the topic of the chosen camera driver (picam: /picam/image_raw)."""
     topic = _arg(context, 'camera_topic')
@@ -160,14 +170,14 @@ def _drivers(context):
                 actions.append(LogInfo(msg='[car] usb_cam not found (sudo apt install ros-jazzy-usb-cam): '
                                            'the camera must publish ' + _camera_topic(context)))
         elif _arg(context, 'camera_driver') == 'picam':
-            # The Raspberry Pi camera on the CSI ribbon (IMX708): full-sensor field, 640x360 at 30 fps.
+            # The Raspberry Pi camera on the CSI ribbon (IMX708): full-sensor field (size and rate: _picam_size).
             actions.append(Node(package='robotek_hardware', executable='pi_camera_publisher',
                                 name='pi_camera_publisher', output='screen',
                                 parameters=[{'topic': _camera_topic(context),
                                              'rotation': int(_arg(context, 'picam_rotation')),
-                                             'width': int(_arg(context, 'picam_width')),
-                                             'height': int(_arg(context, 'picam_height')),
-                                             'fps': float(_arg(context, 'picam_fps')),
+                                             'width': int(_picam_size(context)[0]),
+                                             'height': int(_picam_size(context)[1]),
+                                             'fps': float(_picam_size(context)[2]),
                                              'active_states': _picam_states(context)}]))
         else:
             # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
@@ -212,10 +222,11 @@ def generate_launch_description():
                                           "package) or 'picam' (the Raspberry Pi camera on the CSI ribbon, IMX708)"),
         DeclareLaunchArgument('picam_rotation', default_value='180',
                               description='picam: 180 = mounted upside down (the team car), 0 = upright'),
-        # 1280x720: from the start the corner lines are ~1.5 m away and only 1 px wide at 640x360 (4 nov 2026).
-        DeclareLaunchArgument('picam_width', default_value='1280'),
-        DeclareLaunchArgument('picam_height', default_value='720'),
-        DeclareLaunchArgument('picam_fps', default_value='10.0'),
+        # auto: 1280x720 at 10 fps for the Open (from the start its corner lines are ~1.5 m away and only 1 px wide at
+        # 640x360, 4 nov 2026), 640x360 at 30 fps for other strategies (the Obstacle).
+        DeclareLaunchArgument('picam_width', default_value='auto'),
+        DeclareLaunchArgument('picam_height', default_value='auto'),
+        DeclareLaunchArgument('picam_fps', default_value='auto'),
         DeclareLaunchArgument('picam_active_states', default_value='auto',
                               description="picam: /robotek/state values the camera runs in ('' = always; auto = "
                                           "the Open only until the direction is chosen)"),

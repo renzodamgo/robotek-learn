@@ -8,6 +8,12 @@ taken from the v3 node of WRO-Strategies so the decisions stay the same:
   (the course's node skips it). The strategy needs a fresh frame to keep driving;
 * the 26 mission parameters of ``settings.Params`` are ROS parameters (defaults = WRO-Strategies'
   ``obstacle_v3.yaml``); ``parking`` (from the round launch) sets ``park``.
+
+The camera is ROS parameters too, for a camera other than the one of the defaults (the USB camera measured on
+8 oct 2026; ``car.launch.py strategy_params:=<file.yaml>`` sets them): ``camera_hfov``, ``camera_pitch`` and
+``camera_yaw`` (rad, + = looks left of the LiDAR's zero) turn an image column into a bearing, and ``red_hsv`` /
+``green_hsv`` are the colours of the signs as ``"h_min,h_max,s_min,v_min"`` (h_min > h_max wraps through 0, as red
+does). ``sign_min_area`` is the smallest blob in pixels.
 """
 from dataclasses import asdict
 import math
@@ -21,7 +27,7 @@ from sensor_msgs.msg import Image, Imu, LaserScan
 from std_msgs.msg import Bool, Float32MultiArray, String
 
 from robotek_common.vehicle import REAL_CAMERA_HFOV, REAL_CAMERA_PITCH, REAL_CAMERA_YAW, WHEELBASE
-from robotek_course.obstacle_vision import associate, color_blocks
+from robotek_course.obstacle_vision import COLOR_RANGES, associate, color_blocks
 
 from .perception import scan_clusters
 from .settings import Params
@@ -29,6 +35,22 @@ from .strategy import Strategy
 
 CONTROL_RATE = 50.0       # Hz, on the node's clock (simulation clock in Gazebo)
 IMAGE_PAIRING = 0.15      # s; a camera frame is paired with a scan at most this old
+
+
+def hsv_bands(spec):
+    """``"h_min,h_max,s_min,v_min"`` -> the [(low, high)] bands of ``color_blocks``; h_min > h_max wraps through 0."""
+    h_min, h_max, s_min, v_min = (int(float(v)) for v in spec.split(','))
+    if h_min <= h_max:
+        return [((h_min, s_min, v_min), (h_max, 255, 255))]
+    return [((0, s_min, v_min), (h_max, 255, 255)), ((h_min, s_min, v_min), (179, 255, 255))]
+
+
+def hsv_spec(bands):
+    """The inverse of ``hsv_bands`` for the default ranges (used as the parameters' defaults)."""
+    (low, high), *rest = bands
+    if rest:                                   # wrapped: (0..h_max) and (h_min..179)
+        return '%d,%d,%d,%d' % (rest[-1][0][0], high[0], low[1], low[2])
+    return '%d,%d,%d,%d' % (low[0], high[0], low[1], low[2])
 
 
 def stamp_of(msg):
@@ -45,6 +67,13 @@ class Drive(Node):
         params = {name: value for name, value in values.items() if value != defaults[name]}
         self.strategy = Strategy(self.declare_parameter('direction', 'auto').value, parking=parking, params=params)
         self.strategy.auto_start = False                 # the referee (or the button on the car) publishes /start
+        self.camera = dict(
+            hfov=float(self.declare_parameter('camera_hfov', REAL_CAMERA_HFOV).value),
+            pitch=float(self.declare_parameter('camera_pitch', REAL_CAMERA_PITCH).value),
+            yaw=float(self.declare_parameter('camera_yaw', REAL_CAMERA_YAW).value),
+            ranges={color: hsv_bands(self.declare_parameter(color + '_hsv', hsv_spec(COLOR_RANGES[color])).value)
+                    for color in ('red', 'green')},
+            min_area=int(self.declare_parameter('sign_min_area', 30).value))
         self.bridge = CvBridge()
         self.scan_msg = None
         self.cmd = self.create_publisher(Twist, '/cmd_vel_raw', 10)
@@ -58,7 +87,8 @@ class Drive(Node):
         self.create_subscription(Bool, 'start', self.on_start, 10)   # plain QoS: the referee and the car's button
         self.create_timer(1.0 / CONTROL_RATE, self.control)
         p = self.strategy.mission.p
-        self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s)' % (p.park, p.steer_limit, params))
+        self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s; camera %s)'
+                               % (p.park, p.steer_limit, params, self.camera))
 
     def now(self):
         return self.get_clock().now().nanoseconds * 1e-9
@@ -76,7 +106,7 @@ class Drive(Node):
         observations = []
         if self.scan_msg is not None and abs(stamp - stamp_of(self.scan_msg)) <= IMAGE_PAIRING:
             bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            blocks = color_blocks(bgr, hfov=REAL_CAMERA_HFOV, pitch=REAL_CAMERA_PITCH, yaw=REAL_CAMERA_YAW)
+            blocks = color_blocks(bgr, **self.camera)
             observations = associate(blocks, scan_clusters(self.scan_msg))
         self.strategy.on_signs(observations, stamp)
 
