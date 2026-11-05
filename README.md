@@ -170,7 +170,9 @@ todo grabado: `bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=
 ### Que arranque solo al encender el Pi
 
 ```bash
-bash tools/car-autostart.sh on motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml
+bash tools/car-autostart.sh on motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car_picam.yaml \
+    camera_driver:=picam                          # la cámara IMX708 (así está el coche desde el 4 nov 2026)
+# con la cámara USB: ... strategy_params:=$HOME/.config/robotek/open_v5_car.yaml (sin camera_driver)
 bash tools/car-autostart.sh status                # ¿está corriendo?   ... log: su salida
 bash tools/car-autostart.sh stop                  # pararlo ahora (p. ej. para lanzar otra cosa a mano)
 bash tools/car-autostart.sh start                 # otra ronda: el Open termina en DONE y hay que relanzarlo
