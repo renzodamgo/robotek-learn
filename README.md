@@ -112,45 +112,59 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 ### Correr el Open v5 (la estrategia del equipo)
 
 El Open v5 está en `src/robotek_open` y corre con el mismo `car.launch.py`, así que usa la calibración actual del coche
-(`src/robotek_hardware/config/robot.yaml`): la dirección medida el 1 nov 2026 (centro real 1403 µs, ±19° iguales a los
-dos lados, proporcional) y el motor en M1. En el Pi:
+(`src/robotek_hardware/config/robot.yaml`): la dirección medida el 1 nov 2026 (centro 1403 µs, ±19°) y el motor 310 en
+M1 con el tipo 2 de la placa (`src/rrc_lite_driver/config/controller_params.yaml`). El 4 nov 2026 hizo rondas completas
+de 3 vueltas en ~30 s en el campo del equipo. En el Pi:
 
 ```bash
-cd ~/robotek-learn && git pull
-colcon build --symlink-install --packages-select robotek_common robotek_open
-source install/setup.bash
-ros2 launch robotek_course car.launch.py strategy:=robotek_open executable:=open_v5
+cd ~/robotek-learn && git pull && colcon build --symlink-install && source install/setup.bash
+bash tools/car-clean.sh                                   # nada de pruebas anteriores
+ros2 launch robotek_course car.launch.py strategy:=robotek_open executable:=open_v5 motor_max_rps:=2.5 \
+    strategy_params:=$HOME/.config/robotek/open_v5_car.yaml
 ```
 
-Espera el botón de la placa (con `button:=false` arranca solo a los 12 s). Usa solo el LiDAR, el giroscopio y la cámara,
-que decide el sentido. La telemetría queda en `~/runs/<fecha>-<hora>-open-v5/`. Los parámetros (velocidad, distancias,
-colores de la cámara) son los valores por defecto de la clase `Params` en `v5/mission.py` y de `v5/settings.py`.
+`~/.config/robotek/open_v5_car.yaml` son los ajustes del coche (el simulador usa los valores por defecto de `Params`
+en `v5/mission.py`):
 
-Antes de una ronda de verdad, con las ruedas en el aire primero:
+```yaml
+strategy:
+  ros__parameters:
+    inner_gap: 0.35            # m a la isla en las rectas
+    wall_heading_gain: 0.3     # corrige el rumbo con las paredes (el giroscopio marca ~5 % menos)
+    finish_speed: 0.4          # m/s del último tramo
+    finish_lead: 0.25          # m: pide parar antes, lo que se pasa el freno
+    # laps: 1                  # solo para probar la llegada y el freno
+```
 
-* **Velocidad:** el v5 pide 1,28 m/s en las rectas; `base_adapter` lo convierte con `motor_rps_per_mps` (4,8, medido
-  con el motor anterior) en ~6,1 rps de la placa, por debajo del tope `motor_max_rps` (7 rps). Con el motor nuevo no se
-  sabe aún qué velocidad real dan: hay que medirla con las ruedas en el aire y luego en el suelo.
-* El v5 calcula sus curvas con la velocidad real del motor anterior (`REAL_SPEED` en `v5/mission.py`, 1,28 → 0,60 m/s)
-  y con un tope de dirección de 17,6° (`REAL_STEER_LIMIT`), dentro de los ±19° del coche.
+Espera el botón de la placa. Usa solo el LiDAR, el giroscopio y la cámara, que decide el sentido (el LiDAR lo
+comprueba antes de la primera esquina). La telemetría queda en `~/runs/<fecha>-<hora>-open-v5/`. Prueba sin botón y con
+todo grabado: `bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml`.
+
+* **Velocidad:** con el tipo 2, ~0,45–0,5 m/s a 2,5 rps y ~0,75 m/s a 4–6 rps (el tope del motor). Corre con
+  `motor_max_rps:=2.5`.
+* **Freno:** con el motor 310 la placa no se queda en 0. `base_adapter` (`brake_reset: true`) reinicia la placa por
+  `/rrc/reset` al parar después de moverse; el coche se para ~17 cm después. Pendiente: revisar el encoder de M1.
+* **Luces:** verde = listo para el botón; azul = pulsado; rojo parpadeando = batería baja.
 
 ### Que arranque solo al encender el Pi
 
 ```bash
-bash tools/car-autostart.sh on motor_max_rps:=6   # a cada arranque: el Open v5 con esos argumentos
+bash tools/car-autostart.sh on motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml
 bash tools/car-autostart.sh status                # ¿está corriendo?   ... log: su salida
 bash tools/car-autostart.sh stop                  # pararlo ahora (p. ej. para lanzar otra cosa a mano)
+bash tools/car-autostart.sh start                 # otra ronda: el Open termina en DONE y hay que relanzarlo
 bash tools/car-autostart.sh off                   # que no arranque más al encender
 ```
 
 Es un servicio de usuario de systemd (`robotek-car.service`, sin sudo). Al encender el Pi espera el Wi-Fi (hasta 60 s)
-y lanza `car.launch.py`: el driver de la placa (con la batería en `/rrc/battery`), el LiDAR, la cámara y la
-estrategia, que **espera el botón de la placa**. `button:=false` no se acepta aquí: el coche saldría solo a los 12 s de
-cada arranque. Sin argumentos usa el Open v5; `on` otra vez cambia los argumentos (`~/.config/robotek/autostart-args`).
-Antes de lanzar algo a mano, `stop`: dos launches a la vez pelean por la placa y el LiDAR. Cada arranque y cada `stop`
-pasan antes por `tools/car-clean.sh`, que para todos los nodos del coche que hayan quedado de un launch anterior y deja
-los motores a 0 (un launch parado desde un script o por ssh puede dejar sus nodos vivos; el 4 nov 2026 eso puso dos
-estrategias a la vez y frenó el Open hasta chocar). Úsalo también a mano antes de cualquier prueba. Tras un `git pull` y
+y lanza `car.launch.py` con esos argumentos; la estrategia **espera el botón de la placa**. `button:=false` no se acepta
+aquí: el coche saldría solo a los 12 s de cada arranque. `on` otra vez cambia los argumentos
+(`~/.config/robotek/autostart-args`). Cada arranque y cada `stop` pasan antes por `tools/car-clean.sh`, que para todos
+los nodos del coche que hayan quedado de un launch anterior y deja los motores a 0 (el 4 nov 2026, nodos sobrantes
+pusieron dos estrategias a la vez y frenaron el Open hasta chocar): úsalo también a mano antes de cualquier prueba.
+Cada ronda queda en `~/runs/<fecha>-<hora>-autostart/`: `launch.log`, `kernel.log` (cortes del USB de la placa) y un
+rosbag ligero que empieza al pulsar Start. El driver reenvía el tipo de motor cada 3 s mientras el coche está parado:
+el interruptor apaga la placa y no el Pi, y la placa vuelve al tipo por defecto (sin fuerza). Tras un `git pull` y
 `colcon build`, el código nuevo entra en el siguiente arranque (o con `stop` y `start`).
 
 ### Conducir el coche con el teclado (para colocarlo en la salida)
