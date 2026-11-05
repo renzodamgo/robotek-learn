@@ -66,9 +66,9 @@ class RosRobotController(Node):
         if motor_type >= 0:
             self.board.set_motor_type(motor_type)
             self.get_logger().info(f"Motor type {motor_type} sent to the board.")
-            # Sent again 3 and 6 s later: a board still rebooting (after a reset, or after the port opened) misses it and
-            # keeps its default type, which has no torque on the floor (4 nov 2026: the car did not move in a round).
-            self.type_resends = 2
+            # Sent again every 3 s while the motors are stopped: a board that rebooted (its power switch, a reset, a USB
+            # drop) forgets it and keeps its default type, which has no torque on the floor (4 nov 2026: twice the car did
+            # not move in a round). Never while a motor turns.
             self.type_timer = self.create_timer(3.0, self.resend_motor_type)
         self.declare_parameter("motor_watchdog", 0.5)
         self.motor_watchdog = float(self.get_parameter("motor_watchdog").value)
@@ -121,12 +121,11 @@ class RosRobotController(Node):
         self.get_logger().info("\033[1;32m%s\033[0m" % "start")
 
     def resend_motor_type(self):
+        if self.motor_moving or self.reset_timer is not None:
+            return
         self.board.enable_reception()
         self.board.set_motor_type(self.motor_type)
-        self.type_resends -= 1
-        if self.type_resends <= 0:
-            self.type_timer.cancel()
-        self.get_logger().info(f"Motor type {self.motor_type} sent again.")
+        self.get_logger().info(f"Motor type {self.motor_type} sent again.", throttle_duration_sec=60.)
 
     def reset_board(self, _msg=None):
         """Pulse RTS (board RESET): the motors lose their speed set point at once. Set up again 2.5 s later."""
@@ -148,9 +147,7 @@ class RosRobotController(Node):
         self.reset_timer = None
         self.board.enable_reception()
         if self.motor_type >= 0:
-            self.board.set_motor_type(self.motor_type)
-            self.type_resends = 2                       # and twice more, in case the board was still booting
-            self.type_timer = self.create_timer(1.5, self.resend_motor_type)
+            self.board.set_motor_type(self.motor_type)   # and again every 3 s while stopped (resend_motor_type)
         self.load_servo_offsets()
         self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
         self.get_logger().info("Board set up again after the reset.")
