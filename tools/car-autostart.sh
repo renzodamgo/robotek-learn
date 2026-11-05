@@ -41,7 +41,7 @@ run() {
     local out=$HOME/runs/$(date +%Y%m%d-%H%M%S)-autostart
     mkdir -p "$out"
     journalctl -k -f -n 0 > "$out/kernel.log" 2>&1 &
-    (ros2 topic echo --once /start > /dev/null 2>&1 &&
+    (ros2 topic echo --once /start std_msgs/msg/Bool > /dev/null 2>&1 &&
         exec ros2 bag record --max-bag-duration 5 -o "$out/bag" /cmd_vel_raw /rrc/acker_servo/set_state /rrc/set_motor \
             /rrc/reset /robotek/scan /robotek/imu /rrc/imu_raw /rrc/battery /robotek/state /start /robotek/stop \
             /robotek/estop /open/steer /tf_static /rosout > "$out/bag.log" 2>&1) &
