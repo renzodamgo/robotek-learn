@@ -14,17 +14,23 @@ The camera is ROS parameters too, for a camera other than the one of the default
 ``camera_yaw`` (rad, + = looks left of the LiDAR's zero) turn an image column into a bearing, and ``red_hsv`` /
 ``green_hsv`` are the colours of the signs as ``"h_min,h_max,s_min,v_min"`` (h_min > h_max wraps through 0, as red
 does). ``sign_min_area`` is the smallest blob in pixels.
+
+For RViz, only while someone watches them: ``/obstacle/debug_image/compressed`` (the frame with the red and green
+blobs, thick when paired with a LiDAR cluster, the state and the steering) and ``/obstacle/signs`` (the paired signs
+as cylinders and the steering as an arrow, in base_link).
 """
 from dataclasses import asdict
 import math
 
+import cv2
 from cv_bridge import CvBridge
 from geometry_msgs.msg import Twist
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
-from sensor_msgs.msg import Image, Imu, LaserScan
+from sensor_msgs.msg import CompressedImage, Image, Imu, LaserScan
 from std_msgs.msg import Bool, Float32MultiArray, String
+from visualization_msgs.msg import Marker, MarkerArray
 
 from robotek_common.vehicle import REAL_CAMERA_HFOV, REAL_CAMERA_PITCH, REAL_CAMERA_YAW, WHEELBASE
 from robotek_course.obstacle_vision import COLOR_RANGES, associate, color_blocks
@@ -81,6 +87,9 @@ class Drive(Node):
             String, '/robotek/state', QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.state_sent = None
         self.pose_pub = self.create_publisher(Float32MultiArray, '/obstacle/pose', 10)   # x, y, th, progress
+        self.debug_pub = self.create_publisher(CompressedImage, '/obstacle/debug_image/compressed', 1)
+        self.signs_pub = self.create_publisher(MarkerArray, '/obstacle/signs', 1)
+        self.steer = 0.0
         self.create_subscription(LaserScan, '/scan', self.on_scan, qos_profile_sensor_data)
         self.create_subscription(Imu, '/imu', self.on_imu, qos_profile_sensor_data)
         self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
@@ -108,7 +117,50 @@ class Drive(Node):
             bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             blocks = color_blocks(bgr, **self.camera)
             observations = associate(blocks, scan_clusters(self.scan_msg))
+            if self.debug_pub.get_subscription_count():
+                self.publish_debug(msg, bgr, blocks, observations)
         self.strategy.on_signs(observations, stamp)
+        if self.signs_pub.get_subscription_count():
+            self.publish_signs(msg, observations)
+
+    def publish_debug(self, msg, bgr, blocks, observations):
+        """The frame with every red and green blob (thick = paired with a LiDAR cluster), the state and the steering."""
+        paired = {o['box'] for o in observations}
+        for block in blocks:
+            x, y, w, h = block['box']
+            color = (0, 200, 0) if block['color'] == 'green' else (0, 0, 255)
+            thick = 3 if block['box'] in paired else 1
+            cv2.rectangle(bgr, (x, y), (x + w, y + h), color, thick)
+            cv2.putText(bgr, '%s %+.0f' % (block['color'][0].upper(), math.degrees(block['bearing'])), (x, max(12, y - 3)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+        for o in observations:
+            cv2.putText(bgr, '%s %.2f,%+.2f' % (o['color'][0].upper(), o['x'], o['y']), (8, bgr.shape[0] - 10 - 16 *
+                        observations.index(o)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 0), 1)
+        cv2.putText(bgr, '%s  signs %d  steer %+.0f' % (self.strategy.label, len(observations), math.degrees(self.steer)),
+                    (8, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 0), 2)
+        out = CompressedImage(format='jpeg', data=cv2.imencode('.jpg', bgr, [cv2.IMWRITE_JPEG_QUALITY, 70])[1].tobytes())
+        out.header = msg.header
+        self.debug_pub.publish(out)
+
+    def publish_signs(self, msg, observations):
+        """The paired signs as cylinders and the commanded steering as an arrow, in base_link."""
+        markers = MarkerArray(markers=[Marker(action=Marker.DELETEALL)])
+        for i, o in enumerate(observations):
+            m = Marker(ns='signs', id=i, type=Marker.CYLINDER, action=Marker.ADD)
+            m.header.frame_id, m.header.stamp = 'base_link', msg.header.stamp
+            m.pose.position.x, m.pose.position.y, m.pose.position.z = float(o['x']), float(o['y']), 0.05
+            m.scale.x = m.scale.y = 0.05
+            m.scale.z = 0.1
+            m.color.a, m.color.r, m.color.g = 0.9, float(o['color'] == 'red'), float(o['color'] == 'green')
+            markers.markers.append(m)
+        arrow = Marker(ns='steer', id=0, type=Marker.ARROW, action=Marker.ADD)
+        arrow.header.frame_id, arrow.header.stamp = 'base_link', msg.header.stamp
+        arrow.pose.position.x = float(WHEELBASE)
+        arrow.pose.orientation.z, arrow.pose.orientation.w = math.sin(self.steer / 2), math.cos(self.steer / 2)
+        arrow.scale.x, arrow.scale.y, arrow.scale.z = 0.25, 0.02, 0.02
+        arrow.color.a, arrow.color.r, arrow.color.g, arrow.color.b = 1.0, 1.0, 1.0, 0.0
+        markers.markers.append(arrow)
+        self.signs_pub.publish(markers)
 
     def on_start(self, msg):
         if msg.data and not self.strategy.started:
@@ -117,6 +169,7 @@ class Drive(Node):
 
     def control(self):
         speed, steer = self.strategy.control(self.now(), 1.0 / CONTROL_RATE)
+        self.steer = steer
         cmd = Twist()
         cmd.linear.x = float(speed)
         cmd.angular.z = float(speed * math.tan(steer) / WHEELBASE)
