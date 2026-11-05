@@ -133,6 +133,7 @@ strategy:
     wall_heading_gain: 0.3     # corrige el rumbo con las paredes (el giroscopio marca ~5 % menos)
     finish_speed: 0.4          # m/s del último tramo
     finish_lead: 0.25          # m: pide parar antes, lo que se pasa el freno
+    direction_fallback: ccw    # si la cámara no decide el sentido en 1 s, antihorario; el LiDAR lo corrige
     # laps: 1                  # solo para probar la llegada y el freno
 ```
 

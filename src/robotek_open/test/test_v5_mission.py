@@ -49,6 +49,17 @@ def test_the_camera_decides_the_direction_and_without_it_the_mission_stops_after
     assert lost.step(DT, BESIDE, 0.0, 0.0) == (0.0, 0.0)
 
 
+def test_without_a_camera_decision_the_fallback_direction_is_taken_after_the_wait():
+    mission = OpenMission(Params(direction='auto', direction_fallback='ccw', direction_fallback_wait=1.0))
+    run_setup(mission, seconds=0.9)
+    assert mission.state == 'SETUP' and not mission.direction          # still waiting for the camera
+    run_setup(mission, seconds=0.6)
+    assert mission.direction == 'ccw' and mission.state == 'RUN' and mission.direction_fallback_used
+    decided = OpenMission(Params(direction='auto', direction_fallback='ccw'))
+    run_setup(decided, camera=-1)
+    assert decided.direction == 'cw' and not decided.direction_fallback_used   # the camera still wins
+
+
 def test_it_drives_straight_at_cruise_speed_and_holds_the_gap_to_the_island():
     mission = ready()
     speed, steer = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.8), 0.004, 0.01)

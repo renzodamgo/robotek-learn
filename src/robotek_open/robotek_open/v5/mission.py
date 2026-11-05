@@ -49,6 +49,11 @@ class Params:
     finish_stop_wait: float = 0.9         # s at rest before DONE
     calibrate_seconds: float = 0.3
     direction: str = 'auto'               # ccw, cw or auto (camera)
+    # auto and the camera still undecided this many s after the calibration: take direction_fallback (ccw or cw) and
+    # let the LiDAR check fix it before corner 1. '' = wait up to DIRECTION_TIMEOUT and stop (direction_fault).
+    # 4 nov 2026, real car with the IMX708: both lines equally long from the start (confidence 0.09).
+    direction_fallback: str = ''
+    direction_fallback_wait: float = 1.0
     laps: int = LAPS                      # 3 in a round; fewer only for tests on the car (e.g. the finish and brake)
 
 
@@ -91,6 +96,7 @@ class OpenMission:
         self._braking = False
         self._wrong_side, self._check_scene = 0, None
         self.direction_flipped = False             # the LiDAR overruled the camera's direction before corner 1
+        self.direction_fallback_used = False       # the camera did not decide: direction_fallback was taken
 
     # ----------------------------------------------------------------- API
     def request_start(self):
@@ -151,6 +157,9 @@ class OpenMission:
     def _choose_direction(self, camera):
         if not self.direction and camera:
             self.direction = 'ccw' if camera > 0 else 'cw'
+        if not self.direction and self.p.direction_fallback in ('ccw', 'cw') \
+                and self._time >= self.p.direction_fallback_wait:
+            self.direction, self.direction_fallback_used = self.p.direction_fallback, True
         if self.direction:
             self.state, self.travelled = 'RUN', 0.0
         elif self._time >= DIRECTION_TIMEOUT:
