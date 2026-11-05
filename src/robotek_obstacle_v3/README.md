@@ -87,8 +87,34 @@ Antes de la primera ronda real, revisar esto:
   que 0.06 m/s mueve el coche (el motor nuevo no se movía a 1.3 rps o menos).
 - **Freno de muro** de `base_adapter` (`wall_slow_m` 0.30, `wall_stop_m` 0.10): reduce la velocidad si el LiDAR ve algo
   delante a menos de 0.30 m. Puede frenar a la v3 en las esquinas y al aparcar. Gazebo no tiene ese freno.
-- **Colores**: los rangos HSV de `robotek_course.obstacle_vision` se ajustaron con la cámara simulada. En el coche
-  hay que ajustarlos de nuevo.
+- **Cámara**: los valores por defecto de `drive.py` son los de la cámara USB (medida el 8 oct 2026) y los colores de
+  la cámara simulada. Con la IMX708 hay que usar el archivo de abajo.
+
+### Con la cámara IMX708 (así está el coche desde el 4 nov 2026)
+
+```bash
+ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=2.5 \
+    strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml
+```
+
+Con `camera_driver:=picam`, el Obstacle usa la cámara toda la ronda a 640x360 y 30 fps (en el coche llegan ~25 fps;
+`drive` usa ~42 % de un núcleo). `~/.config/robotek/obstacle_v3_car_picam.yaml`, medido el 4 nov 2026 con tres
+pilares a ~0,9 m comparados con los grupos del LiDAR (error de rumbo 0,8° rms):
+
+```yaml
+strategy:
+  ros__parameters:
+    camera_hfov: 1.78        # rad, ~102°: es la IMX708 Wide (rpicam la lista solo como imx708)
+    camera_pitch: 0.14       # rad hacia abajo, por la base de los pilares (cámara a 0,142 m del suelo)
+    camera_yaw: 0.054        # rad, + = mira a la izquierda del cero del LiDAR
+    red_hsv: "170,6,90,80"   # pilar H 177-1, S 107-138, V 117-132; v_min 80 deja fuera la línea naranja (V ~50)
+    green_hsv: "40,85,70,60" # pilar H 50-59, S 97-126, V 102-122
+```
+
+Formato de los colores: `"h_min,h_max,s_min,v_min"` (si h_min > h_max, el rango da la vuelta por 0, como el rojo).
+Con los valores de la cámara USB, la IMX708 no veía el pilar rojo de la derecha y ponía el verde del centro sobre
+un objeto a 2,1 m; con estos, los tres pilares caen en su grupo del LiDAR. Medido solo con la luz de la sala, de
+frente y a ~0,9 m: falta comprobarlo de lado, de lejos y en marcha.
 
 ## Las medidas del coche (`car.py`)
 
