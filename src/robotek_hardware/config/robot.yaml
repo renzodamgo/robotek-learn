@@ -76,7 +76,7 @@ base_adapter:
                                      # the car at ~1 rps, 0.20 m/s of the Obstacle v3 with full lock; car.launch.py motor_min_rps:=1.5)
     # Wall guard: forward speed scaled down from wall_slow_m to 0 at wall_stop_m (nearest LiDAR return within +-wall_half_deg
     # of straight ahead; the LiDAR is ~2 cm behind the front of the car), smoothly through decel_limit. 0 = off.
-    wall_stop_m: 0.10
+    wall_stop_m: 0.0                 # 8 nov 2026: off (user). It slowed the Obstacle v3 next to signs and walls until the motor stalled; 0.10 = on
     wall_slow_m: 0.30
     wall_half_deg: 15.0
     watchdog: 0.3
