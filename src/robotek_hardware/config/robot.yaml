@@ -58,10 +58,11 @@ base_adapter:
     brake_reset_states: FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT   # only at the end (+ button stop, watchdog); other
                                      # stops send 0: a stale-IMU brake reset the board mid-round, ~4 s lost (test 26)
     # Motor (user, 8 nov 2026): JGA27-310R, 20:1 gearbox, 7.4 V, 450 rpm no load at the gearbox shaft (7.5 turns/s);
-    # 2:1 down to the wheels (r 30.5 mm, 0.192 m per turn) -> 0.72 m/s no load, the ~0.75 m/s ceiling measured with the
-    # LiDAR. The board's "rps" is not real turns of this motor (its speed loop uses the JGB27 encoder model, motor_type
-    # 2): 1 board rps = 0.209 m/s = ~2.2 real shaft turns/s, and it is not linear. The board's speed loop zeroes the
-    # PWM below 25 % (|pulse| < 250 of 1000, Hiwonder RRC firmware docs), i.e. ~0.18 m/s no load for this fast motor:
+    # gears 30:54 from the motor to the wheel axle (user, 8 nov; wheel r 30.5 mm, 0.192 m per turn) -> 250 rpm at the
+    # wheels, 0.80 m/s no load at 7.4 V: the Open rounds of 4 nov averaged ~0.85 m/s (LiDAR odometry) with 2.5 rps
+    # asked, i.e. the motor ran at about full speed. The board's "rps" is not real turns of this motor (its speed loop uses the JGB27 encoder model, motor_type
+    # 2): 1 board rps = 0.209 m/s = ~2.0 real shaft turns/s, and it is not linear. The board's speed loop zeroes the
+    # PWM below 25 % (|pulse| < 250 of 1000, Hiwonder RRC firmware docs), i.e. ~0.2 m/s no load for this fast motor:
     # it cannot hold 0.15-0.30 m/s. On the floor it either does not start or runs at ~0.35-0.4 m/s (Obstacle v3, 4 nov:
     # gyro 1.0-1.2 rad/s at full lock with 0.15-0.30 m/s asked). LiDAR, 1 nov 2026: 1 rps 0.209 m/s (repeatable); ~1.9 rps 0.65-0.69 m/s
     # peak forward (0.45 mean, battery ~7 V), 0.40-0.44 m/s backward = the motor's limit. Above ~2 rps the motor cannot
