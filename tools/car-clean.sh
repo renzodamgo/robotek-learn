@@ -15,7 +15,11 @@ REPO=$(cd "$(dirname "$0")/.." && pwd)
 # Bracketed first letters: the grep does not match its own command line.
 PATTERN="[$(echo "${REPO:0:1}")]${REPO:1}/install/[^ ]*/lib/|[o]pt/ros/jazzy/lib/robot_state_publisher/|[o]pt/ros/jazzy/lib/tf2_ros/static_transform_publisher|[u]sb_cam_node|[r]os2 launch robotek_course|[r]os2 bag record|[o]pen-debug-run.sh|[t]op -b -d 1 -o %CPU|[r]os2 topic echo --once /start|[j]ournalctl -k -f -n 0"
 
-pids() { ps -eo pid=,args= | grep -E "$PATTERN" | awk -v me=$$ -v parent=$PPID '$1 != me && $1 != parent {print $1}'; }
+# Never this script nor any of its callers (open-debug-run.sh calls it and matches the pattern: 8 nov 2026 it killed itself).
+ANCESTORS=" "
+p=$$
+while [ -n "$p" ] && [ "$p" -gt 1 ] 2>/dev/null; do ANCESTORS="$ANCESTORS$p "; p=$(ps -o ppid= -p "$p" | tr -d ' '); done
+pids() { ps -eo pid=,args= | grep -E "$PATTERN" | awk -v skip="$ANCESTORS" 'index(skip, " " $1 " ") == 0 {print $1}'; }
 
 found=$(pids | tr '\n' ' ')
 if [ -z "${found// }" ]; then
