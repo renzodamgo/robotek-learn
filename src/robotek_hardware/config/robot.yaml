@@ -42,19 +42,20 @@ base_adapter:
     # values above. motor_rps_per_mps = motor revolutions per second per m/s of the car: MEASURE IT (until then 0 keeps
     # the motor at 0). motor_max_rps 0 = no cap.
     motor_backend: rrc
-    rrc_motor_port: 1                # 1 nov 2026: the 310 motor on M1 (the old one burnt out after a frontal crash). 4 nov:
-                                     # on M2 from ~20:30 to 22:10; a plain 0 did not stop it there either (test 23), and after
-                                     # a reboot M2 only twitched it (test 25): back on M1. Keep brake_reset.
-    rrc_motor_sign: 1.0              # 4 nov 2026, 310 motor on M1 with motor_type 2: -rps drove the car BACKWARD (Open v5, front wall
-                                     # 1.39 -> 1.97 m in 1.2 s). Was -1 (1 nov, old motor on M4). Re-check it if the motor type changes.
+    rrc_motor_port: 2                # 8 nov 2026: the 310 motor on M2 (as the MentorPi), with no motor type sent (rrc_lite_driver
+                                     # motor_type -1): the board's own speed loop then follows the rps and stops on 0.
+                                     # (1-4 nov: M1/M2 with motor_type 2 = the JGA27's negative PID gains against our encoder:
+                                     # full PWM, no stop on 0, sometimes backwards.)
+    rrc_motor_sign: -1.0             # 8 nov 2026, M2 without motor type: +rps straight to the board drives forward, and
+                                     # rrc_driver sends -rps: so -1 here. Re-check it with the LiDAR if port or type change.
     # Brake (4 nov 2026): with the 310 motor the board does not hold 0 (runs on, speeds up or rolls back). Stopping after
     # moving, the motor gets +-brake_rps alternating at brake_hz for brake_s, then 0: on the floor the car stopped
     # ~12 cm after the order, 3 times out of 3 (type 2, 4 rps). brake_rps 0 = off (a plain 0).
-    brake_rps: 1.0
+    brake_rps: 0.0                   # 8 nov: off; without motor type a plain 0 stops the car (~8-10 cm from 0.6 m/s)
     brake_hz: 10.0
     brake_s: 1.5
     brake_min_rps: 0.3               # the Open's finish crawls at ~0.7-1.9 rps: brake after that too
-    brake_reset: true                # reset the board instead (RTS = RESET): the car stopped at once on the floor
+    brake_reset: false               # 8 nov: off (a plain 0 stops it). true = reset the board (RTS) to stop, the 1-4 nov work-around
     brake_reset_states: FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT   # only at the end (+ button stop, watchdog); other
                                      # stops send 0: a stale-IMU brake reset the board mid-round, ~4 s lost (test 26)
     # Motor (user, 8 nov 2026): JGA27-310R, 20:1 gearbox, 7.4 V, 450 rpm no load at the gearbox shaft (7.5 turns/s);
@@ -69,8 +70,8 @@ base_adapter:
     # gyro 1.0-1.2 rad/s at full lock with 0.15-0.30 m/s asked). LiDAR, 1 nov 2026: 1 rps 0.209 m/s (repeatable); ~1.9 rps 0.65-0.69 m/s
     # peak forward (0.45 mean, battery ~7 V), 0.40-0.44 m/s backward = the motor's limit. Above ~2 rps the motor cannot
     # turn faster: the board only pushes more current (a frontal crash at full push stalled and overheated it).
-    motor_rps_per_mps: 4.8           # 1 rps = 0.209 m/s; valid only near 1 rps
-    motor_max_rps: 7.0               # 3 nov 2026, user: the new 310 motor did not move the car at <= 1.3 rps on the floor (it did at 2-7 by hand); was 1.3 after the burnt motor
+    motor_rps_per_mps: 13.0          # 8 nov 2026, M2 without motor type, 30:54 gears: 8.0 gave 0.57-0.67 x the asked 0.1-0.4 m/s (LiDAR)
+    motor_max_rps: 10.0              # 8 nov 2026: ~0.77 m/s with 13 rps per m/s (was 7.0 with type 2 and 4.8 rps per m/s)
     motor_min_rps: 0.0               # > 0: any moving command gets at least this (8 nov 2026: the 310 motor does not start
                                      # the car at ~1 rps, 0.20 m/s of the Obstacle v3 with full lock; car.launch.py motor_min_rps:=1.5)
     # Wall guard: forward speed scaled down from wall_slow_m to 0 at wall_stop_m (nearest LiDAR return within +-wall_half_deg

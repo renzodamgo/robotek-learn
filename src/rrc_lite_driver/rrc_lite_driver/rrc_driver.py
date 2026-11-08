@@ -158,9 +158,10 @@ class RosRobotController(Node):
         mid-round the car drove backwards with the board's default type; resend_motor_type waits for a stop)."""
         now = time.monotonic()
         last, self.last_imu = getattr(self, 'last_imu', None), now
-        if last is None or now - last < REBOOT_GAP or self.reset_timer is not None or self.motor_type < 0:
+        if last is None or now - last < REBOOT_GAP or self.reset_timer is not None:
             return
-        self.send_motor_setup()
+        if self.motor_type >= 0:
+            self.send_motor_setup()
         self.load_servo_offsets()
         self.get_logger().warning(f"Board data back after {now - last:.1f} s (the board rebooted?): motor type "
                                   f"{self.motor_type} and servo offsets sent again.")

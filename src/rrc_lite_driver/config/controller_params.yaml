@@ -4,8 +4,8 @@ rrc_driver:
     init_finish: false
     port: ""          # vacio = /dev/rrc_lite (udev) o /dev/ttyACM0
     acker_channel: 1  # canal PWM del servo de dirección: en el coche del equipo, J4 es el canal 1 (medido 1 nov 2026)
-    # Motor 310 del MentorPi A1 en M1: tipo 2 (JGB27). Prueba del 4 nov 2026 en el suelo, placa sola, 10 rps 2 s
-    # adelante y atras con los tipos 0, 1, 3 y 2: el 2 fue el que mejor avanzo (0 gira continuo en el aire pero en el
-    # suelo solo zumba; 1 y 3 casi no se mueven). Ojo: con el 2 el motor a veces sigue girando tras mandar 0 (1 y 4 nov);
-    # tener a mano el interruptor. Se envia en cada arranque. -1 = no enviarlo.
-    motor_type: 2
+    # Tipo de motor: -1 = NO mandarlo (8 nov 2026). La placa usa entonces su tipo de fabrica y su control de velocidad
+    # sigue los rps y para con 0. Con el tipo 2 (JGA27, ganancias PID negativas en el firmware) nuestro encoder cuenta al
+    # reves y el control se embalaba: PWM a tope, no paraba con 0 y a veces iba hacia atras (1-4 nov). El MentorPi
+    # tampoco lo manda. Si la placa se reinicia, vuelve a su tipo de fabrica, que es el correcto.
+    motor_type: -1
