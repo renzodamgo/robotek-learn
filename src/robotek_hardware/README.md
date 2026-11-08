@@ -10,8 +10,7 @@ LiDAR LD19  -> /scan (driver)        -> scan_adapter -> /robotek/scan  (0 rad al
 IMU de la RRC Lite -> /rrc/imu_raw   -> imu_adapter  -> /robotek/imu   (x adelante, y izquierda, z arriba) -> tu /imu
 Cámara USB -> /usb_cam/image_raw                                                                         -> tu /camera/image
 Botón de la RRC Lite -> start_button -> /start (primera pulsación), /robotek/stop (las siguientes)
-tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_state) + motor (rps, /rrc/set_motor, puerto M1)
-                                     y al parar después de moverse: /rrc/reset (el freno, ver Motor)
+tu /cmd_vel_raw -> base_adapter -> servo (microsegundos, /rrc/acker_servo/set_state) + motor (rps, /rrc/set_motor, puerto M2)
 ```
 
 Se lanza todo con `ros2 launch robotek_course car.launch.py strategy:=my_open` (ver
@@ -113,11 +112,11 @@ Cambios del equipo respecto a MentorPi (solo se incluye lo que necesita el coche
 4. Sin la placa enchufada el nodo no se cae con un traceback: avisa y reintenta cada 3 s. Si el USB se cae **durante**
    una corrida, el nodo muere (`TypeError` en `recv_task`) y hay que relanzar: pasó el 4 nov 2026 por ruido eléctrico
    (`disabled by hub (EMI?)` en el kernel).
-6. `motor_type` (en `config/controller_params.yaml`, 2 en el coche del equipo) se manda al arrancar y otra vez cada 3 s
-   mientras los motores están parados: una placa que se reinició (su interruptor, un reset) vuelve a su tipo por
-   defecto.
+6. `motor_type` (en `config/controller_params.yaml`): **−1 en el coche del equipo, no se manda** (8 nov 2026; con el 2
+   el motor se embalaba, ver Motor). Si fuera ≥ 0, se mandaría al arrancar y cada 3 s con los motores parados.
 7. `/rrc/reset` (`std_msgs/Empty`): reinicia la placa (la línea RTS de su chip USB va a RESET), el motor se para, y
-   2,5 s después la vuelve a preparar (recepción, tipo de motor, motores a 0). Es el freno de `base_adapter`.
+   2,5 s después la vuelve a preparar (recepción, tipo de motor si lo hay, motores a 0). Era el freno de `base_adapter`
+   (`brake_reset`), apagado desde el 8 nov.
 5. Los desplazamientos de los servos (`config/servo_config.yaml`) se leen del paquete instalado, no de una ruta fija.
 
 Qué hace falta para cada cosa:
@@ -135,8 +134,8 @@ Qué hace falta para cada cosa:
 * **LiDAR LD19**: adaptador CP210x (USB `10c4:ea60`), aparece como `/dev/ttyUSB0` a 230400 baudios, que es lo que
   abre el `ld19.launch.py` del driver; la regla de udev añade `/dev/ldlidar`. Si en tu Pi es otro puerto, arranca el
   driver tú y lanza con `lidar_package:=''`.
-* **Motor**: desde el 1 nov 2026, un motor 310 con encoder (reductora 1:90) en el puerto **M1** de la RRC Lite
-  (`rrc_motor_port: 1`; el 4 nov 2026 se probó en M2: no paraba con un 0 y tras un reinicio solo daba tirones). La placa lo mueve en «rps» con el tipo de motor 2. Antes iba un motor sin encoder por un
+* **Motor**: un motor 310 con encoder (JGA27-310R, reductora 20:1, 450 rpm) en el puerto **M2** de la RRC Lite
+  (`rrc_motor_port: 2`), sin mandar el tipo de motor (8 nov 2026). Engranajes motor:eje 54:30. Antes iba un motor sin encoder por un
   puente TB6612 en los GPIO del Pi (`motor_backend: tb6612`, `motor_driver`).
 * **Cámara**: `camera_publisher` busca la primera `/dev/v4l/by-id/*-video-index0` (en el Pi 5 hay muchos
   `/dev/videoN` y el número cambia: mejor la ruta estable; se fija con `video_device:=` en el launch). YUYV 640x480.
@@ -170,21 +169,28 @@ cuando esté enchufado).
 La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo publica en `/cmd_vel_raw`: `linear.x` en m/s y
 `angular.z = v·tan(dirección)/0,1174` en rad/s). `base_adapter` lo convierte así:
 
-* **Motor**: `rps = v·motor_rps_per_mps` (4,8, medido con el motor anterior), con el signo `rrc_motor_sign` (+1: con el
-  tipo 2, +rps es hacia delante) y recortado a `motor_max_rps`. Esas «rps» no son vueltas reales: con el motor 310 y el
-  tipo 2 el coche va a **~0,45–0,5 m/s con 2,5 rps** y a ~0,75 m/s con 4 o 6 rps (el tope del motor) (4 nov 2026). El
-  Open del equipo corre con `motor_max_rps:=2.5`.
-* **Freno**: con este motor, mandar 0 no basta (sigue de largo, acelera o va hacia atrás; ningún tipo de motor lo
-  arregla: probablemente la placa no lee bien su encoder). Con `brake_reset: true` (en `robot.yaml`), al pasar a 0
-  después de moverse `base_adapter` publica `/rrc/reset` y el coche se para ~17 cm después de la orden. Durante los
-  2,5 s del reset no llegan la IMU ni la batería. `brake_rps` es un freno anterior (adelante/atrás alternando), que no
-  fue fiable.
+* **Motor**: `rps = v·motor_rps_per_mps`, con el signo `rrc_motor_sign` y recortado a `motor_max_rps`.
+  - Configuración desde el 8 nov 2026: motor 310 (JGA27-310R 20:1) en **M2**, **sin mandar el tipo de motor**
+    (`motor_type: -1`), engranajes motor:eje 54:30, `motor_rps_per_mps` **4,4**, `rrc_motor_sign` −1 (`rrc_driver`
+    invierte el signo y la placa avanza con rps positivos).
+  - Medido con el LiDAR: 0,15 / 0,30 / 0,50 m/s pedidos dan 0,16 / 0,28 / 0,45 con el factor 4,0, así que el factor
+    pasó a 4,4.
+  - Con 30:54 (el engranaje pequeño en el motor), el factor es 13 y la máxima ~0,65 m/s.
+  - El Open del equipo corre con `motor_max_rps:=6.7`: no recorta su 1,28 m/s; ~0,87 m/s de media en la ronda.
+* **Parada**: un 0 normal. El coche se desliza 8–35 cm (54:30) y se queda quieto.
+  - `brake_reset` (reiniciar la placa por `/rrc/reset`) y `brake_rps` están apagados.
+  - Eran parches del 1–4 nov, cuando se mandaba el **tipo 2**. El firmware de la RRC Lite (código de Hiwonder,
+    `motors_param.h`) tiene para el JGA27 ganancias PID **negativas**, y el encoder de nuestro motor cuenta al revés
+    que el de Hiwonder. Con el tipo 2, el control empujaba en el sentido equivocado: PWM a tope con cualquier consigna,
+    no paraba con 0 y a veces iba hacia atrás.
+  - Sin mandar el tipo, la placa usa el suyo de fábrica y controla bien.
+  - Detalle y medidas: WRO-Strategies `docs/robot-real-pi/obstacle-runs/20261108/`.
 * **Aceleración**: `accel_limit` 1 m/s² (arranque suave). Sin el freno por reset, al parar sigue `decel_limit`
   (0,6 m/s²).
 * **Dirección**: el ángulo de rueda del Twist pasa por la tabla `wheel_table_*` al servo (µs) y se limita a 17,6° (el
   máximo que alcanzan las dos ruedas, igual que `STEER_LIMIT` de la estrategia). Medida el 1 nov 2026
   (`servo_measured: true`). En cuanto la estrategia publica (aunque esté parada esperando el Start) el servo va al centro.
-* **Primera vez**: con las ruedas en el aire y `motor_max_rps:=2.5`. Comprueba que el motor gira hacia adelante, que la
+* **Primera vez**: con las ruedas en el aire y `motor_max_rps:=2`. Comprueba que el motor gira hacia adelante, que la
   dirección sigue al servo y que la segunda pulsación del botón lo para.
 
 ### El camino del botón al motor

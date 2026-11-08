@@ -81,7 +81,7 @@ source install/setup.bash && ros2 launch robotek_course open_challenge.launch.py
 Si el script te añadió a grupos nuevos (`dialout`, `video`, `gpio`), cierra la sesión y vuelve a entrar antes del último comando.
 Espera a que los LED de la placa se pongan **verdes** y pulsa el **botón de la placa una vez**: es el Start (`/start`) y el
 coche hace las tres vueltas de la ronda Open; una segunda pulsación lo detiene (`/robotek/stop`). Ver los límites de
-velocidad en `src/robotek_hardware/README.md` (con el motor 310, `motor_max_rps:=2.5`). Para tu propia estrategia: crea tu paquete como en
+velocidad en `src/robotek_hardware/README.md` (con el motor 310 y los engranajes 54:30, `motor_max_rps:=6.7`). Para tu propia estrategia: crea tu paquete como en
 el paso 0 de la guía y lanza `car.launch.py strategy:=<tu paquete>`. Sin `src/my_open`, el launch lo dice y sale con
 código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de seguridad `src/my_open.bak-FECHA`) tu paquete por el de referencia.
 
@@ -113,15 +113,15 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 
 El Open v5 está en `src/robotek_open` y corre con el mismo `car.launch.py`, así que usa la calibración actual del coche
 (`src/robotek_hardware/config/robot.yaml`): la dirección medida el 1 nov 2026 (centro 1403 µs, ±19°) y el motor 310 en
-M1 con el tipo 2 de la placa (`src/rrc_lite_driver/config/controller_params.yaml`). El 4 nov 2026 hizo rondas completas
-de 3 vueltas en ~30 s en el campo del equipo; la última, con la cámara IMX708 y el arranque automático, terminó en ~32 s
-y paró a 2 cm de donde salió (30/30 estimados, sin juez). En el Pi:
+**M2 sin mandar el tipo de motor** (`motor_type: -1` en `src/rrc_lite_driver/config/controller_params.yaml`), con los
+engranajes 54:30 (el grande en el motor). El 8 nov 2026 hizo tres rondas completas seguidas con la IMX708 en ~27 s
+(FINISH a 28,5 / 26,7 / 26,7 s desde Start, ~0,87 m/s de media; sin juez). En el Pi:
 
 ```bash
 cd ~/robotek-learn && git pull && colcon build --symlink-install && source install/setup.bash
 bash tools/car-clean.sh                                   # nada de pruebas anteriores
-ros2 launch robotek_course car.launch.py strategy:=robotek_open executable:=open_v5 motor_max_rps:=2.5 \
-    strategy_params:=$HOME/.config/robotek/open_v5_car.yaml
+ros2 launch robotek_course car.launch.py strategy:=robotek_open executable:=open_v5 motor_max_rps:=6.7 \
+    strategy_params:=$HOME/.config/robotek/open_v5_car_picam.yaml camera_driver:=picam
 ```
 
 `~/.config/robotek/open_v5_car.yaml` son los ajustes del coche (el simulador usa los valores por defecto de `Params`
@@ -159,7 +159,7 @@ Desde la salida, las líneas de la esquina están a ~1,5 m. A 640x360 ocupan 1 p
 
 Espera el botón de la placa y usa solo el LiDAR, el giroscopio y la cámara. La telemetría queda en
 `~/runs/<fecha>-<hora>-open-v5/`. Prueba sin botón y con todo grabado:
-`bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml`.
+`bash tools/open-debug-run.sh motor_max_rps:=6.7 strategy_params:=$HOME/.config/robotek/open_v5_car_picam.yaml camera_driver:=picam`.
 
 * **Sentido:** lo decide la cámara (gana la línea, azul o naranja, más larga en la imagen). Si en 1 s después de la
   calibración no decide (las dos líneas igual de largas), toma `direction_fallback` (antihorario). Antes de la primera
@@ -175,17 +175,16 @@ Espera el botón de la placa y usa solo el LiDAR, el giroscopio y la cámara. La
 * **El lazo** usa el tiempo real entre ciclos (en el Pi va a 33–50 Hz, no a los 50 fijos): con un paso fijo, las
   esquinas salían de ~115°.
 
-* **Velocidad:** con el tipo 2, ~0,45–0,5 m/s a 2,5 rps y ~0,75 m/s a 4–6 rps (el tope del motor). Corre con
-  `motor_max_rps:=2.5`.
-* **Freno:** con el motor 310 la placa no se queda en 0. `base_adapter` (`brake_reset: true`) reinicia la placa por
-  `/rrc/reset` y el coche se para ~17 cm después. Solo lo hace al final (`brake_reset_states`: FINISH, DONE,
-  OPERATOR_STOP, DIRECTION_FAULT), con la parada del botón o si dejan de llegar órdenes. Una parada en mitad de la ronda
-  (la estrategia frena si el LiDAR o el IMU dejan de llegar) manda solo 0: un reset ahí cortaba el IMU 2,5 s más y el
-  coche perdía ~4 s. Después del reset final no se manda nada más al motor hasta relanzar.
-* **La placa se reinicia sola a veces** (cortes de ~2,5 s del IMU, sin corte de USB) y vuelve al tipo de motor por
-  defecto: el coche no avanza o va hacia atrás. `rrc_driver` lo detecta (más de 1 s sin datos) y reenvía en el momento
-  el tipo de motor y los offsets del servo, también con el coche en marcha. La causa (alimentación o conector) está
-  pendiente.
+* **Velocidad:** la placa controla la velocidad con el encoder: `base_adapter` manda 4,4 rps por m/s (engranajes 54:30)
+  y el coche va a lo pedido (0,15 → 0,16 m/s, 0,50 → 0,45 m/s, medido con el LiDAR el 8 nov). El Open pide hasta
+  1,28 m/s; `motor_max_rps:=6.7` no lo recorta (el coche hace ~0,87 m/s de media en la ronda). Con 2,64 rps
+  (0,60 m/s) la ronda dura ~49 s.
+* **Parada:** un 0 normal: el coche se desliza 8–35 cm y se queda quieto (`brake_reset: false`). Hasta el 8 nov la
+  placa no paraba porque se le mandaba el tipo de motor 2: ver `src/robotek_hardware/README.md`, sección Motor.
+* **La placa se reinicia sola a veces** (cortes de ~2,5 s del IMU, sin corte de USB), sobre todo con el coche
+  atascado empujando. `rrc_driver` lo detecta y reenvía los offsets del servo; el tipo de motor ya no hace falta.
+* **Pendiente:** a veces la dirección no gira en una esquina aunque recibe todo el giro (8 nov, dos rondas; 4 nov,
+  pruebas 19 y 27). CPU y frecuencias normales; el servo responde con el coche quieto.
 * **Botón:** las pulsaciones de los primeros 5 s después del Start se ignoran (`stop_lockout`), por si se pulsa dos
   veces sin querer; después, otra pulsación para el coche.
 * **Luces:** verde = listo para el botón; azul = pulsado; rojo parpadeando = batería baja. El color se reenvía cada
@@ -196,7 +195,7 @@ Espera el botón de la placa y usa solo el LiDAR, el giroscopio y la cámara. La
 ### Que arranque solo al encender el Pi
 
 ```bash
-bash tools/car-autostart.sh on motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car_picam.yaml \
+bash tools/car-autostart.sh on motor_max_rps:=6.7 strategy_params:=$HOME/.config/robotek/open_v5_car_picam.yaml \
     camera_driver:=picam                          # la cámara IMX708 (así está el coche desde el 4 nov 2026)
 # con la cámara USB: ... strategy_params:=$HOME/.config/robotek/open_v5_car.yaml (sin camera_driver)
 bash tools/car-autostart.sh status                # ¿está corriendo?   ... log: su salida
