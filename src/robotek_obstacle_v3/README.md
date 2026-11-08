@@ -65,37 +65,59 @@ Compilar y cargar el entorno en la Raspberry Pi (una vez por cambio):
 cd ~/robotek-learn && colcon build --symlink-install --packages-select robotek_obstacle_v3 && source install/setup.bash
 ```
 
-Lanzar (el botón de la placa da Start; otra pulsación lo para):
+Lanzar en el coche (así corre desde el 8 nov 2026; el botón de la placa da Start y otra pulsación lo para):
 
 ```bash
-ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3
-```
-
-Para seguir los estados en esa terminal, añadir `debug:=true`. El nodo publica su estado en `/robotek/state` y lo
-escribe en la terminal. `/obstacle/pose` lleva x, y, rumbo y progreso. **Nunca se ha probado en el coche real.**
-La primera vez, probarlo sobre tacos y con el motor limitado (`motor_max_rps:=2.5`; el motor 310 no siempre se para con 0: ver el freno en `src/robotek_hardware/README.md`).
-
-Antes de la primera ronda real, revisar esto:
-
-- **Aparcamiento**: `car.launch.py` todavía no tiene un argumento `parking` (Gazebo sí se lo pasa al nodo), así que
-  en el coche la v3 no aparca: para en la recta de salida tras tres vueltas.
-- **Dirección**: la v3 limita el giro a 0.307 rad (17.6°, `steer_limit`). `robot.yaml` permite ±19°. La v3 funciona
-  dentro de ese límite pero no usa los 1.4° que sobran. Subir `steer_limit` cambia las líneas de las esquinas y el
-  aparcamiento, así que habría que validarlo antes en el laboratorio y en Gazebo.
-- **Velocidad**: la v3 pide 0.35 m/s en recta, 0.30 junto a las señales y 0.06 al aparcar. `base_adapter` convierte
-  la velocidad con `motor_rps_per_mps` 4.8, una tabla medida solo cerca de 1 rps. Hay que comprobar con el LiDAR
-  que 0.06 m/s mueve el coche (el motor nuevo no se movía a 1.3 rps o menos).
-- **Freno de muro** de `base_adapter` (`wall_slow_m` 0.30, `wall_stop_m` 0.10): reduce la velocidad si el LiDAR ve algo
-  delante a menos de 0.30 m. Puede frenar a la v3 en las esquinas y al aparcar. Gazebo no tiene ese freno.
-- **Cámara**: los valores por defecto de `drive.py` son los de la cámara USB (medida el 8 oct 2026) y los colores de
-  la cámara simulada. Con la IMX708 hay que usar el archivo de abajo.
-
-### Con la cámara IMX708 (así está el coche desde el 4 nov 2026)
-
-```bash
-ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=2.5 \
+bash tools/car-autostart.sh stop && bash tools/car-clean.sh      # el arranque automático tiene la placa ocupada
+ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=3.4 \
     strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml
 ```
+
+Sin botón (arranca solo a los 12 s): añadir `button:=false`. Para seguir los estados en la terminal: `debug:=true`. El
+nodo publica su estado en `/robotek/state`. `/obstacle/pose` lleva x, y, rumbo y progreso. Para ver qué detecta, en
+el Mac (WRO-Strategies): `PI_IP=192.168.8.153 bash tools/macos_rviz_real.sh docs/robot-real-pi/robot_obstacle.rviz`.
+Muestra la imagen con los pilares (caja gruesa si el LiDAR lo confirma), las señales y la dirección.
+
+Para grabar la ronda, en otra terminal del coche:
+
+```bash
+ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v3/bag /cmd_vel_raw /rrc/set_motor \
+    /robotek/scan /robotek/imu /rrc/battery /robotek/state /start /obstacle/pose /obstacle/signs \
+    /obstacle/debug_image/compressed /rrc/acker_servo/set_state
+```
+
+### En el coche real (8 nov 2026): primera ronda completa
+
+- **Primera ronda que termina:** DONE a los 118,7 s del Start, con tres vueltas y la parada. Fue con el motor en M2
+  sin tipo, engranajes 54:30, `motor_rps_per_mps` 4,4 y sin el freno de pared. El usuario: «funcionó perfecto».
+  - Sin bag ni juez: no hay puntuación medida.
+  - Notas: WRO-Strategies `docs/robot-real-pi/obstacle-runs/20261108/`.
+- **Motor:** hasta el 8 nov no podía ir despacio. Se le mandaba el tipo de motor 2 a la placa, y el motor iba siempre
+  a tope y no paraba con 0. Ver la sección Motor de `src/robotek_hardware/README.md`. Ahora la placa sigue la
+  velocidad desde ~0,02 m/s.
+  - Ya no hace falta `motor_min_rps`: déjalo en 0.
+- **Fuerza a poca velocidad:** con 54:30 (el engranaje grande en el motor), a 0,15–0,20 m/s (0,7–0,9 rps), cerca de
+  los pilares o en las curvas cerradas, al motor a veces le falta fuerza. Para el Obstacle se pueden usar los
+  engranajes 30:54: 3,24 veces más fuerza en las ruedas y máxima ~0,65 m/s.
+  - Entonces `motor_rps_per_mps` 13 en `robot.yaml` y `motor_max_rps:=10`.
+- **Freno de pared** de `base_adapter`: **apagado** (`wall_stop_m: 0` en `robot.yaml`, 8 nov 2026).
+  - Bajaba la velocidad cuando el LiDAR veía algo a menos de 0,30 m delante, lo que pasa todo el rato junto a pilares
+    y paredes. El coche acababa parado.
+  - Gazebo nunca lo tuvo.
+- **Salida con un pilar en la recta:** la v3 pide un cambio de carril de 0,30 m sin rampa. La dirección se va a
+  tope, el coche se pasa y puede tocar la isla. Pasó el 4 nov; ver WRO-Strategies
+  `docs/robot-real-pi/obstacle-runs/20261104/`. Sigue pendiente de arreglar en la estrategia.
+- **Dirección:** a veces, en el Open, el servo recibe todo el giro y el coche no gira. Si pasa en el Obstacle, es lo
+  mismo; está pendiente.
+- **Aparcamiento:** `car.launch.py` todavía no tiene un argumento `parking`, así que en el coche la v3 no aparca: para
+  en la recta de salida tras tres vueltas.
+- **Límite de giro:** la v3 limita el giro a 0.307 rad (17.6°, `steer_limit`) y `robot.yaml` permite ±19°. Subir
+  `steer_limit` cambia las líneas de las esquinas, así que habría que validarlo antes en el laboratorio y en Gazebo.
+
+### La cámara IMX708 (así está el coche desde el 4 nov 2026)
+
+Los valores por defecto de `drive.py` son los de la cámara USB (medida el 8 oct 2026) y los colores de la cámara
+simulada; con la IMX708 se usa `strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml`.
 
 Con `camera_driver:=picam`, el Obstacle usa la cámara toda la ronda a 640x360 y 30 fps (en el coche llegan ~25 fps;
 `drive` usa ~42 % de un núcleo). `~/.config/robotek/obstacle_v3_car_picam.yaml`, medido el 4 nov 2026 con tres
