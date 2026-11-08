@@ -113,12 +113,15 @@ def front_distance(ranges, angle_min, increment, half_deg):
     return best
 
 
-def motor_rps(speed_mps, rps_per_mps, max_rps=0., sign=1., deadband_mps=.005):
+def motor_rps(speed_mps, rps_per_mps, max_rps=0., sign=1., deadband_mps=.005, min_rps=0.):
     """Signed motor speed in revolutions per second for the RRC Lite's closed-loop (encoder) motor ports.
-    rps_per_mps is measured on the car (motor rps per m/s of the car); max_rps <= 0 means no cap."""
+    rps_per_mps is measured on the car (motor rps per m/s of the car); max_rps <= 0 means no cap. min_rps > 0: any
+    speed outside the deadband gets at least that many rps (a motor that does not start lower down)."""
     if abs(speed_mps) < deadband_mps:
         return 0.
     rps = speed_mps*rps_per_mps
+    if min_rps > 0. and abs(rps) < min_rps:
+        rps = math.copysign(min_rps, rps)
     if max_rps > 0.:
         rps = max(-max_rps, min(max_rps, rps))
     return sign*rps

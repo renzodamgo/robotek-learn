@@ -68,6 +68,8 @@ base_adapter:
     # turn faster: the board only pushes more current (a frontal crash at full push stalled and overheated it).
     motor_rps_per_mps: 4.8           # 1 rps = 0.209 m/s; valid only near 1 rps
     motor_max_rps: 7.0               # 3 nov 2026, user: the new 310 motor did not move the car at <= 1.3 rps on the floor (it did at 2-7 by hand); was 1.3 after the burnt motor
+    motor_min_rps: 0.0               # > 0: any moving command gets at least this (8 nov 2026: the 310 motor does not start
+                                     # the car at ~1 rps, 0.20 m/s of the Obstacle v3 with full lock; car.launch.py motor_min_rps:=1.5)
     # Wall guard: forward speed scaled down from wall_slow_m to 0 at wall_stop_m (nearest LiDAR return within +-wall_half_deg
     # of straight ahead; the LiDAR is ~2 cm behind the front of the car), smoothly through decel_limit. 0 = off.
     wall_stop_m: 0.10

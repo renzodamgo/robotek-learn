@@ -200,3 +200,12 @@ def test_dither_brake_does_nothing_when_idle_disabled_or_cancelled():
     brake.rps(2.0, -3.0)                                 # reversing
     assert brake.rps(2.1, 0.0) == 1.0                    # brake starts forward
     assert brake.rps(2.2, 2.0) == 2.0                    # a new command cancels the brake
+
+
+def test_motor_rps_floor():
+    from robotek_hardware.mapping import motor_rps
+    assert motor_rps(0.20, 4.8, 2.5, 1., min_rps=1.5) == 1.5
+    assert motor_rps(-0.10, 4.8, 2.5, 1., min_rps=1.5) == -1.5
+    assert motor_rps(0.40, 4.8, 2.5, 1., min_rps=1.5) == 0.4*4.8
+    assert motor_rps(0.0, 4.8, 2.5, 1., min_rps=1.5) == 0.0
+    assert motor_rps(0.20, 4.8, 2.5, 1.) == 0.20*4.8

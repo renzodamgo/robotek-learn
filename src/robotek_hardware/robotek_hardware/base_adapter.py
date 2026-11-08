@@ -69,7 +69,7 @@ class BaseAdapter(Node):
             wheel_table_servo_deg=[0.], wheel_table_left_deg=[0.], wheel_table_right_deg=[0.],
             wheel_limit_deg=0., servo_measured=True,
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
-            motor_rps_per_mps=0., motor_max_rps=0.,
+            motor_rps_per_mps=0., motor_max_rps=0., motor_min_rps=0.,
             brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1., brake_reset=False,
             brake_reset_states='FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT',
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
@@ -214,8 +214,8 @@ class BaseAdapter(Node):
             if self.motor_halted:
                 return
             rps_per_mps = float(p['motor_rps_per_mps'])
-            rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign'])) \
-                if rps_per_mps > 0. else 0.
+            rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign']),
+                            min_rps=float(p['motor_min_rps'])) if rps_per_mps > 0. else 0.
             rps = self.brake.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
             if self.brake_reset:
                 if self.brake.start is not None:      # braking: one board reset (at the end), else plain 0
