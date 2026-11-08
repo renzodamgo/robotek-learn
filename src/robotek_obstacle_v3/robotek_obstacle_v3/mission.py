@@ -296,9 +296,13 @@ class Mission:
         self.speed = speed
         return speed, self._sign() * steer, 'PARK'
 
+    def _lot_in_laps(self):
+        """With lot_laps 0 the laps ignore the lot (as a round without it); parking itself always sees it."""
+        return self.p.lot_laps > 0.0 or self.state == 'PARK'
+
     def _lot_zone(self, progress):
         """Whether a progress value is on the start straight beside the lot (rounds with the lot)."""
-        if not self.p.park:
+        if not self.p.park or not self._lot_in_laps():
             return False
         s = progress % scene.UNITS_PER_LAP
         low, high = (0.43, 1.18) if self.selected_direction == 'ccw' else (-0.18, 0.57)
@@ -550,7 +554,7 @@ class Mission:
     def _lot_limits(self, start):
         """Smallest offsets before and after a corner: beside the lot (rounds with it) the line
         keeps off its limits, before corner 1 in CCW and after corner 7 in CW."""
-        if not self.p.park:
+        if not self.p.park or not self._lot_in_laps():
             return -1.0, -1.0
         ccw = self.selected_direction == 'ccw'
         return (LOT_OFFSET if ccw and start % 8 == 1 else -1.0,

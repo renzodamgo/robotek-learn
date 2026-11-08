@@ -15,6 +15,7 @@ class Params:
     stop_progress: float = 24.7     # track units: 3 laps + 0.7 into the start straight
     park: float = 0.0               # 1: park in the lot after the three laps (rounds with the lot)
     park_after: float = 24.0        # track units driven before parking (3 laps; 0 in parking-only tests)
+    lot_laps: float = 1.0           # 1: with park, the laps keep off the lot's limits; 0: the laps as without the lot, the lot only for parking (8 nov 2026, car test)
     park_speed: float = 0.06        # m/s while manoeuvring in the lot
     park_margin: float = 0.015      # m kept from the limits and the wall by the parking search
     scan_max_age: float = 0.35      # s; older LiDAR brakes
