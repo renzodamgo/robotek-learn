@@ -114,7 +114,8 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 El Open v5 está en `src/robotek_open` y corre con el mismo `car.launch.py`, así que usa la calibración actual del coche
 (`src/robotek_hardware/config/robot.yaml`): la dirección medida el 1 nov 2026 (centro 1403 µs, ±19°) y el motor 310 en
 M1 con el tipo 2 de la placa (`src/rrc_lite_driver/config/controller_params.yaml`). El 4 nov 2026 hizo rondas completas
-de 3 vueltas en ~30 s en el campo del equipo. En el Pi:
+de 3 vueltas en ~30 s en el campo del equipo; la última, con la cámara IMX708 y el arranque automático, terminó en ~32 s
+y paró a 2 cm de donde salió (30/30 estimados, sin juez). En el Pi:
 
 ```bash
 cd ~/robotek-learn && git pull && colcon build --symlink-install && source install/setup.bash
@@ -156,16 +157,41 @@ Desde la salida, las líneas de la esquina están a ~1,5 m. A 640x360 ocupan 1 p
 `camera_driver:=picam` usa por defecto 1280x720 a 10 fps. La cámara solo funciona hasta que se elige el sentido
 (`picam_active_states:=auto` en el Open): después de Start se para `rpicam-vid` y no gasta batería ni CPU.
 
-Espera el botón de la placa. Usa solo el LiDAR, el giroscopio y la cámara, que decide el sentido (el LiDAR lo
-comprueba antes de la primera esquina). La telemetría queda en `~/runs/<fecha>-<hora>-open-v5/`. Prueba sin botón y con
-todo grabado: `bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml`.
+Espera el botón de la placa y usa solo el LiDAR, el giroscopio y la cámara. La telemetría queda en
+`~/runs/<fecha>-<hora>-open-v5/`. Prueba sin botón y con todo grabado:
+`bash tools/open-debug-run.sh motor_max_rps:=2.5 strategy_params:=$HOME/.config/robotek/open_v5_car.yaml`.
+
+* **Sentido:** lo decide la cámara (gana la línea, azul o naranja, más larga en la imagen). Si en 1 s después de la
+  calibración no decide (las dos líneas igual de largas), toma `direction_fallback` (antihorario). Antes de la primera
+  esquina el LiDAR lo comprueba: si el lado que debería ser la isla se abre más de 1,2 m durante 3 barridos, cambia el
+  sentido.
+* **Rumbo: el giroscopio corregido con las paredes** (`wall_heading_gain: 0.3`). En el coche, cada esquina giraba
+  4–6° más de lo que medía el giroscopio y, tras dos vueltas, el coche iba 35–40° hacia la isla creyendo ir recto. En
+  cada recta, con cada barrido del LiDAR, `scene.wall_heading` ajusta una recta a las paredes de cada lado (los rayos a
+  ±20° de los 90°, solo si la recta es limpia, no muy inclinada y a una distancia creíble) y calcula el rumbo del coche
+  respecto a ellas. La misión acerca su yaw del giroscopio un 30 % hacia ese rumbo. No corrige en las esquinas, ni en
+  los primeros 0,25 m después de una, ni si la diferencia pasa de 25° (eso es un mal ajuste, no deriva). El
+  giroscopio sigue mandando en los giros; las paredes solo quitan el error que se acumula.
+* **El lazo** usa el tiempo real entre ciclos (en el Pi va a 33–50 Hz, no a los 50 fijos): con un paso fijo, las
+  esquinas salían de ~115°.
 
 * **Velocidad:** con el tipo 2, ~0,45–0,5 m/s a 2,5 rps y ~0,75 m/s a 4–6 rps (el tope del motor). Corre con
   `motor_max_rps:=2.5`.
 * **Freno:** con el motor 310 la placa no se queda en 0. `base_adapter` (`brake_reset: true`) reinicia la placa por
-  `/rrc/reset` al parar después de moverse; el coche se para ~17 cm después. Con el motor en M2 tampoco paraba con un 0
-  (4 nov). Pendiente: revisar el encoder y el cable del motor.
-* **Luces:** verde = listo para el botón; azul = pulsado; rojo parpadeando = batería baja.
+  `/rrc/reset` y el coche se para ~17 cm después. Solo lo hace al final (`brake_reset_states`: FINISH, DONE,
+  OPERATOR_STOP, DIRECTION_FAULT), con la parada del botón o si dejan de llegar órdenes. Una parada en mitad de la ronda
+  (la estrategia frena si el LiDAR o el IMU dejan de llegar) manda solo 0: un reset ahí cortaba el IMU 2,5 s más y el
+  coche perdía ~4 s. Después del reset final no se manda nada más al motor hasta relanzar.
+* **La placa se reinicia sola a veces** (cortes de ~2,5 s del IMU, sin corte de USB) y vuelve al tipo de motor por
+  defecto: el coche no avanza o va hacia atrás. `rrc_driver` lo detecta (más de 1 s sin datos) y reenvía en el momento
+  el tipo de motor y los offsets del servo, también con el coche en marcha. La causa (alimentación o conector) está
+  pendiente.
+* **Botón:** las pulsaciones de los primeros 5 s después del Start se ignoran (`stop_lockout`), por si se pulsa dos
+  veces sin querer; después, otra pulsación para el coche.
+* **Luces:** verde = listo para el botón; azul = pulsado; rojo parpadeando = batería baja. El color se reenvía cada
+  segundo: un mensaje perdido dejaba el verde toda la ronda.
+* **LiDAR:** el launch abre `/dev/ldlidar` (la regla de udev), que no cambia si el USB se corta y vuelve como
+  `/dev/ttyUSB1`.
 
 ### Que arranque solo al encender el Pi
 
