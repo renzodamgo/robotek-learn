@@ -389,6 +389,11 @@ class Board:
         0 JGB520, 1 JGB37, 2 JGB27, 3 JGB528."""
         self.buf_write(PacketFunction.PACKET_FUNC_MOTOR, struct.pack("<BB", 0x05, int(motor_type)))
 
+    def set_battery_level(self, millivolts):
+        """Battery level of the board in mV (system packet 0x01; HiWonder's LanderPi SDK, which sends 6900 = 0x1af4 for
+        its 2S Mecanum and Ackermann chassis with this 310 motor, 11000 for the 3S tank; the SDK default is 10500)."""
+        self.buf_write(PacketFunction.PACKET_FUNC_SYS, struct.pack("<BH", 0x01, int(millivolts)))
+
     def set_motor_speed(self, speeds):
         data = [0x01, len(speeds)]
         for i in speeds:

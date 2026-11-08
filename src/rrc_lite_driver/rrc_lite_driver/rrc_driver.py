@@ -64,9 +64,13 @@ class RosRobotController(Node):
         # board's own setting). Sent at every start: it is not known whether the board keeps it.
         self.declare_parameter("motor_type", -1)
         motor_type = self.motor_type = int(self.get_parameter("motor_type").value)
+        # Battery level for the board in mV, sent with the motor type (-1 = never). LanderPi (the same RRC Lite and 310
+        # motor) sends 6900 for its 2S battery; without it the board keeps the SDK's 10500 (8 nov 2026).
+        self.declare_parameter("battery_level_mv", -1)
+        self.battery_level_mv = int(self.get_parameter("battery_level_mv").value)
         if motor_type >= 0:
-            self.board.set_motor_type(motor_type)
-            self.get_logger().info(f"Motor type {motor_type} sent to the board.")
+            self.send_motor_setup()
+            self.get_logger().info(f"Motor type {motor_type} sent to the board (battery level {self.battery_level_mv} mV).")
             # Sent again every 3 s while the motors are stopped: a board that rebooted (its power switch, a reset, a USB
             # drop) forgets it and keeps its default type, which has no torque on the floor (4 nov 2026: twice the car did
             # not move in a round). Never while a motor turns.
@@ -125,8 +129,14 @@ class RosRobotController(Node):
         if self.motor_moving or self.reset_timer is not None:
             return
         self.board.enable_reception()
-        self.board.set_motor_type(self.motor_type)
+        self.send_motor_setup()
         self.get_logger().info(f"Motor type {self.motor_type} sent again.", throttle_duration_sec=60.)
+
+    def send_motor_setup(self):
+        """Motor type, then the battery level (LanderPi sends both together, twice)."""
+        self.board.set_motor_type(self.motor_type)
+        if self.battery_level_mv > 0:
+            self.board.set_battery_level(self.battery_level_mv)
 
     def reset_board(self, _msg=None):
         """Pulse RTS (board RESET): the motors lose their speed set point at once. Set up again 2.5 s later."""
@@ -150,7 +160,7 @@ class RosRobotController(Node):
         last, self.last_imu = getattr(self, 'last_imu', None), now
         if last is None or now - last < REBOOT_GAP or self.reset_timer is not None or self.motor_type < 0:
             return
-        self.board.set_motor_type(self.motor_type)
+        self.send_motor_setup()
         self.load_servo_offsets()
         self.get_logger().warning(f"Board data back after {now - last:.1f} s (the board rebooted?): motor type "
                                   f"{self.motor_type} and servo offsets sent again.")
@@ -161,7 +171,7 @@ class RosRobotController(Node):
         self.reset_timer = None
         self.board.enable_reception()
         if self.motor_type >= 0:
-            self.board.set_motor_type(self.motor_type)   # and again every 3 s while stopped (resend_motor_type)
+            self.send_motor_setup()   # and again every 3 s while stopped (resend_motor_type)
         self.load_servo_offsets()
         self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
         self.get_logger().info("Board set up again after the reset.")
