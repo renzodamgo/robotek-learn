@@ -70,8 +70,8 @@ base_adapter:
     # gyro 1.0-1.2 rad/s at full lock with 0.15-0.30 m/s asked). LiDAR, 1 nov 2026: 1 rps 0.209 m/s (repeatable); ~1.9 rps 0.65-0.69 m/s
     # peak forward (0.45 mean, battery ~7 V), 0.40-0.44 m/s backward = the motor's limit. Above ~2 rps the motor cannot
     # turn faster: the board only pushes more current (a frontal crash at full push stalled and overheated it).
-    motor_rps_per_mps: 4.0           # 8 nov 2026, 54:30 gears (big gear on the motor again): 13.0 measured with 30:54 / 3.24 (MEASURE it)
-    motor_max_rps: 3.1               # ~0.77 m/s with 4.0 rps per m/s (54:30 gears; was 10.0 with 30:54)
+    motor_rps_per_mps: 4.4           # 8 nov 2026, 54:30 gears: 4.0 gave 0.160 / 0.277 / 0.449 m/s for 0.15 / 0.30 / 0.50 asked (LiDAR); stops 8-35 cm after a 0
+    motor_max_rps: 3.4               # ~0.77 m/s with 4.4 rps per m/s (54:30 gears)
     motor_min_rps: 0.0               # > 0: any moving command gets at least this (8 nov 2026: the 310 motor does not start
                                      # the car at ~1 rps, 0.20 m/s of the Obstacle v3 with full lock; car.launch.py motor_min_rps:=1.5)
     # Wall guard: forward speed scaled down from wall_slow_m to 0 at wall_stop_m (nearest LiDAR return within +-wall_half_deg
