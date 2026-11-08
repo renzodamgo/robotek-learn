@@ -209,3 +209,18 @@ def test_motor_rps_floor():
     assert motor_rps(0.40, 4.8, 2.5, 1., min_rps=1.5) == 0.4*4.8
     assert motor_rps(0.0, 4.8, 2.5, 1., min_rps=1.5) == 0.0
     assert motor_rps(0.20, 4.8, 2.5, 1.) == 0.20*4.8
+
+
+def test_low_speed_drive():
+    from robotek_hardware.mapping import LowSpeedDrive
+    off = LowSpeedDrive()
+    assert off.rps(0., 0.3) == 0.3 and off.rps(1., 0.) == 0.
+    kick = LowSpeedDrive(kick_rps=2., kick_s=.2)
+    assert kick.rps(10., -0.5) == -2.          # standing start: kick, same sign
+    assert kick.rps(10.1, -0.5) == -2.
+    assert kick.rps(10.3, -0.5) == -0.5        # after kick_s: as asked
+    assert kick.rps(10.4, 0.) == 0. and kick.rps(10.5, 1.) == 2.   # stop, then a new start kicks again
+    pulse = LowSpeedDrive(pulse_rps=1., pulse_period_s=1.)
+    samples = [pulse.rps(t / 100., 0.4) for t in range(100)]
+    assert set(samples) == {0., 1.} and abs(sum(samples) / 100. - 0.4) < 0.02
+    assert pulse.rps(1.5, 1.5) == 1.5          # above pulse_rps: unchanged

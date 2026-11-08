@@ -276,3 +276,33 @@ class DitherBrake:
             return -self.direction * self.amp * (1. if half % 2 == 0 else -1.)
         self.start, self.direction = None, 0.
         return 0.
+
+
+class LowSpeedDrive:
+    """Helps a motor with little torque at low speed (the 310 motor with the 54:30 gears, 8 nov 2026).
+
+    * Start kick: when the request goes from 0 to moving, the first kick_s seconds get at least kick_rps (same
+      direction), to break the static friction (wheels at full lock, standing start).
+    * Pulsing: a request below pulse_rps (but not 0) becomes pulse_rps for a share request/pulse_rps of every
+      pulse_period_s, and 0 the rest, so the mean speed is the one asked (the parking manoeuvres ask 0.06 m/s).
+    kick_rps 0 and pulse_rps 0 turn each off (then rps passes unchanged)."""
+
+    def __init__(self, kick_rps=0., kick_s=.2, pulse_rps=0., pulse_period_s=.5):
+        self.kick_rps, self.kick_s = float(kick_rps), float(kick_s)
+        self.pulse_rps, self.period = float(pulse_rps), float(pulse_period_s)
+        self.moving_since = None
+
+    def rps(self, now, requested):
+        if requested == 0.:
+            self.moving_since = None
+            return 0.
+        if self.moving_since is None:
+            self.moving_since = now
+        sign = math.copysign(1., requested)
+        out = abs(requested)
+        if self.pulse_rps > 0. and out < self.pulse_rps:
+            phase = ((now - self.moving_since) % self.period) / self.period
+            out = self.pulse_rps if phase < out / self.pulse_rps else 0.
+        if self.kick_rps > 0. and now - self.moving_since < self.kick_s:
+            out = max(out, self.kick_rps)
+        return sign * out
