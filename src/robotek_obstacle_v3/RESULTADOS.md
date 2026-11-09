@@ -1,5 +1,8 @@
 # Resultados de robotek_obstacle_v3 (3 nov 2026)
 
+> Son los resultados de Gazebo y del laboratorio del 3 nov 2026, antes del perfil del coche real `real_v3` (WRO-Strategies,
+> 8 nov). Lo del coche real está en el [README](README.md), sección «En el coche».
+
 Son puntos estimados de simulación, no puntuación oficial. Todas las rondas tienen el aparcamiento, las semillas de
 ruido 0–2 y los campos 0–4 en los dos sentidos (30 rondas por fila).
 

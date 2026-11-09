@@ -107,7 +107,7 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 ### Probar más rápido
 
 `ros2 launch robotek_course open_challenge.launch.py button:=false` arranca solo 12 s después de lanzar
-(`start_delay:=...`), sin pulsar el botón; la primera pulsación del botón ya es la parada. Ctrl+C también para el motor.
+(`start_delay:=...`; para el Obstacle v3, `start_delay:=20`, porque tarda 13–17 s en estar listo), sin pulsar el botón; la primera pulsación del botón ya es la parada. Ctrl+C también para el motor.
 
 ### Correr el Open v5 (la estrategia del equipo)
 
@@ -211,8 +211,7 @@ aquí: el coche saldría solo a los 12 s de cada arranque. `on` otra vez cambia 
 los nodos del coche que hayan quedado de un launch anterior y deja los motores a 0 (el 4 nov 2026, nodos sobrantes
 pusieron dos estrategias a la vez y frenaron el Open hasta chocar): úsalo también a mano antes de cualquier prueba.
 Cada ronda queda en `~/runs/<fecha>-<hora>-autostart/`: `launch.log`, `kernel.log` (cortes del USB de la placa) y un
-rosbag ligero que empieza al pulsar Start. El driver reenvía el tipo de motor cada 3 s mientras el coche está parado:
-el interruptor apaga la placa y no el Pi, y la placa vuelve al tipo por defecto (sin fuerza). Tras un `git pull` y
+rosbag ligero que empieza al pulsar Start. Tras un `git pull` y
 `colcon build`, el código nuevo entra en el siguiente arranque (o con `stop` y `start`).
 
 ### Conducir el coche con el teclado (para colocarlo en la salida)
@@ -221,7 +220,7 @@ En el coche, todo menos la estrategia:
 
 ```bash
 ros2 launch robotek_course car.launch.py teleop:=true                  # hasta ~0,2 m/s
-ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=3   # otro tope para conducir (el de robot.yaml es 7 rps)
+ros2 launch robotek_course car.launch.py teleop:=true motor_max_rps:=3   # otro tope para conducir (el de robot.yaml es 3,4 rps)
 ```
 
 En tu ordenador, en la misma Wi-Fi que el coche, una ventana como un juego de carreras: mantén y combina

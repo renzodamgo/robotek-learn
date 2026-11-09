@@ -31,7 +31,7 @@ source install/setup.bash && ros2 launch robotek_course open_challenge.launch.py
 Si el script te añadió a grupos nuevos (`dialout`, `video`, `gpio`), cierra la sesión y vuelve a entrar antes del último comando.
 Espera a que los LED de la placa se pongan **verdes** y pulsa el **botón de la placa una vez**: es el Start (`/start`) y el
 coche hace las tres vueltas de la ronda Open; una segunda pulsación lo detiene (`/robotek/stop`). Ver los límites de
-velocidad y por qué conviene `motor_max_rps:=2.5`, más abajo. Para tu propia estrategia: crea tu paquete como en
+velocidad más abajo: empieza con `motor_max_rps:=2.5` (~0,57 m/s); el Open v5 del equipo corre con 6,7. Para tu propia estrategia: crea tu paquete como en
 el paso 0 de la guía y lanza `car.launch.py strategy:=<tu paquete>`. Sin `src/my_open`, el launch lo dice y sale con
 código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de seguridad `src/my_open.bak-FECHA`) tu paquete por el de referencia.
 
@@ -83,9 +83,9 @@ Todo lo que necesita ese comando (dependencias, drivers, reglas) está descrito 
 > el motor por su cuenta: el motor solo se mueve si llega `/cmd_vel_raw` de tu estrategia, y la estrategia espera el
 > Start (la pulsación del botón de la placa). Aun así: `base_adapter` limita la aceleración (`accel_limit`, 1 m/s²), no
 > pide más de `motor_max_rps`, un `watchdog` de 0,3 s lo para si dejan de llegar comandos, la dirección se limita a
-> ±25° y una segunda pulsación del botón (`/robotek/stop`) lo deja parado hasta lanzar de nuevo. Un
-> `/robotek/estop` (`Bool` verdadero) también lo para. **Con el motor 310, la placa no siempre se queda en 0**: por eso
-> el freno reinicia la placa (sección Motor). Si el motor sigue girando, apaga la placa con su interruptor.
+> `wheel_limit_deg` (19°) y una segunda pulsación del botón (`/robotek/stop`) lo deja parado hasta lanzar de nuevo. Un
+> `/robotek/estop` (`Bool` verdadero) también lo para. Un 0 para el motor (desde el 8 nov 2026, sin mandar el tipo de
+> motor: sección Motor). Si aun así sigue girando, apaga la placa con su interruptor.
 
 ## Drivers de terceros (incluidos en este repositorio)
 
@@ -154,8 +154,8 @@ ros2 launch robotek_course open_challenge.launch.py      # = car.launch.py strat
 ```
 
 Espera a que los LED de la placa se pongan **verdes** (la estrategia espera el botón), pon el coche en la posición de
-salida y pulsa el botón una vez: es el Start (`/start`) y los LED pasan a azul. Pulsa otra vez para parar: el freno
-reinicia la placa y el motor queda en 0 hasta que lances de nuevo. Con las ruedas en el aire se pueden probar los nodos antes de poner el coche en
+salida y pulsa el botón una vez: es el Start (`/start`) y los LED pasan a azul. Pulsa otra vez para parar: el motor
+queda en 0 hasta que lances de nuevo. Con las ruedas en el aire se pueden probar los nodos antes de poner el coche en
 la pista. `ros2 launch robotek_course car.launch.py --show-args` muestra las opciones (`battery_guard:=false`,
 `status_leds:=false`, `motor_max_rps:=2.5`, `strategy_params:=<archivo.yaml>`, `camera:=false`, `camera_driver:=usb_cam`, `video_device:=/dev/v4l/by-id/...`,
 `lidar_package:=''`...).
@@ -195,11 +195,16 @@ La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo public
   - `motor_pulse_rps` / `motor_pulse_period_s`: por debajo de `motor_pulse_rps`, alterna ese valor y 0 para que la
     media sea lo pedido. En el suelo, en recto, con arranque 2 rps y pulsos 0,66 rps: 0,06 / 0,10 / 0,20 m/s pedidos
     dan 0,046 / 0,108 / 0,233 m/s. Con todo el giro, ni pulsos de 1 rps cada 2 s movieron el coche (8 nov 2026).
-* **Aceleración**: `accel_limit` 1 m/s² (arranque suave). Sin el freno por reset, al parar sigue `decel_limit`
-  (0,6 m/s²).
-* **Dirección**: el ángulo de rueda del Twist pasa por la tabla `wheel_table_*` al servo (µs) y se limita a 17,6° (el
-  máximo que alcanzan las dos ruedas, igual que `STEER_LIMIT` de la estrategia). Medida el 1 nov 2026
-  (`servo_measured: true`). En cuanto la estrategia publica (aunque esté parada esperando el Start) el servo va al centro.
+* **Aceleración**: `accel_limit` 1 m/s² (arranque suave). Al parar sigue `decel_limit` (0,6 m/s²).
+* **Dirección**: el ángulo de rueda del Twist pasa por la tabla `wheel_table_*` al servo (µs) y se limita a `wheel_limit_deg`, 19°. Medida el 1 nov 2026
+  (`servo_measured: true`). Las estrategias piden menos: `STEER_LIMIT` 17,6° (Open) y `steer_limit` 17,5° en el
+  archivo del Obstacle en el coche. En cuanto la estrategia publica (aunque esté parada esperando el Start) el servo va
+  al centro.
+  - **Fallo intermitente, sin resolver:** a veces la placa recibe todo el giro y el coche sigue recto (giroscopio ~0).
+    Pasó en dos rondas del Open del 4 nov, en dos del 8 nov y en una del Obstacle. CPU y frecuencias normales; el servo
+    funciona cuando se prueba solo.
+* **Reinicios de la placa**: el giroscopio se corta ~2,5 s («Board data back after … s»), sobre todo con el coche
+  atascado empujando. `rrc_driver` le reenvía los offsets del servo; sin tipo de motor, no hay nada más que reenviar.
 * **Primera vez**: con las ruedas en el aire y `motor_max_rps:=2`. Comprueba que el motor gira hacia adelante, que la
   dirección sigue al servo y que la segunda pulsación del botón lo para.
 
@@ -210,7 +215,7 @@ La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo public
 `CALIBRATE` y `DETECT_DIRECTION`. Los sensores llegan por las remapeos del launch (`/scan` → `/robotek/scan`, `/imu` →
 `/robotek/imu`, `/camera/image` → `/usb_cam/image_raw`) y el mando vuelve por `/cmd_vel_raw → base_adapter → servo
 (/rrc/acker_servo/set_state) + /rrc/set_motor → rrc_driver`. La segunda pulsación publica `/robotek/stop`: `strategy` pasa a
-`OPERATOR_STOP` y `base_adapter` frena (reset de la placa) y deja el motor en 0. El nodo usa el reloj del nodo (en el coche
+`OPERATOR_STOP` y `base_adapter` deja el motor en 0. El nodo usa el reloj del nodo (en el coche
 `use_sim_time` es falso, es reloj de pared). Ojo: en el Pi el temporizador de `CONTROL_RATE` = 50 Hz va a ~35–40 Hz; si integras el giroscopio con 1/50 s fijo el rumbo sale corto (el Open v5 usa el tiempo real entre ciclos). Si el LiDAR (0,35 s)
 o el giroscopio (0,2 s) dejan de llegar, el log dice `A sensor went quiet: braking until it is back` y la velocidad es 0.
 
@@ -224,8 +229,8 @@ tuyos** antes de confiar en ellos:
   dando círculos). Mientras `servo_measured: false` el nodo avisa en cada arranque: cuando lo midas, ponlo en
   `true`. Prueba el servo solo con `ros2 run robotek_hardware servo_steer` y publicando en `/steer`.
 * **Motor** (`motor_backend: rrc`, `rrc_motor_port`, `rrc_motor_sign`, `motor_rps_per_mps`, `motor_max_rps`, `brake_*`)
-  y `motor_type` en `src/rrc_lite_driver/config/controller_params.yaml`. Si cambias el tipo de motor, vuelve a comprobar
-  el sentido. Mide la velocidad con el LiDAR (distancia a una pared antes y después) con pulsos cortos.
+  y `motor_type` en `src/rrc_lite_driver/config/controller_params.yaml` (−1: no mandar el tipo; con el 310 y el tipo 2,
+  el control de la placa va al revés). Si cambias de puerto o de tipo, vuelve a comprobar el sentido. Mide la velocidad con el LiDAR (distancia a una pared antes y después) con pulsos cortos.
 * **Distancia entre ejes** (`wheelbase`, 0,1174 m): tiene que coincidir con `WHEELBASE` de
   `robotek_common/vehicle.py`, que usa tu estrategia.
 * **Ejes de la IMU** (`imu_adapter`): con el Pi y la placa de pie los ejes cambian. Con el coche quieto lanza
