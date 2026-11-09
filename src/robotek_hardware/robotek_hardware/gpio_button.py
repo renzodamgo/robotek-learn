@@ -10,6 +10,7 @@ without lgpio the node logs it and keeps retrying, it never crashes the launch."
 import time
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Bool
 
@@ -119,7 +120,7 @@ def main(args=None):
     node = GpioButton()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
