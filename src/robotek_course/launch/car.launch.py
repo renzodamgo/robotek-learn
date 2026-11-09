@@ -96,6 +96,11 @@ def _strategy_node(context):
     """Your node; strategy_params:=<file.yaml> adds its ROS parameters (e.g. inner_gap: 0.35 for the Open v5)."""
     parameters = [{'use_sim_time': False}]
     extra = _arg(context, 'strategy_params')
+    if extra == 'auto':
+        # The team's Obstacle v3 with the IMX708: its car file (camera, colours, 17.5 deg; 8 nov 2026: DONE 85.0 s).
+        extra = ''
+        if _arg(context, 'strategy') == 'robotek_obstacle_v3' and _arg(context, 'camera_driver') == 'picam':
+            extra = os.path.join(get_package_share_directory('robotek_obstacle_v3'), 'config', 'car_picam.yaml')
     if extra:
         path = os.path.expanduser(extra)
         if not os.path.isfile(path):
@@ -239,14 +244,17 @@ def generate_launch_description():
                                           '(/usb_cam/image_raw, or /picam/image_raw with picam)'),
         DeclareLaunchArgument('teleop', default_value='false',
                               description='true: no strategy, drive with keyboard_drive (hold:=true) from another terminal'),
-        DeclareLaunchArgument('strategy_params', default_value='',
-                              description='optional YAML file with ROS parameters for your node (strategy: ros__parameters: ...)'),
+        DeclareLaunchArgument('strategy_params', default_value='auto',
+                              description='optional YAML file with ROS parameters for your node (strategy: ros__parameters: ...); '
+                                          'auto = robotek_obstacle_v3/config/car_picam.yaml for the Obstacle v3 with the picam, '
+                                          "else none; '' = none"),
         DeclareLaunchArgument('debug', default_value='false',
                               description='true: report states, direction, corners, laps and lines in this terminal'),
         DeclareLaunchArgument('button', default_value='true',
                               description='false: start by itself after start_delay s, without the button (tests only)'),
-        DeclareLaunchArgument('start_delay', default_value='12.0',
-                              description='seconds from launch to the automatic start with button:=false'),
+        DeclareLaunchArgument('start_delay', default_value='auto',
+                              description='seconds from launch to the automatic start with button:=false; auto = 20 for '
+                                          'the Obstacle v3 (ready only after 13-17 s), else 12'),
         DeclareLaunchArgument('camera_bottom_crop', default_value='0.12',
                               description='share of image rows at the bottom the line detector ignores (the LiDAR is in view)'),
         DeclareLaunchArgument('camera_blue_hsv', default_value='95,135,15,35,125',
@@ -255,8 +263,9 @@ def generate_launch_description():
                               description='orange line (looks red: hue wraps through 0), same format'),
         DeclareLaunchArgument('camera_wall_mask', default_value='true',
                               description='line detector only looks inside the black walls'),
-        DeclareLaunchArgument('motor_max_rps', default_value=default_max_rps,
-                              description='encoder motor cap in rps (robot.yaml); the board is not linear above 1'),
+        DeclareLaunchArgument('motor_max_rps', default_value='auto',
+                              description='encoder motor cap in rps; auto = 4 for the Obstacle v3 (8 nov 2026: DONE 85.0 s), '
+                                          'else robot.yaml (%s)' % default_max_rps),
         DeclareLaunchArgument('motor_min_rps', default_value=default_min_rps,
                               description='encoder motor floor in rps while moving (robot.yaml; 0 = off). The 310 motor '
                                           'does not start the car at ~1 rps: 1.5 for the Obstacle v3'),
@@ -288,8 +297,10 @@ def generate_launch_description():
         Node(package='robotek_hardware', executable='base_adapter', name='base_adapter', output='screen',
              parameters=[hardware_config, {'motor_max_pct': ParameterValue(LaunchConfiguration('motor_max_pct'),
                                                                            value_type=float),
-                                           'motor_max_rps': ParameterValue(LaunchConfiguration('motor_max_rps'),
-                                                                           value_type=float),
+                                           'motor_max_rps': ParameterValue(PythonExpression(
+                                               ["(4.0 if '", LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else ",
+                                                default_max_rps, ") if '", LaunchConfiguration('motor_max_rps'),
+                                                "' == 'auto' else ", LaunchConfiguration('motor_max_rps')]), value_type=float),
                                            'motor_min_rps': ParameterValue(LaunchConfiguration('motor_min_rps'),
                                                                            value_type=float),
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
@@ -300,7 +311,9 @@ def generate_launch_description():
              remappings=[('start', '/start')],
              # button:=false (quick tests): start by itself after start_delay s; the first press is then the stop.
              parameters=[{'auto_start_delay': ParameterValue(PythonExpression(
-                 ["0.0 if '", LaunchConfiguration('button'), "'.lower() == 'true' else ", LaunchConfiguration('start_delay')]),
+                 ["0.0 if '", LaunchConfiguration('button'), "'.lower() == 'true' else ((20.0 if '",
+                  LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else 12.0) if '",
+                  LaunchConfiguration('start_delay'), "' == 'auto' else ", LaunchConfiguration('start_delay'), ")"]),
                  value_type=float)}]),
         Node(package='robotek_hardware', executable='battery_guard', name='battery_guard', output='screen',
              condition=IfCondition(LaunchConfiguration('battery_guard')),

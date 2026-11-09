@@ -66,16 +66,24 @@ Compilar y cargar el entorno en la Raspberry Pi (una vez por cambio):
 cd ~/robotek-learn && colcon build --symlink-install --packages-select robotek_obstacle_v3 && source install/setup.bash
 ```
 
-Lanzar en el coche (así corre desde el 8 nov 2026; el botón de la placa da Start y otra pulsación lo para):
+Lanzar en el coche (el botón de la placa da Start y otra pulsación lo para):
 
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh      # el arranque automático tiene la placa ocupada
-ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=4 \
-    strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml
+ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam
 ```
 
-Sin botón: añadir `button:=false start_delay:=20`. La estrategia tarda 13–17 s en estar lista; si el Start llega antes
-(el valor por defecto es 12 s) se pierde y se queda en WAIT_START. Entonces, desde otra terminal del Pi:
+Con esos dos argumentos, `car.launch.py` pone los valores de la mejor ronda en el coche (8 nov 2026, 23:08: **DONE a los
+85,0 s** del Start, sin aparcamiento):
+- **`motor_max_rps`:** 4.
+- **`strategy_params`:** `config/car_picam.yaml` de este paquete, con la cámara IMX708 y `steer_limit` 0,3054 (17,5°).
+- **`start_delay`:** 20 s con `button:=false`.
+
+Cualquiera de los tres se cambia pasándolo al lanzar, por ejemplo `strategy_params:=otro.yaml` o `strategy_params:=''`
+(sin archivo).
+
+Sin botón: añadir `button:=false`; arranca a los 20 s. La estrategia tarda 13–17 s en estar lista; si el Start llega
+antes se pierde y se queda en WAIT_START. Entonces, desde otra terminal del Pi:
 `ros2 topic pub --once -w 2 /start std_msgs/msg/Bool "data: true"`.
 
 **Dónde colocarlo:** centrado en el carril y a ~1,55–1,60 m de la pared de delante. Con un pilar en la recta, la v3 sale
@@ -117,8 +125,10 @@ ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v
 - **Dirección:** a veces, en el Open, el servo recibe todo el giro y el coche no gira. Si pasa en el Obstacle, es lo
   mismo; está pendiente.
 - **Segunda ronda completa** (8 nov, 18:17): DONE a ~138 s del Start.
+- **La mejor** (8 nov, 23:08): **DONE a los 85,0 s**, con el giro a 17,5° y lo demás como la de las 18:17. Sin esperas de
+  sensores ni reinicios de la placa. Son los valores por defecto de `car.launch.py` para la v3.
 - **Límite de giro:** la v3 limita el giro con `steer_limit` (0,307 rad = 17,6° por defecto) y `robot.yaml` permite
-  ±19°. En el coche, `obstacle_v3_car_picam.yaml` lo deja en **0,3054 (17,5°)** desde el 8 nov, para no forzar el servo
+  ±19°. En el coche, `config/car_picam.yaml` lo deja en **0,3054 (17,5°)** desde el 8 nov, para no forzar el servo
   contra su tope. Subirlo cambia las líneas de las esquinas: validarlo antes en el laboratorio y en Gazebo.
 
 ### Aparcamiento en el coche (8 nov 2026)
@@ -170,10 +180,11 @@ Comando de la prueba en el coche: WRO-Strategies `docs/robot-real-pi/obstacle-ru
 ### La cámara IMX708 (así está el coche desde el 4 nov 2026)
 
 Los valores por defecto de `drive.py` son los de la cámara USB (medida el 8 oct 2026) y los colores de la cámara
-simulada; con la IMX708 se usa `strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml`.
+simulada. Con la IMX708, `car.launch.py` carga `config/car_picam.yaml` (`strategy_params` por defecto con
+`camera_driver:=picam`).
 
 Con `camera_driver:=picam`, el Obstacle usa la cámara toda la ronda a 640x360 y 30 fps (en el coche llegan ~25 fps;
-`drive` usa ~42 % de un núcleo). `~/.config/robotek/obstacle_v3_car_picam.yaml`, medido el 4 nov 2026 con tres
+`drive` usa ~42 % de un núcleo). `config/car_picam.yaml`, medido el 4 nov 2026 con tres
 pilares a ~0,9 m comparados con los grupos del LiDAR (error de rumbo 0,8° rms):
 
 ```yaml

@@ -1,0 +1,12 @@
+# Obstacle v3 on the team's car with the IMX708 Wide (camera_driver:=picam, 640x360 at 30 fps). car.launch.py loads
+# it by default for strategy:=robotek_obstacle_v3 with the picam (strategy_params:=auto); another file replaces it.
+# Camera measured 4 nov 2026 with 3 pillars at ~0.9 m against the LiDAR clusters (bearing error 0.8 deg rms).
+# With this file, motor_max_rps 4 and start_delay 20: DONE 85.0 s after Start on 8 nov 2026 (23:08, no parking).
+strategy:
+  ros__parameters:
+    camera_hfov: 1.78        # rad, ~102 deg: the Wide lens (rpicam lists it only as imx708)
+    camera_pitch: 0.14       # rad down, from the pillars' bases (camera 0.142 m above the floor)
+    camera_yaw: 0.054        # rad, + = looks left of the LiDAR's zero
+    red_hsv: "170,6,90,80"   # pillar H 177-1, S 107-138, V 117-132; v_min 80 leaves out the orange line (V ~50)
+    green_hsv: "40,85,70,60" # pillar H 50-59, S 97-126, V 102-122
+    steer_limit: 0.3054      # rad = 17.5 deg (user, 8 nov 2026; the v3 default 0.307 = 17.6 is the lab's and Gazebo's)

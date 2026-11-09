@@ -107,7 +107,7 @@ ros2 launch robotek_course open_challenge.launch.py     # = car.launch.py strate
 ### Probar más rápido
 
 `ros2 launch robotek_course open_challenge.launch.py button:=false` arranca solo 12 s después de lanzar
-(`start_delay:=...`; para el Obstacle v3, `start_delay:=20`, porque tarda 13–17 s en estar listo), sin pulsar el botón; la primera pulsación del botón ya es la parada. Ctrl+C también para el motor.
+(`start_delay:=...`; con el Obstacle v3, 20 s por defecto, porque tarda 13–17 s en estar listo), sin pulsar el botón; la primera pulsación del botón ya es la parada. Ctrl+C también para el motor.
 
 ### Correr el Open v5 (la estrategia del equipo)
 
@@ -320,11 +320,12 @@ La estrategia terminada del equipo (`src/robotek_obstacle_v3`) corre en el coche
 
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh
-ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=4 \
-    strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml
+ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam
 ```
 
-El 8 nov 2026 hizo la primera ronda completa en el coche: DONE a los 118,7 s, sin juez (otra a ~138 s). Con el
+Sin más argumentos, `car.launch.py` usa los valores de la mejor ronda: 4 rps, la cámara IMX708 y 17,5° de giro
+(`src/robotek_obstacle_v3/config/car_picam.yaml`), y 20 s con `button:=false`. El 8 nov 2026 hizo con ellos **DONE a los
+85,0 s** del Start, sin aparcamiento y sin juez; antes, 118,7 s y ~138 s. Con el
 aparcamiento activo da las tres vueltas (90–115 s), pero el aparcamiento planificado no sale: al motor le falta fuerza a
 0,06 m/s con todo el giro. Está a prueba el aparcamiento fijo (`park_mode: 1`). Fue con el motor en M2 sin
 tipo de motor, los engranajes 54:30 y el freno de pared apagado (`wall_stop_m: 0`). La cámara IMX708, cómo grabar la
