@@ -28,6 +28,7 @@ setup(
             'imu_adapter = robotek_hardware.imu_adapter:main',
             'imu_axes = robotek_hardware.imu_axes:main',
             'start_button = robotek_hardware.start_button:main',
+            'gpio_button = robotek_hardware.gpio_button:main',
             'motor_driver = robotek_hardware.motor_driver:main',
             'servo_steer = robotek_hardware.servo_steer:main',
             'battery_guard = robotek_hardware.battery_guard:main',

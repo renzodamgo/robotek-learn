@@ -12,13 +12,14 @@ Here those names are connected to the car:
   RRC Lite IMU -> /rrc/imu_raw   -> imu_adapter   -> /robotek/imu    (x forward, y left, z up) -> your /imu
   USB camera   -> /usb_cam/image_raw                                                           -> your /camera/image
   RRC Lite button -> start_button -> /start (first press) and /robotek/stop (any later press)
+  GPIO 16 button  -> gpio_button  -> /robotek/gpio_button (true = pressed; only reported for now)
   your /cmd_vel_raw -> base_adapter -> servo (microseconds) on the RRC Lite + /motor_vel -> motor_driver (TB6612)
 
 Started here (each driver is skipped with a message when its package is not installed, so the launch can be tried
 on a laptop; see src/robotek_hardware/README.md for how to install them):
   - rrc_lite_driver (the RRC Lite board: IMU, button, servo, RGBs) and the LiDAR driver (ldlidar_stl_ros2, LD19)
   - the camera: robotek_hardware/camera_publisher (camera_driver:=usb_cam for the ROS package)
-  - robotek_hardware: scan_adapter, imu_adapter, motor_driver, base_adapter, start_button, battery_guard, status_leds
+  - robotek_hardware: scan_adapter, imu_adapter, motor_driver, base_adapter, start_button, gpio_button, battery_guard, status_leds
   - robot_state_publisher with robotek_description (only if installed; useful to see the car in RViz on a laptop)
   - your strategy, with use_sim_time false
 
@@ -254,6 +255,11 @@ def generate_launch_description():
                               description='true: report states, direction, corners, laps and lines in this terminal'),
         DeclareLaunchArgument('button', default_value='true',
                               description='false: start by itself after start_delay s, without the button (tests only)'),
+        DeclareLaunchArgument('gpio_button', default_value='true',
+                              description='push button on a Pi GPIO -> /robotek/gpio_button (Bool, true = pressed); '
+                                          'only reports for now, it does not start or stop the round'),
+        DeclareLaunchArgument('gpio_button_pin', default_value='16',
+                              description='BCM GPIO of the push button (other leg on GND, internal pull-up)'),
         DeclareLaunchArgument('start_delay', default_value='auto',
                               description='seconds from launch to the automatic start with button:=false; auto = 20 for '
                                           'the Obstacle v3 (ready only after 13-17 s), else 12'),
@@ -324,6 +330,9 @@ def generate_launch_description():
                   LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else 12.0) if '",
                   LaunchConfiguration('start_delay'), "' == 'auto' else ", LaunchConfiguration('start_delay'), ")"]),
                  value_type=float)}]),
+        Node(package='robotek_hardware', executable='gpio_button', name='gpio_button', output='screen',
+             condition=IfCondition(LaunchConfiguration('gpio_button')),
+             parameters=[{'pin': ParameterValue(LaunchConfiguration('gpio_button_pin'), value_type=int)}]),
         Node(package='robotek_hardware', executable='battery_guard', name='battery_guard', output='screen',
              condition=IfCondition(LaunchConfiguration('battery_guard')),
              parameters=[{'min_voltage': ParameterValue(LaunchConfiguration('battery_min_v'), value_type=float)}]),

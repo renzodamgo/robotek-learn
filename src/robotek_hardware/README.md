@@ -44,6 +44,7 @@ código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de segurid
 | `scan_adapter` | El scan del driver del LD19 (su cero apunta hacia atrás) a `/robotek/scan` con 0 rad al frente. Descarta lo que el coche no ve (más allá de +-110 grados los rayos pegan en el propio coche) |
 | `imu_adapter` | IMU de la placa a ejes del coche (x adelante, y izquierda, z arriba). Las estrategias integran el giroscopio z, así que los ejes tienen que estar bien |
 | `start_button` | Botón de la placa: primera pulsación publica `/start` (y pita), cualquier otra publica `/robotek/stop` y el coche queda parado hasta lanzar de nuevo |
+| `gpio_button` | Pulsador en el GPIO 16 del Pi (la otra pata a GND, pull-up interno) → `/robotek/gpio_button` (Bool: `true` al pulsar, `false` al soltar) y una línea en el log. De momento solo avisa: no arranca ni para la ronda. `gpio_button:=false` lo quita; `gpio_button_pin:=N` cambia el pin |
 | `battery_guard` | Si la batería de la placa (`/rrc/battery`) baja de 6,8 V durante 5 lecturas seguidas, avisa en rojo parpadeante (`status_leds`). No para el coche |
 | `status_leds` | Los dos LED RGB de la placa: verde = listo para el botón, azul = pulsado (la ronda corre, terminó o se paró), rojo parpadeando = batería baja. Solo lee `/robotek/state` y `/robotek/battery_low` |
 | `imu_axes` | Herramienta de calibración: con el coche quieto y un empujón hacia adelante imprime los ejes de `imu_adapter` |
