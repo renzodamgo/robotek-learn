@@ -321,13 +321,15 @@ La estrategia terminada del equipo (`src/robotek_obstacle_v3`) corre en el coche
 
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh
-ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=3.4 \
+ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=4 \
     strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml
 ```
 
-El 8 nov 2026 hizo la primera ronda completa en el coche: DONE a los 118,7 s, sin juez. Fue con el motor en M2 sin
+El 8 nov 2026 hizo la primera ronda completa en el coche: DONE a los 118,7 s, sin juez (otra a ~138 s). Con el
+aparcamiento activo da las tres vueltas (90–115 s), pero el aparcamiento planificado no sale: al motor le falta fuerza a
+0,06 m/s con todo el giro. Está a prueba el aparcamiento fijo (`park_mode: 1`). Fue con el motor en M2 sin
 tipo de motor, los engranajes 54:30 y el freno de pared apagado (`wall_stop_m: 0`). La cámara IMX708, cómo grabar la
-ronda, RViz y lo que falta (la salida con un pilar en la recta, el aparcamiento, la fuerza del motor a poca velocidad)
+ronda, RViz, el aparcamiento y lo que falta (la salida con un pilar en la recta, la fuerza del motor a poca velocidad)
 están en `src/robotek_obstacle_v3/README.md`, sección «En el coche».
 
 ## Licencia

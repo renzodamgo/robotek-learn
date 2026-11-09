@@ -185,6 +185,16 @@ La estrategia de referencia pide `CRUISE_SPEED = 1.28` m/s (`drive.py` lo public
     no paraba con 0 y a veces iba hacia atrás.
   - Sin mandar el tipo, la placa usa el suyo de fábrica y controla bien.
   - Detalle y medidas: WRO-Strategies `docs/robot-real-pi/obstacle-runs/20261108/`.
+* **Poca velocidad** (54:30): el motor tiene poca fuerza; con todo el giro, desde parado, no arranca por debajo de
+  ~1 rps (~0,23 m/s). Tres opciones del adaptador, apagadas por defecto (el Open no cambia), como argumentos de
+  `car.launch.py`:
+  - `motor_min_rps`: toda orden de moverse manda al menos estos rps. Con 1,1–1,3 arranca siempre, pero lo lento va más
+    rápido de lo pedido (0,06 m/s → ~0,25 m/s).
+  - `motor_kick_rps` / `motor_kick_s`: arranque a más rps (p. ej. 2 durante 0,2 s), solo si el coche llevaba parado al
+    menos 0,5 s.
+  - `motor_pulse_rps` / `motor_pulse_period_s`: por debajo de `motor_pulse_rps`, alterna ese valor y 0 para que la
+    media sea lo pedido. En el suelo, en recto, con arranque 2 rps y pulsos 0,66 rps: 0,06 / 0,10 / 0,20 m/s pedidos
+    dan 0,046 / 0,108 / 0,233 m/s. Con todo el giro, ni pulsos de 1 rps cada 2 s movieron el coche (8 nov 2026).
 * **Aceleración**: `accel_limit` 1 m/s² (arranque suave). Sin el freno por reset, al parar sigue `decel_limit`
   (0,6 m/s²).
 * **Dirección**: el ángulo de rueda del Twist pasa por la tabla `wheel_table_*` al servo (µs) y se limita a 17,6° (el

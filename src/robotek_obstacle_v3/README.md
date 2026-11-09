@@ -70,14 +70,20 @@ Lanzar en el coche (así corre desde el 8 nov 2026; el botón de la placa da Sta
 
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh      # el arranque automático tiene la placa ocupada
-ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=3.4 \
+ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam motor_max_rps:=4 \
     strategy_params:=$HOME/.config/robotek/obstacle_v3_car_picam.yaml
 ```
 
-Sin botón (arranca solo a los 12 s): añadir `button:=false`. Para seguir los estados en la terminal: `debug:=true`. El
+Sin botón: añadir `button:=false start_delay:=20`. La estrategia tarda 13–17 s en estar lista; si el Start llega antes
+(el valor por defecto es 12 s) se pierde y se queda en WAIT_START. Entonces, desde otra terminal del Pi:
+`ros2 topic pub --once -w 2 /start std_msgs/msg/Bool "data: true"`.
+
+**Dónde colocarlo:** centrado en el carril y a ~1,55–1,60 m de la pared de delante. Con un pilar en la recta, la v3 sale
+con todo el giro; desde 0,4–0,5 m más atrás va más rápido, el arco se abre y choca (8 nov 2026). Para seguir los estados en la terminal: `debug:=true`. El
 nodo publica su estado en `/robotek/state`. `/obstacle/pose` lleva x, y, rumbo y progreso. Para ver qué detecta, en
 el Mac (WRO-Strategies): `PI_IP=192.168.8.153 bash tools/macos_rviz_real.sh docs/robot-real-pi/robot_obstacle.rviz`.
-Muestra la imagen con los pilares (caja gruesa si el LiDAR lo confirma), las señales y la dirección.
+Muestra la imagen con los pilares (caja gruesa si el LiDAR lo confirma), las señales y la dirección. La imagen sale
+solo si alguien la mira y como mucho a 5 Hz: a 25 fps dejaba sin cámara a la estrategia.
 
 Para grabar la ronda, en otra terminal del coche:
 
@@ -110,10 +116,32 @@ ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v
   `docs/robot-real-pi/obstacle-runs/20261104/`. Sigue pendiente de arreglar en la estrategia.
 - **Dirección:** a veces, en el Open, el servo recibe todo el giro y el coche no gira. Si pasa en el Obstacle, es lo
   mismo; está pendiente.
-- **Aparcamiento:** `car.launch.py` todavía no tiene un argumento `parking`, así que en el coche la v3 no aparca: para
-  en la recta de salida tras tres vueltas.
-- **Límite de giro:** la v3 limita el giro a 0.307 rad (17.6°, `steer_limit`) y `robot.yaml` permite ±19°. Subir
-  `steer_limit` cambia las líneas de las esquinas, así que habría que validarlo antes en el laboratorio y en Gazebo.
+- **Segunda ronda completa** (8 nov, 18:17): DONE a ~138 s del Start.
+- **Límite de giro:** la v3 limita el giro con `steer_limit` (0,307 rad = 17,6° por defecto) y `robot.yaml` permite
+  ±19°. En el coche, `obstacle_v3_car_picam.yaml` lo deja en **0,3054 (17,5°)** desde el 8 nov, para no forzar el servo
+  contra su tope. Subirlo cambia las líneas de las esquinas: validarlo antes en el laboratorio y en Gazebo.
+
+### Aparcamiento en el coche (8 nov 2026)
+
+`car.launch.py` no tiene un argumento `parking`: se activa en el archivo de parámetros. En el coche están:
+- `~/.config/robotek/obstacle_v3_car_picam_park.yaml`: el de la cámara más `parking: true`, `lot_laps: 0` y
+  `park_margin: 0.03`.
+- `~/.config/robotek/obstacle_v3_car_picam_park_only.yaml`: lo mismo con `park_after: 0`, que aparca nada más arrancar,
+  sin vueltas. Sirve para probar solo la maniobra, con el coche junto al aparcamiento.
+
+`lot_laps` (1 por defecto): con 0, las vueltas son las de una ronda sin aparcamiento y el lote solo se usa para
+aparcar. Con 1, las vueltas se apartan del lote y la salida cambia.
+
+Lo que pasó (detalle y bolsas: WRO-Strategies `docs/robot-real-pi/obstacle-runs/20261108/`, «Rondas con aparcamiento de
+la tarde»):
+- **Las vueltas sí salen:** tres vueltas en 90 y 115 s con `lot_laps: 0`, y la v3 pasa a PARK.
+- **El aparcamiento planificado no:** pide 0,06 m/s (0,26 rps) con todo el giro y el motor no mueve el coche, ni con
+  los pulsos del adaptador (0,66 o 1 rps); acaba en FAULT.
+- **Con `motor_min_rps` 1,1–1,3** sí hace las maniobras, pero se pasa en sus ~14 movimientos cortos y se atasca contra
+  un tope por detrás, dos veces en el mismo punto.
+- **Falta medir el lote del campo:** la v3 usa el del reglamento (0,35 × 0,20 m, límite lejano a 0,48 m del centro de
+  la recta de salida).
+- Por eso existe el aparcamiento fijo de la sección siguiente.
 
 ### Aparcamiento fijo (`park_mode: 1`, 8 nov 2026)
 
