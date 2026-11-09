@@ -289,6 +289,8 @@ class Mission:
         turn = wrap(heading - self._park_heading) if self._park_heading is not None else 0.0
         self._park_heading = heading
         x, y, th = self._update_pose(distance, yaw, gyro, self._sign(), self.parking.travelled(distance, turn))
+        if scan is not None and hasattr(self.parking, 'observe'):
+            self.parking.observe(*scan_points(scan, self._sign()))   # park_fixed_sense: the lot from the LiDAR
         speed, steer = self.parking.step(now, x, y, th)
         if self.parking.state in ('PARKED', 'PARK_FAIL'):
             self.state = 'STOP'

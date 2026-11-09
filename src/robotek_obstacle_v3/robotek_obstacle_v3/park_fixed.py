@@ -18,13 +18,22 @@ the roll after the stop (the measured roll, as in ``park.py``).
 The lot (``park_lot_length`` x ``park_lot_depth`` against the outer wall, far inner face at
 ``park_lot_end`` along the start straight in CCW, mirrored in CW) defaults to the rules' lot and can be
 set to a measured field. Frame and approach as in ``park.py``.
+
+``park_fixed_sense`` 1: the lot is placed from what the LiDAR sees, not from the map pose alone. Every
+scan, the outer wall beside the lot (a line fitted to its returns) and the limit plates (returns near
+their expected x, inside the lot's depth) give a correction of the pose (along-track shift, distance
+to the wall, heading against the wall), low-passed and bounded; with nothing seen it keeps the last
+one. On the car (8 nov 2026) the outer wall showed at y -1.52..-1.57 instead of -1.50 and a limit
+~3 cm off: the map pose places the lot wrong by that much, in a lot with 2.6 cm of room per side.
 """
 import math
 
-from .car import OUTLINE_HALF_WIDTH
+import numpy as np
+
+from .car import LIDAR_OFFSET_X, OUTLINE_HALF_WIDTH
 
 from .field import wrap
-from .parking_search import Lot, move
+from .parking_search import LIMIT_THICKNESS, Lot, move
 from .park import GUARD_AHEAD, GYRO_ARC, LINE_UP, MAX_RESUME, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES, Parking
 
 GAP = 0.04                  # m between the car side and the lot line while approaching
@@ -33,6 +42,16 @@ DOWN_MAX = 0.30             # m: the straight into the lot runs at most this far
 GUARD_ROLL = 1.0            # x the measured roll added to the guard's look-ahead
 LADDER_MOVES = 24           # straightening moves at most (park.py: 12; 4-8 deg each from ~45 deg here)
 ROLL_MAX = 0.30             # m: a longer roll (a push, a bad pose) does not enter the estimate
+# park_fixed_sense: the lot from the LiDAR.
+SENSE_GAIN = 0.3            # of the measured error taken per scan
+SENSE_LIMIT = (0.12, 0.12, math.radians(8.0))   # largest correction: along, across (m), heading (rad)
+WALL_BAND = 0.10            # m around the expected outer wall for its returns
+WALL_REACH = 0.6            # m beyond the lot's ends along x where the wall is fitted
+WALL_MIN = 15               # returns to fit the wall; its slope only over at least WALL_SPAN m
+WALL_SPAN = 0.15
+PLATE_BAND = 0.06           # m around a limit plate's expected x for its returns
+PLATE_MIN = 3
+SENSE_DEADBAND = (0.008, 0.008, math.radians(0.75))   # smaller parts of the correction are not applied
 
 
 def make_lot(sign, p):
@@ -65,6 +84,65 @@ class FixedParking(Parking):
         self.rolls = {False: p.park_fixed_roll, True: p.park_fixed_roll_arc if self.split else p.park_fixed_roll}
         self.coast = p.park_fixed_roll
         self.ladder = 0             # straightening moves driven
+        self.sense = bool(p.park_fixed_sense)
+        self.fix = [0.0, 0.0, 0.0]  # correction of the map pose: along x, across y (m), heading (rad)
+        self.pivot = (0.5 * (self.lot.xa + self.lot.xb), self.lot.y0)   # the heading turns about the lot
+        self.raw = None             # last map pose
+        self.seen = [0, 0]          # scans that saw the wall, a limit plate
+
+    # ------------------------------------------------------- the lot from the LiDAR
+    def _applied(self):
+        """The correction in use: each part only once it is larger than SENSE_DEADBAND. Smaller corrections mostly
+        add their noise (lab real_v3, rules field: 157/200 with every correction, 188 with the deadband, 195 off)."""
+        return [v if abs(v) >= d else 0.0 for v, d in zip(self.fix, SENSE_DEADBAND)]
+
+    def _corrected(self, x, y, th, fix=None):
+        dx, dy, dth = self._applied() if fix is None else fix
+        cx, cy = self.pivot
+        c, s = math.cos(dth), math.sin(dth)
+        return cx + c * (x - cx) - s * (y - cy) + dx, cy + s * (x - cx) + c * (y - cy) + dy, wrap(th + dth)
+
+    def step(self, now, x, y, th):
+        self.raw = (x, y, th)
+        return super().step(now, *self._corrected(x, y, th))
+
+    def observe(self, bx, by):
+        """A new scan (base_link points, mirrored in CW): correct the pose against the outer wall and the
+        limit plates beside the lot (park_fixed_sense)."""
+        if not self.sense or self.raw is None:
+            return
+        x, y, th = self._corrected(*self.raw, self.fix)    # the features against the full correction
+        c, s = math.cos(th), math.sin(th)
+        px = x + c * np.asarray(bx) - s * np.asarray(by)
+        py = y + s * np.asarray(bx) + c * np.asarray(by)
+        lot, (cx, _) = self.lot, self.pivot
+        plates = (lot.xa - 0.5 * LIMIT_THICKNESS, lot.xb + 0.5 * LIMIT_THICKNESS)
+        off_plates = np.all([np.abs(px - p) > PLATE_BAND for p in plates], axis=0)
+        wall = ((np.abs(py - lot.y0) < WALL_BAND) & (px > lot.xa - WALL_REACH) & (px < lot.xb + WALL_REACH)
+                & off_plates)
+        g = SENSE_GAIN
+        if wall.sum() >= WALL_MIN:
+            wx, wy = px[wall], py[wall]
+            if wx.max() - wx.min() >= WALL_SPAN:
+                slope, icpt = np.polyfit(wx, wy, 1)
+            else:
+                slope, icpt = 0.0, float(np.median(wy))
+            self.fix[1] -= g * (icpt + slope * cx - lot.y0)
+            self.fix[2] -= g * math.atan(slope)
+            self.seen[0] += 1
+        errors = []
+        lidar = x + LIDAR_OFFSET_X * c
+        for p in plates:
+            # The LiDAR sees the plate's face toward it (the plates are LIMIT_THICKNESS thick).
+            low, high = p - 0.5 * LIMIT_THICKNESS, p + 0.5 * LIMIT_THICKNESS
+            face = low if lidar < low else high if lidar > high else p
+            near = (py > lot.y0 + 0.03) & (py < lot.y1 - 0.01) & (np.abs(px - p) < PLATE_BAND)
+            if near.sum() >= PLATE_MIN:
+                errors.append(float(np.median(px[near])) - face)
+        if errors:
+            self.fix[0] -= g * sum(errors) / len(errors)
+            self.seen[1] += 1
+        self.fix = [max(-m, min(m, v)) for v, m in zip(self.fix, SENSE_LIMIT)]
 
     def _line(self):
         return self.lot.y1 + OUTLINE_HALF_WIDTH + GAP
@@ -102,7 +180,8 @@ class FixedParking(Parking):
                                ('along', (start, pose[1], 0.0))))
         self.moves.append((-self.steer_limit, -1.0, ENTRY_MAX, ('heading', self.entry)))
         self.moves.append((0.0, -1.0, DOWN_MAX, ('guard', None)))
-        self.log.append(dict(event='park_fixed', pose=list(pose), entry=self.entry, ahead=self.ahead))
+        self.log.append(dict(event='park_fixed', pose=list(pose), entry=self.entry, ahead=self.ahead,
+                             fix=[round(v, 4) for v in self.fix], seen=list(self.seen)))
 
     def _straighten(self, pose):
         """``park.Parking._straighten`` with up to LADDER_MOVES moves."""
@@ -139,6 +218,8 @@ class FixedParking(Parking):
 
     def _next(self, now, pose):
         super()._next(now, pose)
+        if self.state in ('PARKED', 'PARK_FAIL') and self.log and self.log[-1].get('event') == 'park_end':
+            self.log[-1].update(fix=[round(v, 4) for v in self.fix], seen=list(self.seen))
         if self.current is not None:
             self.coast = self.rolls[self._is_arc(self.current[0]) and self.split]
 

@@ -65,3 +65,36 @@ def test_lot_parameters_move_the_lot():
 
 def test_default_mode_is_the_planner():
     assert make().park_mode == 0.0
+
+
+def _scan_of(points, pose):
+    """Track-frame points -> base_link (what the LiDAR returns from the car at ``pose``)."""
+    x, y, th = pose
+    c, s = math.cos(th), math.sin(th)
+    return ([c * (px - x) + s * (py - y) for px, py in points], [-s * (px - x) + c * (py - y) for px, py in points])
+
+
+def test_sense_finds_a_shifted_wall_and_lot():
+    """park_fixed_sense: an outer wall 5 cm further out and a lot 3 cm further along than the map pose expects give
+    the correction that puts them back (the car of 8 nov saw the wall at y -1.52..-1.57)."""
+    p = make({'steer_limit': 0.3054, 'park': 1, 'park_after': 0, 'park_mode': 1, 'park_fixed_sense': 1})
+    parking = park_fixed.FixedParking(SimpleNamespace(p=p, selected_direction='ccw'), 0.06, 0.015)
+    lot = parking.lot
+    wall = [(x / 100.0, lot.y0 - 0.05) for x in range(-50, 100)]
+    # The faces toward the LiDAR (beyond both plates): each plate's +x face, 3 cm further along.
+    plates = [(xp + 0.03, lot.y0 + 0.04 + 0.01 * k) for xp in (lot.xa, lot.xb + 0.02) for k in range(14)]
+    pose = (lot.xb + 0.10, lot.y1 + 0.11, 0.0)
+    parking.step(0.0, *pose)
+    for _ in range(40):
+        parking.observe(*_scan_of(wall + plates, pose))
+    dx, dy, dth = parking.fix
+    assert abs(dy - 0.05) < 0.005 and abs(dx + 0.03) < 0.01 and abs(dth) < 0.01, parking.fix
+    assert parking.seen[0] == 40 and parking.seen[1] == 40
+
+
+def test_sense_off_keeps_the_map_pose():
+    p = make({'steer_limit': 0.3054, 'park': 1, 'park_after': 0, 'park_mode': 1})
+    parking = park_fixed.FixedParking(SimpleNamespace(p=p, selected_direction='ccw'), 0.06, 0.015)
+    parking.step(0.0, 0.5, -1.2, 0.0)
+    parking.observe([0.0, 0.1], [-0.35, -0.35])
+    assert parking.fix == [0.0, 0.0, 0.0]

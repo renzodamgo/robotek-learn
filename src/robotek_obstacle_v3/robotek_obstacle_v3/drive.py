@@ -84,6 +84,7 @@ class Drive(Node):
         self.bridge = CvBridge()
         self.scan_msg = None
         self.cmd = self.create_publisher(Twist, '/cmd_vel_raw', 10)
+        self.park_state = None     # last parking sub-state logged
         self.state = self.create_publisher(
             String, '/robotek/state', QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.state_sent = None
@@ -179,6 +180,7 @@ class Drive(Node):
         self.cmd.publish(cmd)
         mission = self.strategy.mission
         self.pose_pub.publish(Float32MultiArray(data=[float(v) for v in (*mission.pose, mission.phi)]))
+        self._log_parking(mission)
         if self.strategy.label != self.state_sent:
             self.state_sent = self.strategy.label
             if self.state_sent == 'WAIT_SENSOR':
@@ -188,6 +190,34 @@ class Drive(Node):
             else:
                 self.get_logger().info('state %s' % self.state_sent)
             self.state.publish(String(data=self.state_sent))
+
+
+    def _log_parking(self, mission):
+        """The parking's own steps and events: each sub-state (PARK_APPROACH, PARK_MOVE, ...) with the pose, the
+        log of park.py / park_fixed.py (start pose, LiDAR correction, end) and the verdict, PARKED or PARK_FAIL and
+        why (on the car on 8 nov 2026 a DONE could be either)."""
+        parking = mission.parking
+        if parking is None:
+            return
+        # The fixed park's pose against the lot (with its LiDAR correction), else the mission's.
+        own = parking._corrected(*parking.raw) if getattr(parking, 'raw', None) else mission.pose
+        pose = ' '.join('%.3f' % v for v in own)
+        if parking.state != self.park_state:
+            self.park_state = parking.state
+            move = getattr(parking, 'current', None)
+            what = '' if move is None else ' move steer %.3f dir %+.0f target %s' % (move[0], move[1], move[3][0])
+            self.get_logger().info('park %s at %s%s' % (parking.state, pose, what))
+        for event in parking.log:
+            self.get_logger().info('park event %s' % {k: ([round(float(x), 4) for x in v] if isinstance(v, (list, tuple))
+                                                          else v) for k, v in event.items()})
+            if event.get('event') == 'park_end':
+                inside = parking.lot.parked(*own, inside=0.0, parallel=math.radians(90.0))
+                why = 'parked: inside and parallel (own pose)' if event.get('parked') else (
+                    'not parallel: heading %.1f deg' % math.degrees(own[2]) if inside
+                    else 'not inside the lot (own pose)')
+                self.get_logger().info('park verdict %s: %s, %d moves' % (
+                    'PARKED' if event.get('parked') else 'PARK_FAIL', why, event.get('moves', 0)))
+        parking.log.clear()
 
 
 def main(args=None):
