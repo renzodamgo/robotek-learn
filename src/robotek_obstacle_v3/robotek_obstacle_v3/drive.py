@@ -41,6 +41,7 @@ from .strategy import Strategy
 
 CONTROL_RATE = 50.0       # Hz, on the node's clock (simulation clock in Gazebo)
 IMAGE_PAIRING = 0.15      # s; a camera frame is paired with a scan at most this old
+DEBUG_PERIOD = 0.2        # s; the detections image at most 5 times a second (JPEG at 25 fps made the camera stale, 8 nov)
 
 
 def hsv_bands(spec):
@@ -90,6 +91,7 @@ class Drive(Node):
         self.debug_pub = self.create_publisher(CompressedImage, '/obstacle/debug_image/compressed', 1)
         self.signs_pub = self.create_publisher(MarkerArray, '/obstacle/signs', 1)
         self.steer = 0.0
+        self.debug_sent = -1e9
         self.create_subscription(LaserScan, '/scan', self.on_scan, qos_profile_sensor_data)
         self.create_subscription(Imu, '/imu', self.on_imu, qos_profile_sensor_data)
         self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
@@ -117,7 +119,8 @@ class Drive(Node):
             bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             blocks = color_blocks(bgr, **self.camera)
             observations = associate(blocks, scan_clusters(self.scan_msg))
-            if self.debug_pub.get_subscription_count():
+            if self.debug_pub.get_subscription_count() and stamp - self.debug_sent >= DEBUG_PERIOD:
+                self.debug_sent = stamp
                 self.publish_debug(msg, bgr, blocks, observations)
         self.strategy.on_signs(observations, stamp)
         if self.signs_pub.get_subscription_count():

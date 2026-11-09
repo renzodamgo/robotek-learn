@@ -287,22 +287,31 @@ class LowSpeedDrive:
       pulse_period_s, and 0 the rest, so the mean speed is the one asked (the parking manoeuvres ask 0.06 m/s).
     kick_rps 0 and pulse_rps 0 turn each off (then rps passes unchanged)."""
 
-    def __init__(self, kick_rps=0., kick_s=.2, pulse_rps=0., pulse_period_s=.5):
+    def __init__(self, kick_rps=0., kick_s=.2, pulse_rps=0., pulse_period_s=.5, kick_after_s=.5):
         self.kick_rps, self.kick_s = float(kick_rps), float(kick_s)
         self.pulse_rps, self.period = float(pulse_rps), float(pulse_period_s)
+        self.kick_after = float(kick_after_s)
         self.moving_since = None
+        self.kick_until = -math.inf
+        self.stopped_since = -math.inf      # stopped since the start: the first move kicks
 
     def rps(self, now, requested):
         if requested == 0.:
+            if self.moving_since is not None:
+                self.stopped_since = now
             self.moving_since = None
             return 0.
         if self.moving_since is None:
             self.moving_since = now
+            # Kick only after a real stop (kick_after_s): the strategy's short sensor pauses (~0.05 s of 0) kicked the
+            # car again and again and, with full lock, spun it on the spot (8 nov 2026).
+            if now - self.stopped_since >= self.kick_after:
+                self.kick_until = now + self.kick_s
         sign = math.copysign(1., requested)
         out = abs(requested)
         if self.pulse_rps > 0. and out < self.pulse_rps:
             phase = ((now - self.moving_since) % self.period) / self.period
             out = self.pulse_rps if phase < out / self.pulse_rps else 0.
-        if self.kick_rps > 0. and now - self.moving_since < self.kick_s:
+        if self.kick_rps > 0. and now < self.kick_until:
             out = max(out, self.kick_rps)
         return sign * out

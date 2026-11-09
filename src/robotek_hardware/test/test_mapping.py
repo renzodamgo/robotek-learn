@@ -219,7 +219,8 @@ def test_low_speed_drive():
     assert kick.rps(10., -0.5) == -2.          # standing start: kick, same sign
     assert kick.rps(10.1, -0.5) == -2.
     assert kick.rps(10.3, -0.5) == -0.5        # after kick_s: as asked
-    assert kick.rps(10.4, 0.) == 0. and kick.rps(10.5, 1.) == 2.   # stop, then a new start kicks again
+    assert kick.rps(10.4, 0.) == 0. and kick.rps(10.5, 1.) == 1.   # a short pause (< 0.5 s): no kick
+    assert kick.rps(11.0, 0.) == 0. and kick.rps(11.6, 1.) == 2.   # a real stop (>= 0.5 s): kick again
     pulse = LowSpeedDrive(pulse_rps=1., pulse_period_s=1.)
     samples = [pulse.rps(t / 100., 0.4) for t in range(100)]
     assert set(samples) == {0., 1.} and abs(sum(samples) / 100. - 0.4) < 0.02
