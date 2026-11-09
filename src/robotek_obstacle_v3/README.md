@@ -23,11 +23,12 @@ Solo usa sensores honestos: LiDAR, giroscopio (IMU) y cámara. Sin encoder ni po
 | `drive.py` | el nodo ROS (`drive`): /scan, /imu, /camera/image, /start → /cmd_vel_raw |
 | `mission.py` | la misión: SETUP → RUN → PARK → STOP |
 | `corner.py`, `corner_table.py` | la línea de cada esquina (`corner_table` se precalculó en WRO-Strategies) |
-| `park.py`, `parking_search.py` | el aparcamiento en paralelo |
+| `park.py`, `parking_search.py` | el aparcamiento en paralelo planificado (`park_mode: 0`, por defecto) |
+| `park_fixed.py` | el aparcamiento fijo (`park_mode: 1`): cada paso termina en el giroscopio o el LiDAR |
 | `localizer.py`, `field.py`, `scene.py` | ubicarse con los muros, la geometría del campo y del carril |
 | `perception.py` | los grupos del LiDAR que pueden ser señales |
 | `car.py` | las medidas del coche con las que se ajustó la v3 (ver abajo) |
-| `settings.py` | los 26 parámetros de la misión (también parámetros ROS del nodo) |
+| `settings.py` | los 35 parámetros de la misión (también parámetros ROS del nodo) |
 
 La lógica es la de WRO-Strategies sin cambios, copiada del commit `5cf3771` (solo cambian los `import`). Lo que hacía su nodo con los sensores lo
 hace aquí `ObstacleStrategyBase` (odometría del LiDAR, giro integrado, Start). La `Strategy` añade tres cosas para
@@ -113,6 +114,30 @@ ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v
   en la recta de salida tras tres vueltas.
 - **Límite de giro:** la v3 limita el giro a 0.307 rad (17.6°, `steer_limit`) y `robot.yaml` permite ±19°. Subir
   `steer_limit` cambia las líneas de las esquinas, así que habría que validarlo antes en el laboratorio y en Gazebo.
+
+### Aparcamiento fijo (`park_mode: 1`, 8 nov 2026)
+
+El aparcamiento planificado (`park.py`) no funciona en el coche real del 8 nov:
+- con todo el giro, el motor no mueve el coche a 0,06 m/s;
+- con `motor_min_rps` va a ~0,25 m/s y se pasa en cada uno de sus ~14 movimientos cortos.
+
+`park_fixed.py` no planifica. Hace estos pasos:
+1. Se pone a `park_fixed_ahead` (0,145 m) por delante del límite lejano.
+2. Marcha atrás con todo el giro hasta `park_fixed_entry` (0,76 rad, giroscopio).
+3. Marcha atrás recta hasta que el contorno queda cerca de la pared o de un límite (LiDAR).
+4. Endereza adelante y atrás con todo el giro.
+5. Se centra.
+
+**Lote:** su tamaño y su posición son parámetros (`park_lot_length` 0,3495, `park_lot_depth` 0,20 y `park_lot_end` 0,48 m,
+los del reglamento): hay que poner los del campo medido.
+
+**Resultados en el laboratorio de WRO-Strategies** (`--car real_v3`, solo aparcar, 200 rondas):
+- el fijo aparca bien 195 veces y el planificado, 35;
+- con un piso de 0,25 m/s (como `motor_min_rps` 1,1) no aparca ninguno de los dos;
+- a 1 cm de error en el lote baja a 128–184.
+
+Comando de la prueba en el coche: WRO-Strategies `docs/robot-real-pi/obstacle-runs/20261108/README.md`, sección
+«Aparcamiento fijo».
 
 ### La cámara IMX708 (así está el coche desde el 4 nov 2026)
 

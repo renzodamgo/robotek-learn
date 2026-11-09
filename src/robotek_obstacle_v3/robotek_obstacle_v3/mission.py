@@ -13,7 +13,7 @@ from .car import OUTLINE_FRONT, OUTLINE_HALF_WIDTH, OUTLINE_REAR, WHEELBASE
 from .field import SWAP, scan_points, track_s, unwrap_s, wrap
 from .localizer import Localizer, direction_from_scan
 from .perception import scan_clusters
-from . import corner, park, scene
+from . import corner, park, park_fixed, scene
 from .scene import Scene
 from .settings import make
 
@@ -100,7 +100,7 @@ class Mission:
         self._peek = None           # [seat, phase, yaw at start, time]
         self.parking = None
         self._park_heading = None   # gyro heading of the previous parking cycle
-        if self.p.park:
+        if self.p.park and not self.p.park_mode:
             park.nominal_plan(self.p.steer_limit)   # before the round: a few seconds
 
     # ------------------------------------------------------------- inputs
@@ -165,7 +165,8 @@ class Mission:
         self.profile = self._plan()
         if self.p.park and self.phi >= self.p.park_after:
             self.state = 'PARK'
-            self.parking = park.Parking(self, self.p.park_speed, self.p.park_margin)
+            kind = park_fixed.FixedParking if self.p.park_mode else park.Parking
+            self.parking = kind(self, self.p.park_speed, self.p.park_margin)
             return 0.0, 0.0, 'PARK'
         remaining = self.p.stop_progress - self.phi
         if remaining <= 0.0 and not self.p.park:

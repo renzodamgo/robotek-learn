@@ -6,7 +6,7 @@ taken from the v3 node of WRO-Strategies so the decisions stay the same:
 
 * every camera frame reaches the strategy: one with no scan within ``IMAGE_PAIRING`` gives an empty list of signs
   (the course's node skips it). The strategy needs a fresh frame to keep driving;
-* the 26 mission parameters of ``settings.Params`` are ROS parameters (defaults = WRO-Strategies'
+* the 35 mission parameters of ``settings.Params`` are ROS parameters (defaults = WRO-Strategies'
   ``obstacle_v3.yaml``); ``parking`` (from the round launch) sets ``park``.
 
 The camera is ROS parameters too, for a camera other than the one of the defaults (the USB camera measured on

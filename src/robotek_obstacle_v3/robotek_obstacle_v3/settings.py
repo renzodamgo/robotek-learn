@@ -18,6 +18,14 @@ class Params:
     lot_laps: float = 1.0           # 1: with park, the laps keep off the lot's limits; 0: the laps as without the lot, the lot only for parking (8 nov 2026, car test)
     park_speed: float = 0.06        # m/s while manoeuvring in the lot
     park_margin: float = 0.015      # m kept from the limits and the wall by the parking search
+    park_mode: float = 0.0          # 0: the planned manoeuvre (park.py); 1: the fixed manoeuvre closed on sensors (park_fixed.py)
+    park_fixed_ahead: float = 0.145  # m past the lot's far limit (base_link) where the fixed manoeuvre starts reversing
+    park_fixed_entry: float = 0.76  # rad of heading that ends the fixed entry arc (gyro)
+    park_fixed_margin: float = 0.012  # m the fixed manoeuvre's guard keeps from the limits and the wall
+    park_fixed_roll: float = 0.012  # m the car rolls after a stop at first (then the measured roll)
+    park_lot_length: float = 0.3495  # m between the limits' inner faces (rules: 1.5 x 0.233 m car; fixed manoeuvre)
+    park_lot_depth: float = 0.20    # m from the outer wall (rules; fixed manoeuvre)
+    park_lot_end: float = 0.48      # m along the start straight to the far limit's inner face in CCW (mirrored in CW)
     scan_max_age: float = 0.35      # s; older LiDAR brakes
     imu_max_age: float = 0.20       # s; older gyro brakes
     known_speed_gain: float = 1.0   # cruise and pillar speeds x this from lap 2 on (every sign known)
