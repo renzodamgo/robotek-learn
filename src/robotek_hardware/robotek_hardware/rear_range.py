@@ -113,6 +113,11 @@ class Vl53l0x:
             time.sleep(.001)
 
     def init(self):
+        # a sensor left ranging (by an earlier run, or after a reset that kept it in back-to-back mode) does not
+        # finish the reference calibration: stop it first (9 nov 2026)
+        self.write(SYSRANGE_START, 0x01)
+        time.sleep(.05)
+        self.write(SYSTEM_INTERRUPT_CLEAR, 0x01)
         self.write(0x89, self.read(0x89) | 0x01)    # I/O at 2.8 V (the boards have a 2.8 V regulator)
         self.write(0x88, 0x00)                      # I2C standard mode
         self.write(0x80, 0x01), self.write(0xFF, 0x01), self.write(0x00, 0x00)
@@ -240,12 +245,13 @@ class RearRange(Node):
         self.i2c = None
         self.dev = None
         self.waited = 0
+        self.failures = 0
         self.readings = 0
         if lgpio is None:
             self.get_logger().error('lgpio missing (sudo apt install python3-lgpio): rear range disabled.')
             return
-        if not self.open_i2c():
-            self.create_timer(5., self.retry_i2c)
+        self.open_i2c()
+        self.create_timer(5., self.retry_i2c)   # also re-initialises a sensor that was dropped (see poll)
         self.create_timer(float(p['poll_s']), self.poll)
 
     def open_i2c(self):
@@ -291,22 +297,30 @@ class RearRange(Node):
             self.open_i2c()
 
     def poll(self):
-        if self.i2c is None:
+        if self.dev is None:
             return
         try:
             if not self.dev.ready():
                 self.waited += 1
-                if self.waited > 50:    # 0.5 s without a result: restart the ranging
-                    self.waited = 0
-                    self.get_logger().warn('VL53L0X did not answer in time: restarting.', throttle_duration_sec=10.)
-                    self.dev.start_continuous()
+                if self.waited > 50:    # 0.5 s without a result: the sensor may have reset (power or cable)
+                    self.drop('VL53L0X gave no result for 0.5 s')
                 return
             reading = self.dev.result()
         except Exception as error:  # noqa: BLE001
+            self.failures += 1
             self.get_logger().warn(f'I2C read failed ({error}).', throttle_duration_sec=10.)
+            if self.failures >= 10:
+                self.drop('10 I2C errors in a row')
             return
-        self.waited = 0
+        self.waited = self.failures = 0
         self.publish(*reading)
+
+    def drop(self, why):
+        """Forget the sensor; retry_i2c opens it again and runs the whole init within 5 s. A VL53L0X that lost power
+        comes back with its factory registers, so restarting the ranging alone is not enough (9 nov 2026)."""
+        self.get_logger().warn(f'{why}: re-initialising the sensor.')
+        self.close(self.i2c)
+        self.i2c, self.dev, self.waited, self.failures = None, None, 0, 0
 
     def publish(self, raw, status):
         mm = max(0, round((raw-self.offset)/self.scale))

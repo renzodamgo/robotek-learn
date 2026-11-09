@@ -55,3 +55,21 @@ def test_other_model_refused():
         node.destroy_node()
     finally:
         rclpy.try_shutdown()
+
+
+def test_silent_sensor_is_reinitialised():
+    rclpy.init()
+    try:
+        node = make_node([block(100)])
+        status = [0x00]                  # RESULT_INTERRUPT_STATUS never says ready
+        rear_range.lgpio.i2c_read_byte_data = lambda h, reg: (
+            0xEE if reg == rear_range.MODEL_ID else status[0] if reg == rear_range.RESULT_INTERRUPT_STATUS else 0x01)
+        for _ in range(51):
+            node.poll()
+        assert node.dev is None and node.i2c is None
+        status[0] = 0x07
+        node.retry_i2c()                 # runs the init again
+        assert node.dev is not None
+        node.destroy_node()
+    finally:
+        rclpy.try_shutdown()
