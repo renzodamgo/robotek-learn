@@ -45,6 +45,7 @@ código 1; `bash tools/get-reference.sh --force` reemplaza (con copia de segurid
 | `imu_adapter` | IMU de la placa a ejes del coche (x adelante, y izquierda, z arriba). Las estrategias integran el giroscopio z, así que los ejes tienen que estar bien |
 | `start_button` | Botón de la placa: primera pulsación publica `/start` (y pita), cualquier otra publica `/robotek/stop` y el coche queda parado hasta lanzar de nuevo |
 | `gpio_button` | Pulsador en el GPIO 16 del Pi (la otra pata a GND, pull-up interno) → `/robotek/gpio_button` (Bool: `true` al pulsar, `false` al soltar) y una línea en el log. De momento solo avisa: no arranca ni para la ronda. `gpio_button:=false` lo quita; `gpio_button_pin:=N` cambia el pin |
+| `rear_range` | Sensor de distancia VL53L0X en el I2C del Pi (0x29, bus 1) → `/robotek/rear_range` (Range, metros) y `/robotek/rear_range_mm` (Int32, milímetros; `-1` si no ve nada). Aún no está en el launch: `ros2 run robotek_hardware rear_range`. Sin probar en el coche. |
 | `battery_guard` | Si la batería de la placa (`/rrc/battery`) baja de 6,8 V durante 5 lecturas seguidas, avisa en rojo parpadeante (`status_leds`). No para el coche |
 | `status_leds` | Los dos LED RGB de la placa: verde = listo para el botón, azul = pulsado (la ronda corre, terminó o se paró), rojo parpadeando = batería baja. Solo lee `/robotek/state` y `/robotek/battery_low` |
 | `imu_axes` | Herramienta de calibración: con el coche quieto y un empujón hacia adelante imprime los ejes de `imu_adapter` |
