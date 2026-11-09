@@ -42,6 +42,20 @@ def test_stale_camera_pauses_and_the_round_limit_ends():
     assert strategy.label == 'FAULT' and strategy.done
 
 
+def test_parking_ignores_a_stale_camera():
+    strategy = Strategy(parking=True)
+    strategy.request_start()
+    strategy.on_scan(_scan(0.0))
+    strategy.on_imu(0.0, 0.0)
+    strategy.on_signs([], 0.0)
+    strategy.control(0.0, 0.02)
+    strategy.on_scan(_scan(0.5))
+    strategy.on_imu(0.5, 0.0)
+    assert set(strategy.stale(0.5)) == {'camera'}
+    strategy.mission.state = 'PARK'
+    assert strategy.stale(0.5) == {} and strategy.fresh(0.5)
+
+
 def test_lab_round_with_the_lot(tmp_path: Path):
     field = obstacle_lab.make_field(tmp_path, 0, 'ccw', True)
     result = obstacle_lab.run_round(field, obstacle_lab.make_strategy('robotek_obstacle_v3.strategy:Strategy', True))

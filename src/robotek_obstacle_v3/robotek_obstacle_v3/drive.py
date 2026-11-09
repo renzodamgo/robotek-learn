@@ -181,7 +181,12 @@ class Drive(Node):
         self.pose_pub.publish(Float32MultiArray(data=[float(v) for v in (*mission.pose, mission.phi)]))
         if self.strategy.label != self.state_sent:
             self.state_sent = self.strategy.label
-            self.get_logger().info('state %s' % self.state_sent)
+            if self.state_sent == 'WAIT_SENSOR':
+                ages = self.strategy.stale(self.now())
+                self.get_logger().warn('state WAIT_SENSOR: stale %s' % ', '.join(
+                    '%s %.2f s' % (name, age) for name, age in sorted(ages.items())))
+            else:
+                self.get_logger().info('state %s' % self.state_sent)
             self.state.publish(String(data=self.state_sent))
 
 

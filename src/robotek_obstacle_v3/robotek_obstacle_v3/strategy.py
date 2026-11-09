@@ -37,9 +37,18 @@ class Strategy(ObstacleStrategyBase):
         super().on_imu(now, gyro_z)
         self._imu_stamp = now
 
+    def stale(self, now):
+        """The sensors that are not younger than SENSOR_MAX_AGE, as {name: age in s}. The camera does not count while
+        parking: the parking uses only the LiDAR and the gyroscope, and on the car (8 nov 2026, 22:29) the camera's
+        stamp stopped mid-park and held the car in WAIT_SENSOR for minutes with every sensor fresh outside the node."""
+        stamps = {'scan': self.scan_stamp, 'imu': self._imu_stamp}
+        if self.mission.state != 'PARK':
+            stamps['camera'] = self.signs_stamp
+        return {name: now - t for name, t in stamps.items() if not 0 <= now - t < SENSOR_MAX_AGE}
+
     def fresh(self, now):
-        """Scan, camera and gyroscope all younger than SENSOR_MAX_AGE (the v3 node's test)."""
-        return all(0 <= now - t < SENSOR_MAX_AGE for t in (self.scan_stamp, self.signs_stamp, self._imu_stamp))
+        """Scan, camera and gyroscope all younger than SENSOR_MAX_AGE (the v3 node's test; no camera while parking)."""
+        return not self.stale(now)
 
     def update(self, now, dt):
         distance = self.travelled if self.mission.loc.ready else 0.0
