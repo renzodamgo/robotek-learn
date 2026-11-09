@@ -23,6 +23,7 @@ class Params:
     park_fixed_entry: float = 0.76  # rad of heading that ends the fixed entry arc (gyro)
     park_fixed_margin: float = 0.012  # m the fixed manoeuvre's guard keeps from the limits and the wall
     park_fixed_roll: float = 0.012  # m the car rolls after a stop at first (then the measured roll)
+    park_fixed_roll_arc: float = 0.0  # m of arc it rolls after a stop at full lock at first (0 = park_fixed_roll)
     park_lot_length: float = 0.3495  # m between the limits' inner faces (rules: 1.5 x 0.233 m car; fixed manoeuvre)
     park_lot_depth: float = 0.20    # m from the outer wall (rules; fixed manoeuvre)
     park_lot_end: float = 0.48      # m along the start straight to the far limit's inner face in CCW (mirrored in CW)

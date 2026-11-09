@@ -25,14 +25,14 @@ from .car import OUTLINE_HALF_WIDTH
 
 from .field import wrap
 from .parking_search import Lot, move
-from .park import GUARD_AHEAD, LINE_UP, MAX_RESUME, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES, Parking
+from .park import GUARD_AHEAD, GYRO_ARC, LINE_UP, MAX_RESUME, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES, Parking
 
 GAP = 0.04                  # m between the car side and the lot line while approaching
 ENTRY_MAX = 0.60            # m: the entry arc runs at most this far
 DOWN_MAX = 0.30             # m: the straight into the lot runs at most this far
 GUARD_ROLL = 1.0            # x the measured roll added to the guard's look-ahead
 LADDER_MOVES = 24           # straightening moves at most (park.py: 12; 4-8 deg each from ~45 deg here)
-ROLL_MAX = 0.15             # m: a longer roll (a push, a bad pose) does not enter the estimate
+ROLL_MAX = 0.30             # m: a longer roll (a push, a bad pose) does not enter the estimate
 
 
 def make_lot(sign, p):
@@ -58,6 +58,11 @@ class FixedParking(Parking):
         self.ahead = p.park_fixed_ahead
         self.entry = p.park_fixed_entry
         self.guard_margin = p.park_fixed_margin
+        # park_fixed_roll_arc > 0: the roll after a stop is measured apart for arcs and straights (8 nov floor test at
+        # ~0.3 m/s: 0.13 m straight, ~0.07 m of arc at full lock); self.coast is the one of the current move. 0: one
+        # estimate for both (at 0.06 m/s it parks better: lab real_v3 195/200 against 164 with the split).
+        self.split = p.park_fixed_roll_arc > 0.0
+        self.rolls = {False: p.park_fixed_roll, True: p.park_fixed_roll_arc if self.split else p.park_fixed_roll}
         self.coast = p.park_fixed_roll
         self.ladder = 0             # straightening moves driven
 
@@ -117,8 +122,10 @@ class FixedParking(Parking):
         """As ``park.Parking._settled``, with the guard of this manoeuvre and rolls up to ROLL_MAX
         (the floor speed of the real car rolls 3-12 cm)."""
         rolled = math.hypot(pose[0] - self.stop_pose[0], pose[1] - self.stop_pose[1])
-        self.coast = 0.5 * self.coast + 0.5 * min(rolled, ROLL_MAX)
         steer, direction = self.current[:2]
+        kind = self._is_arc(steer) and self.split
+        self.rolls[kind] = 0.5 * self.rolls[kind] + 0.5 * min(rolled, ROLL_MAX)
+        self.coast = self.rolls[kind]
         ahead = move(*pose, steer, direction * (GUARD_AHEAD + GUARD_ROLL * self.coast))
         if (not self._reached(*pose, REACH_SLACK) and self.resumes < MAX_RESUME
                 and self.lot.free(*ahead, steer, self.guard_margin)):
@@ -126,6 +133,14 @@ class FixedParking(Parking):
             self.state = 'PARK_MOVE'
             return
         self._next(now, pose)
+
+    def _is_arc(self, steer):
+        return abs(steer) >= GYRO_ARC * self.steer_limit
+
+    def _next(self, now, pose):
+        super()._next(now, pose)
+        if self.current is not None:
+            self.coast = self.rolls[self._is_arc(self.current[0]) and self.split]
 
     def _drive(self, now, x, y, th):
         steer, direction, length, _, (x0, y0, _) = self.current

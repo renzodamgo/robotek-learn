@@ -211,6 +211,8 @@ def generate_launch_description():
         default_max_pct = str(base['motor_max_pct'])
         default_max_rps = str(base.get('motor_max_rps', 0.0))
         default_min_rps = str(base.get('motor_min_rps', 0.0))
+        brake_defaults = {name: str(base.get(name, value)) for name, value in (
+            ('brake_rps', 0.0), ('brake_hz', 10.0), ('brake_s', 1.5), ('brake_min_rps', 1.0))}
     return LaunchDescription([
         DeclareLaunchArgument('strategy', default_value='my_open', description='the package with your node'),
         DeclareLaunchArgument('executable', default_value='drive', description='the executable of that package'),
@@ -275,6 +277,12 @@ def generate_launch_description():
         DeclareLaunchArgument('motor_pulse_rps', default_value='0.0',
                               description='requests below this many rps become pulses of it with the same mean (0 = off)'),
         DeclareLaunchArgument('motor_pulse_period_s', default_value='0.5'),
+        # Counter-pulse brake (8 nov 2026 floor test at 1.2 rps: 2 rps reverse for 0.15 s cut the roll at full lock from
+        # 0.18 to 0.05 rad): brake_rps:=2 brake_s:=0.15 brake_hz:=3 (one reverse pulse: half period > brake_s).
+        *[DeclareLaunchArgument(name, default_value=value,
+                                description='base_adapter brake (robot.yaml; brake_rps 0 = off): +-brake_rps at brake_hz '
+                                            'for brake_s, reverse first, when stopping from at least brake_min_rps')
+          for name, value in brake_defaults.items()],
         DeclareLaunchArgument('motor_max_pct', default_value=default_max_pct,
                               description='motor ceiling in % (robot.yaml). First run on the car: 30, on blocks'),
         DeclareLaunchArgument('battery_guard', default_value='true',
@@ -305,7 +313,8 @@ def generate_launch_description():
                                                                            value_type=float),
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('motor_kick_rps', 'motor_kick_s', 'motor_pulse_rps',
-                                                           'motor_pulse_period_s')}}],
+                                                           'motor_pulse_period_s', 'brake_rps', 'brake_hz', 'brake_s',
+                                                           'brake_min_rps')}}],
              remappings=[('cmd_vel', '/cmd_vel_raw')]),
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
              remappings=[('start', '/start')],
