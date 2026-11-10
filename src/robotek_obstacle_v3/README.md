@@ -101,7 +101,7 @@ ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v
     /obstacle/debug_image/compressed /rrc/acker_servo/set_state
 ```
 
-### Salir del aparcamiento al empezar (`start_lot:=true`, 9 nov 2026; sin probar en el coche)
+### Salir del aparcamiento al empezar (`start_lot:=true`, 9 nov 2026)
 
 El coche espera dentro del aparcamiento, pegado al muro exterior y a ~1 cm del tope de atrás. Luces: verde
 parpadeando = listo, esperando el botón; azul = pulsado, la ronda corre. Arranca con el botón de la placa o con el
@@ -115,20 +115,29 @@ pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
    parado (0,5 s).
 3. **Vueltas** de la v3 sin aparcar al final y sin retroceder al empezar.
 
-`lot_exit_speed` (0,12 m/s) y `lot_exit_pulse` (0,5 s) se cambian al lanzar. Durante la salida (estado `LOT_EXIT`) el
+`lot_exit_speed` (0,25 m/s), `lot_exit_pulse` (0,5 s, los de adelante) y `lot_exit_back_pulse` (0,3 s, el de atrás)
+se cambian al lanzar. Durante la salida (estado `LOT_EXIT`) el
 motor va con golpe de arranque y pulsos de 1,8 rps (`low_speed_states` de base_adapter): así el coche avanzó 5–6 cm/s
 pidiendo 0,06 m/s. En el resto de la ronda, la velocidad normal.
 
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET ROS_DOMAIN_ID=1 \
-  ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam start_lot:=true
+  ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam start_lot:=true \
+  motor_min_rps:=1.5
 ```
 
 Grabar desde el Mac (WRO-Strategies): `bash tools/car_bag_mac.sh salida-lote`.
 
+En el coche (9 nov 2026, 3 intentos, grabaciones en el Mac `~/rondas-coche/bags/20261109-*-salida-lote*`):
+- a 0,12 m/s casi no se movió (cada pulso daba uno o dos golpes de motor; batería a 6,7–6,9 V);
+- el segundo no empezó: la batería bajó de 6,26 a 5,1 V esperando y el Pi se apagó;
+- con batería cargada (7,69 V), 0,25 m/s y `motor_min_rps:=1.5`: salió (rumbo 2,5° → 11,4° → 22,6° → 23,1°) y siguió en
+  vueltas; en el pulso de atrás (entonces 0,5 s) la trasera casi tocó el muro exterior. Por eso ese pulso es ahora
+  de 0,3 s: el sensor de atrás mira hacia atrás y no ve el muro de al lado. Sin juez ni puntos medidos.
+
 Límite conocido: en el modelo de contorno del coche, un solo arco adelante a tope choca con el tope de delante a los
-~11 cm (17°); los pulsos no se han comprobado en el coche.
+~11 cm (17°).
 
 ### En el coche real (8 nov 2026): primera ronda completa
 

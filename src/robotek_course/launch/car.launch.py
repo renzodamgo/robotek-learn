@@ -111,7 +111,8 @@ def _strategy_node(context):
     if _arg(context, 'start_lot').lower() == 'true':
         # Obstacle v3: start inside the parking lot, leave it with the coach's pulses, then the laps (lot_exit.py).
         parameters.append({'start_lot': 1.0, 'lot_exit_speed': float(_arg(context, 'lot_exit_speed')),
-                           'lot_exit_pulse': float(_arg(context, 'lot_exit_pulse'))})
+                           'lot_exit_pulse': float(_arg(context, 'lot_exit_pulse')),
+                           'lot_exit_back_pulse': float(_arg(context, 'lot_exit_back_pulse'))})
     return [
         Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
              output='screen', parameters=parameters,
@@ -290,8 +291,10 @@ def generate_launch_description():
                                           'from the rear limit): direction from the LiDAR sides, four short full-lock '
                                           'pulses out (left fwd, right back, left fwd, right fwd; mirrored in CW), then '
                                           'the laps. The motor creeps with a kick and pulses only during LOT_EXIT'),
-        DeclareLaunchArgument('lot_exit_speed', default_value='0.12', description='m/s of the lot exit pulses'),
-        DeclareLaunchArgument('lot_exit_pulse', default_value='0.5', description='s of each lot exit pulse'),
+        DeclareLaunchArgument('lot_exit_speed', default_value='0.25',
+                              description='m/s of the lot exit pulses (0.12 barely moved the car, 0.25 got it out, 9 nov 2026)'),
+        DeclareLaunchArgument('lot_exit_pulse', default_value='0.5', description='s of each forward lot exit pulse'),
+        DeclareLaunchArgument('lot_exit_back_pulse', default_value='0.3', description='s of the reverse lot exit pulse'),
         DeclareLaunchArgument('motor_kick_rps', default_value='0.0',
                               description='start kick: at least this many rps for motor_kick_s from a standstill (0 = off)'),
         DeclareLaunchArgument('motor_kick_s', default_value='0.2'),

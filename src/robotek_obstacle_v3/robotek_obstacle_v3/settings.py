@@ -43,7 +43,8 @@ class Params:
     guard_gap: float = 0.0          # m; > 0: LiDAR points this close to the outline GUARD_AHEAD on -> back off
     start_lot: float = 0.0          # 1: the car starts inside the lot and leaves it first (lot_exit.py, 9 nov 2026)
     lot_exit_speed: float = 0.06    # m/s of the lot exit's pulses (the motor creeps with base_adapter's kick and pulses)
-    lot_exit_pulse: float = 0.5     # s of each of the lot exit's four pulses
+    lot_exit_pulse: float = 0.5     # s of each forward pulse of the lot exit
+    lot_exit_back_pulse: float = 0.3  # s of its reverse pulse (0.5 s on the car, 9 nov 2026: the rear swung almost into the outer wall)
 
 
 def validate(params):
