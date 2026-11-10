@@ -278,6 +278,11 @@ class RearRange(Node):
         handle = None
         try:
             handle = lgpio.i2c_open(self.bus, self.address)
+            # Register page 0 first: a sensor left on another page (a node stopped in the middle of a paged sequence;
+            # the sensor keeps it while powered, also with the Pi shut down) read 0x00 0x01 0x9f for the model id
+            # registers and was refused (9 nov 2026).
+            lgpio.i2c_write_byte_data(handle, 0xFF, 0x00)
+            lgpio.i2c_write_byte_data(handle, 0x80, 0x00)
             model = lgpio.i2c_read_byte_data(handle, MODEL_ID)
         except Exception as error:  # lgpio.error: no bus, permission denied, no sensor answering
             self.close(handle)
