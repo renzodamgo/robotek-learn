@@ -103,6 +103,9 @@ ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v
 
 ### Salir del aparcamiento al empezar (`start_lot:=true`, 9 nov 2026)
 
+Todos los parámetros (salida, recuperación, motor, arranque, sensor trasero), con su valor y qué hacen:
+[PARAMETROS.md](PARAMETROS.md).
+
 El coche espera dentro del aparcamiento, pegado al muro exterior y a ~1 cm del tope de atrás. Luces: verde
 parpadeando = listo, esperando el botón; azul = pulsado, la ronda corre. Arranca con el botón de la placa o con el
 pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
