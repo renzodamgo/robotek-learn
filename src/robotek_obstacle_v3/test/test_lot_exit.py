@@ -90,41 +90,42 @@ def test_straight_steps_keep_the_wheels_centred_and_move_the_estimate():
     assert steers == {0.0} and abs(ex.pose[0] - x0 - 0.1) < 0.01      # 0.5 s at 0.2 m/s
 
 
-def test_front_recover_reverses_toward_parallel_to_the_outer_wall():
-    from robotek_obstacle_v3.mission import Mission
-    m = Mission({})
-    m.selected_direction, m.pose = 'ccw', (0.3, -1.0, math.radians(30))   # bottom straight, nose 30 deg up
-    m._scan = scan_ahead(0.19, 0.0)                                        # something straight ahead of the nose
-    steps = []
-    for k in range(200):
-        now = k * 0.02
-        out = m._front_recovery(now, 0.19, 0.3, 0.0)
-        if out is None:
-            break
-        steps.append(out)
-        m._scan = scan_ahead(3.0, 0.0)
-        if out[0] < 0:   # reversing at + steer turns the heading down
-            x, y, th = m.pose
-            m.pose = (x, y, th - 0.15 * 0.02 * math.tan(out[1]) / 0.11883)
-    assert steps[0][0] == 0.003 and steps[0][1] > 0                      # brake first, wheels already turned
-    assert m.events and m.events[0]['event'] == 'front_recover'
-    assert any(s[0] < 0 for s in steps) and abs(m.pose[2]) < math.radians(4)   # reversed until parallel
+def test_front_recover_reverses_right_in_ccw_left_in_cw():
+    from robotek_obstacle_v3.mission import Mission, RECOVER_BACK, RECOVER_BRAKE
+    for direction, side in (('ccw', -1.0), ('cw', 1.0)):
+        m = Mission({})
+        m.selected_direction, m.pose = direction, (0.3, -1.0, math.radians(30))
+        m._scan = scan_ahead(0.19, 0.0)
+        outs = []
+        for k in range(300):
+            out = m._front_recovery(k * 0.02, 0.19, 0.3, 0.0)
+            if out is None:
+                break
+            outs.append(out)
+            m._scan = scan_ahead(3.0, 0.0)
+        assert outs[0][0] == 0.003 and m.events[0]['event'] == 'front_recover'       # brake first
+        backing = [o for o in outs if o[0] < 0]
+        assert backing and all(o[1] * side > 0 for o in backing)                     # real steer: right in CCW
+        assert abs(len(backing) * 0.02 - RECOVER_BACK) < 0.05
 
 
-def test_front_recover_backs_straight_when_already_parallel():
-    from robotek_obstacle_v3.mission import Mission, RECOVER_BRAKE, RECOVER_STRAIGHT
+def test_front_recover_repeats_back_further():
+    from robotek_obstacle_v3.mission import Mission, RECOVER_BACK, RECOVER_STRAIGHT
     m = Mission({})
-    m.selected_direction, m.pose = 'ccw', (0.1, -1.35, 0.0)
-    m._scan = scan_ahead(0.19, 0.0)
-    outs = []
-    for k in range(200):
-        out = m._front_recovery(k * 0.02, 0.19, 0.3, 0.0)
-        if out is None:
-            break
-        outs.append(out)
-    backing = [o for o in outs if o[0] < 0]
-    assert backing and all(o[1] == 0.0 for o in backing)
-    assert abs(len(backing) * 0.02 - RECOVER_STRAIGHT) < 0.05
+    m.selected_direction, m.pose = 'ccw', (0.1, -1.0, 0.0)
+    lengths, now = [], 0.0
+    for _ in range(2):
+        m._scan = scan_ahead(0.19, 0.0)
+        n = 0
+        while True:
+            out = m._front_recovery(now, 0.19, 0.3, 0.0)
+            now += 0.02
+            if out is None:
+                break
+            m._scan = scan_ahead(3.0, 0.0)
+            n += out[0] < 0
+        lengths.append(n * 0.02)
+    assert abs(lengths[0] - RECOVER_BACK) < 0.05 and abs(lengths[1] - RECOVER_BACK - RECOVER_STRAIGHT) < 0.05
 
 
 def scan_ahead(r, bearing):
