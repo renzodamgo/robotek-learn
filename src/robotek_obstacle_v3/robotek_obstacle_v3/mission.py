@@ -41,6 +41,10 @@ RECOVER_LOOK = 0.18         # m along the arc the car is driving (its current st
 RECOVER_CORRIDOR = OUTLINE_HALF_WIDTH + 0.01   # m: half width of the outline checked (+1 cm)
 RECOVER_STRAIGHT = 0.6      # s straight back when it fires already parallel (else it looped: 168 triggers in front of the
                             # lot's far limit, 9 nov 2026)
+RECOVER_NOSE = 0.05         # m: only the front of the outline counts (the sides swept a sign being passed close)
+RECOVER_REPEAT = (0.3, 8.0)  # m and s: a trigger this near the previous one is a repeat: each adds RECOVER_STRAIGHT of
+                             # straight reverse after the turn (at most 3), so the line gets room (it looped 5 times in
+                             # front of the same sign, 9 nov 2026)
 RECOVER_BRAKE = 0.2
 RECOVER_MAX = 1.5
 RECOVER_PARALLEL = math.radians(4.0)
@@ -104,7 +108,9 @@ class Mission:
         self._last_correct = -math.inf
         self._recover_until = None
         self._recover_steer = None   # steering while backing off after the contact guard
-        self._front_recover = None   # (start time, target heading, mirrored steer) of the front recover
+        self._front_recover = None   # (start time, target heading, mirrored steer, extra s back) of the front recover
+        self._last_recover = None    # (time, x, y) of the last trigger, and the repeats so far
+        self._recover_repeats = 0
         self.brake = False           # True for the tick of a hard brake (the node sends /robotek/estop)
         self.events = []             # recover triggers, for the node's log
         self._corner_gaps = {}       # corner start -> clearance its line was planned with
@@ -459,7 +465,7 @@ class Mission:
         py = ranges[ok] * np.sin(angle[ok])
         # Only what is ahead of the nose and inside the corridor now: a wall alongside that the arc would reach (the
         # line follower steering toward the outer wall in the lab) is the line follower's business, not a head-on hit.
-        ahead = (px > OUTLINE_FRONT - 0.02) & (np.abs(py) < RECOVER_CORRIDOR)
+        ahead = (px > OUTLINE_FRONT - 0.02) & (np.abs(py) < OUTLINE_HALF_WIDTH)
         px, py = px[ahead], py[ahead]
         if px.size == 0:
             return None
@@ -469,7 +475,7 @@ class Mission:
             c, s_ = math.cos(th), math.sin(th)
             u = (px - x) * c + (py - y) * s_
             v = -(px - x) * s_ + (py - y) * c
-            inside = (u > -OUTLINE_REAR) & (u < OUTLINE_FRONT) & (np.abs(v) < RECOVER_CORRIDOR)
+            inside = (u > OUTLINE_FRONT - RECOVER_NOSE) & (u < OUTLINE_FRONT) & (np.abs(v) < RECOVER_CORRIDOR)
             if inside.any():
                 return travelled, float(v[inside][0])
             x, y, th = arc_move(x, y, th, steer, 0.02)
@@ -504,16 +510,25 @@ class Mission:
             # Already parallel: straight back for RECOVER_STRAIGHT, to make room.
             error = wrap(th - target)
             steer = 0.0 if abs(error) < RECOVER_PARALLEL else self.p.steer_limit * (1.0 if error > 0.0 else -1.0)
-            self._front_recover = (now, target, steer)
-        start, target, steer = self._front_recover
+            last, x, y = self._last_recover or (-math.inf, math.inf, math.inf)
+            near = math.hypot(self.pose[0] - x, self.pose[1] - y) < RECOVER_REPEAT[0] and now - last < RECOVER_REPEAT[1]
+            self._recover_repeats = min(3, self._recover_repeats + 1) if near else 0
+            self._last_recover = (now, self.pose[0], self.pose[1])
+            self._front_recover = (now, target, steer, self._recover_repeats * RECOVER_STRAIGHT)
+            self.events[-1]['repeat'] = self._recover_repeats
+        start, target, steer, extra = self._front_recover
         error = wrap(th - target)
         if now - start < RECOVER_BRAKE:
             self.speed = 0.0
             return 0.003, sign * steer, 'RUN'            # stopped; a tiny speed carries the steering angle (Twist)
-        if not steer:                                     # straight back
-            done = now - start >= RECOVER_BRAKE + RECOVER_STRAIGHT
+        if not steer:                                     # straight back (already parallel, or after the turn)
+            done = now - start >= RECOVER_BRAKE + RECOVER_STRAIGHT + extra
         else:
             done = now - start >= RECOVER_BRAKE + RECOVER_MAX or abs(error) < RECOVER_PARALLEL or error * steer < 0.0
+            if done and extra > 0.0:                      # a repeat: go on straight back for ``extra`` s
+                self._front_recover = (now - RECOVER_BRAKE - RECOVER_STRAIGHT, target, 0.0, extra)
+                self.speed = -RECOVER_SPEED
+                return -RECOVER_SPEED, 0.0, 'RUN'
         if done:
             self._front_recover = None
             return None

@@ -33,7 +33,10 @@ def test_stale_camera_pauses_and_the_round_limit_ends():
     strategy.control(0.0, 0.02)
     strategy.on_scan(_scan(0.5))
     strategy.on_imu(0.5, 0.0)
-    assert strategy.control(0.5, 0.02) == (0.0, 0.0) and strategy.label == 'WAIT_SENSOR'
+    assert 'camera' not in strategy.stale(0.5)             # 0.5 s late: still fresh (CAMERA_MAX_AGE 0.8)
+    strategy.on_scan(_scan(0.9))
+    strategy.on_imu(0.9, 0.0)
+    assert strategy.control(0.9, 0.02) == (0.0, 0.0) and strategy.label == 'WAIT_SENSOR'
     late = ROUND_LIMIT + 1.0
     strategy.on_scan(_scan(late))
     strategy.on_imu(late, 0.0)
@@ -49,11 +52,11 @@ def test_parking_ignores_a_stale_camera():
     strategy.on_imu(0.0, 0.0)
     strategy.on_signs([], 0.0)
     strategy.control(0.0, 0.02)
-    strategy.on_scan(_scan(0.5))
-    strategy.on_imu(0.5, 0.0)
-    assert set(strategy.stale(0.5)) == {'camera'}
+    strategy.on_scan(_scan(0.9))
+    strategy.on_imu(0.9, 0.0)
+    assert set(strategy.stale(0.9)) == {'camera'}
     strategy.mission.state = 'PARK'
-    assert strategy.stale(0.5) == {} and strategy.fresh(0.5)
+    assert strategy.stale(0.9) == {} and strategy.fresh(0.9)
 
 
 def test_lab_round_with_the_lot(tmp_path: Path):

@@ -19,6 +19,8 @@ from robotek_course.obstacle_base import ObstacleStrategyBase
 from .mission import Mission
 
 SENSOR_MAX_AGE = 0.35   # s; older data pauses the mission
+CAMERA_MAX_AGE = 0.8    # s for the camera: on the car it was 0.35-0.43 s late 48 times in one run (9 nov 2026), each a
+                        # WAIT_SENSOR stop; the colours of the signs do not need every frame
 ROUND_LIMIT = 180.0     # s after Start (rules 9.2)
 
 
@@ -44,7 +46,8 @@ class Strategy(ObstacleStrategyBase):
         stamps = {'scan': self.scan_stamp, 'imu': self._imu_stamp}
         if self.mission.state != 'PARK':
             stamps['camera'] = self.signs_stamp
-        return {name: now - t for name, t in stamps.items() if not 0 <= now - t < SENSOR_MAX_AGE}
+        return {name: now - t for name, t in stamps.items()
+                if not 0 <= now - t < (CAMERA_MAX_AGE if name == 'camera' else SENSOR_MAX_AGE)}
 
     def fresh(self, now):
         """Scan, camera and gyroscope all younger than SENSOR_MAX_AGE (the v3 node's test; no camera while parking)."""
