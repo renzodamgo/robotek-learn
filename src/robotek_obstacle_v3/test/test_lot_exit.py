@@ -54,9 +54,10 @@ def test_default_steps_in_order_with_their_lengths():
         now += 0.01
     assert ex.done
     assert [tuple(s[:3]) for s in starts] == [('1_LFWD', True, True), ('2_RBACK', False, False), ('3_LFWD', True, True),
-                                              ('4_RFWD', True, False), ('5_RBACK', False, False), ('6_LFWD', True, True)]
-    lengths = [round(s[-1] - s[3] + 0.01, 1) for s in starts]
-    assert lengths == [0.5, 0.5, 2.0, 0.5, 1.0, 0.5]
+                                              ('4_RBACK', False, False), ('5_LFWD', True, True), ('6_RBACK', False, False),
+                                              ('7_LFWD', True, True), ('8_CBACK', False, False)]
+    lengths = [s[-1] - s[3] + 0.01 for s in starts]
+    assert all(abs(a - b) < 0.015 for a, b in zip(lengths, [0.45, 0.55, 0.45, 0.55, 0.45, 0.55, 0.78, 0.4]))
 
 
 def test_bad_steps_are_refused():

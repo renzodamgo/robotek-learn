@@ -292,12 +292,12 @@ def generate_launch_description():
                                           'from the rear limit): direction from the LiDAR sides, four short full-lock '
                                           'pulses out (left fwd, right back, left fwd, right fwd; mirrored in CW), then '
                                           'the laps. The motor creeps with a kick and pulses only during LOT_EXIT'),
-        DeclareLaunchArgument('recover_back', default_value='1.0',
+        DeclareLaunchArgument('recover_back', default_value='0.5',
                               description='Obstacle v3: s of reverse at full lock in the front recover (right in CCW, '
                                           'left in CW)'),
-        DeclareLaunchArgument('lot_exit_speed', default_value='0.70',
-                              description='m/s of the lot exit pulses (the coach, 9 nov 2026; 0.12-0.25 barely moved it)'),
-        DeclareLaunchArgument('lot_exit_steps', default_value='L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5',
+        DeclareLaunchArgument('lot_exit_speed', default_value='0.9',
+                              description='m/s of the lot exit pulses (first full car round from the lot, 9 nov 2026: 0.9)'),
+        DeclareLaunchArgument('lot_exit_steps', default_value='L+0.45 R-0.55 L+0.45 R-0.55 L+0.45 R-0.55 L+0.78 C-0.4',
                               description="the lot exit's pulses: <L|R|C><+|-><seconds>, L/R full lock (L = away from the wall, "
                                           'mirrored in CW), C wheels straight, + forward, - reverse; then the laps'),
         DeclareLaunchArgument('motor_kick_rps', default_value='0.0',
@@ -338,8 +338,12 @@ def generate_launch_description():
                                                ["(4.0 if '", LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else ",
                                                 default_max_rps, ") if '", LaunchConfiguration('motor_max_rps'),
                                                 "' == 'auto' else ", LaunchConfiguration('motor_max_rps')]), value_type=float),
-                                           'motor_min_rps': ParameterValue(LaunchConfiguration('motor_min_rps'),
-                                                                           value_type=float),
+                                           # start_lot: 1.5 rps floor unless set (the 310 motor does not start the car
+                                           # lower down; the first full round from the lot, 9 nov 2026)
+                                           'motor_min_rps': ParameterValue(PythonExpression(
+                                               ["(1.5 if '", LaunchConfiguration('start_lot'), "'.lower() == 'true' and float('",
+                                                LaunchConfiguration('motor_min_rps'), "') == 0.0 else ",
+                                                LaunchConfiguration('motor_min_rps'), ")"]), value_type=float),
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('brake_rps', 'brake_hz', 'brake_s', 'brake_min_rps')},
                                            # start_lot: kick and pulses of 1.8 rps (with kick 0.15 s and period 0.4 s

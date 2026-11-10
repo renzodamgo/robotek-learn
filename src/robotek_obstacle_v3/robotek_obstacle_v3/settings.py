@@ -42,8 +42,8 @@ class Params:
     preview_time: float = 0.0       # s; > 0: the curvature feed-forward looks speed x this ahead (at least PREVIEW)
     guard_gap: float = 0.0          # m; > 0: LiDAR points this close to the outline GUARD_AHEAD on -> back off
     start_lot: float = 0.0          # 1: the car starts inside the lot and leaves it first (lot_exit.py, 9 nov 2026)
-    recover_back: float = 1.0       # s of reverse at full lock in the front recover (right in CCW, left in CW)
-    lot_exit_speed: float = 0.70    # m/s of the lot exit's pulses (their order and lengths: the node's lot_exit_steps)
+    recover_back: float = 0.5       # s of reverse at full lock in the front recover (right in CCW, left in CW; 0.5 in the first full car round from the lot, 9 nov 2026)
+    lot_exit_speed: float = 0.90    # m/s of the lot exit's pulses (their order and lengths: the node's lot_exit_steps)
 
 
 def validate(params):

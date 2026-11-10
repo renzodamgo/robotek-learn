@@ -6,8 +6,8 @@ counter-clockwise, on the left -> clockwise (the car faces the driving direction
 
 The exit is the coach's sequence of full-lock pulses (9 nov 2026), ``lot_exit_steps``: space-separated steps
 ``<side><direction><seconds>``, side L or R at full lock (written for CCW, mirrored for CW: L = away from the wall) or C
-with the wheels straight (servo centre, ~1403 us), direction + forward or - reverse. Default ``DEFAULT_STEPS``: L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5 (the coach's values at 0.70 m/s after
-the first car tries; 0.12-0.25 m/s barely moved the car, a 0.5 s third pulse did not get it out). Then the wheels go
+with the wheels straight (servo centre, ~1403 us), direction + forward or - reverse. Default ``DEFAULT_STEPS``: L+0.45 R-0.55 L+0.45 R-0.55 L+0.45 R-0.55 L+0.78 C-0.4 at 0.9 m/s, the coach's sequence of the first complete car round
+from the lot (9 nov 2026, 23:3x; 0.12-0.25 m/s barely moved the car, a 0.5 s third pulse did not get it out). Then the wheels go
 straight and the laps take over (RUN).
 
 Before each pulse the wheels turn with the car stopped (``PRESTEER_S``; the command is a Twist, so a tiny speed under
@@ -30,7 +30,7 @@ import numpy as np
 from .car import OUTLINE_HALF_WIDTH, OUTLINE_REAR, WHEELBASE
 from .parking_search import move
 
-DEFAULT_STEPS = 'L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5'
+DEFAULT_STEPS = 'L+0.45 R-0.55 L+0.45 R-0.55 L+0.45 R-0.55 L+0.78 C-0.4'
 REAR_STOP_MM = 20             # mm of the rear sensor that end the backing move
 REAR_MAX_AGE = 0.3            # s; an older rear reading is not used
 REAR_SENSOR_X = OUTLINE_REAR + 0.012   # m behind base_link to the sensor's face (car 0.245 m long, not measured)

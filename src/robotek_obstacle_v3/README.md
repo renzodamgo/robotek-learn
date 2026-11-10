@@ -112,8 +112,9 @@ pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
 2. **Salida** (`lot_exit.py`): pulsos con todo el giro, en `lot_exit_steps` (escritos para antihorario; en horario,
    en espejo). Cada paso es `<L|R|C><+|-><segundos>`: L izquierda a tope (lejos del muro), R derecha a tope, C ruedas
    al centro (servo ~1403 µs); + adelante, − atrás.
-   Por defecto `L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5` a 0,70 m/s (`lot_exit_speed`), los valores del entrenador tras
-   las primeras pruebas. Antes de cada pulso gira las ruedas parado (0,5 s); en los pasos hacia atrás el sensor de
+   Por defecto `L+0.45 R-0.55 L+0.45 R-0.55 L+0.45 R-0.55 L+0.78 C-0.4` a 0,9 m/s (`lot_exit_speed`): los valores
+   de la primera ronda completa desde el aparcamiento (9 nov 2026, con `recover_back` 0,5 s y `motor_min_rps` 1,5,
+   que `start_lot:=true` pone por defecto). Antes de cada pulso gira las ruedas parado (0,5 s); en los pasos hacia atrás el sensor de
    atrás frena en seco a < 20 mm. Al final, ruedas al centro.
 3. **Vueltas** de la v3 sin aparcar al final y sin retroceder al empezar.
 
@@ -125,9 +126,12 @@ frena a 0 en seco. En el resto de la ronda, la velocidad y las rampas normales.
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET ROS_DOMAIN_ID=1 \
-  ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam start_lot:=true \
-  motor_min_rps:=1.5 lot_exit_speed:=0.70 lot_exit_steps:="L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5"
+  ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam start_lot:=true
 ```
+
+Eso ya lleva los valores de la ronda completa: `lot_exit_speed:=0.9`,
+`lot_exit_steps:="L+0.45 R-0.55 L+0.45 R-0.55 L+0.45 R-0.55 L+0.78 C-0.4"`, `recover_back:=0.5` y `motor_min_rps:=1.5`;
+cualquiera se cambia añadiéndolo al comando.
 
 Grabar desde el Mac (WRO-Strategies): `bash tools/car_bag_mac.sh salida-lote`.
 
