@@ -9,7 +9,7 @@ import math
 
 import numpy as np
 
-from .car import OUTLINE_FRONT, OUTLINE_HALF_WIDTH, OUTLINE_REAR, WHEELBASE
+from .car import LIDAR_OFFSET_X, OUTLINE_FRONT, OUTLINE_HALF_WIDTH, OUTLINE_REAR, WHEELBASE
 from .field import SWAP, scan_points, track_s, unwrap_s, wrap
 from .localizer import Localizer, direction_from_scan
 from .perception import scan_clusters
@@ -28,7 +28,16 @@ PREVIEW = 0.10              # m ahead for the curvature feed-forward (servo and 
 STENCIL = 0.15              # m between the points the line's heading and curvature come from
 LATERAL_GAIN = 6.0          # rad of steer per metre off the planned line
 RECOVER_SPEED = 0.15
-RECOVER_SECONDS = 0.8
+RECOVER_SECONDS = 0.8       # the contact guard's back-off (guard_gap)
+# Front recover (the coach, 9 nov 2026; plans/recover-propuesta.png in WRO-Strategies): something within RECOVER_GAP of
+# the car's nose ahead -> brake RECOVER_BRAKE s, then reverse at full lock to the side that turns the car back parallel
+# to the nearest OUTER wall (not the lane: it can happen in a corner), until parallel within RECOVER_PARALLEL or
+# RECOVER_MAX s; then the Obstacle goes on. The LiDAR drops returns under 0.12 m, so the nearest it sees ahead of the
+# nose is ~0.10 m: the gap is 0.11.
+RECOVER_GAP = 0.11
+RECOVER_BRAKE = 0.2
+RECOVER_MAX = 1.5
+RECOVER_PARALLEL = math.radians(4.0)
 SECTOR = 0.2                # m from the lane centre a sign still counts (rows at +-0.1; the lot limits reach -0.3)
 UNKNOWN_OFFSET = 0.12       # m away from a sign whose colour is still unknown
 LOOKOUT = 0.15              # m to the island side to see an inner sign ahead
@@ -45,14 +54,14 @@ PEEK_TURN = math.radians(15.0)  # rad the nose turns toward the sign, backing up
 PEEK_LOOK = 0.5             # s stopped looking
 
 
-def _window(scan, center, half):
-    """Valid ranges within +-half of a bearing, in the car frame."""
+def _window(scan, center, half, floor=0.16):
+    """Valid ranges within +-half of a bearing, in the car frame (none nearer than ``floor``)."""
     ranges = np.asarray(scan.ranges, dtype=float)
     if ranges.size == 0:
         return np.empty(0)
     angle = scan.angle_min + np.arange(ranges.size) * scan.angle_increment
     relative = np.arctan2(np.sin(angle - center), np.cos(angle - center))
-    valid = np.isfinite(ranges) & (ranges >= max(.16, scan.range_min)) & (ranges <= scan.range_max)
+    valid = np.isfinite(ranges) & (ranges >= max(floor, scan.range_min)) & (ranges <= scan.range_max)
     return ranges[(np.abs(relative) <= half) & valid]
 
 
@@ -89,6 +98,7 @@ class Mission:
         self._last_correct = -math.inf
         self._recover_until = None
         self._recover_steer = None   # steering while backing off after the contact guard
+        self._front_recover = None   # (start time, target heading, mirrored steer) of the front recover
         self._corner_gaps = {}       # corner start -> clearance its line was planned with
         self._lines = {}             # corner start -> (corner.plan arguments, line) last given (tracked_corners)
         self._direction_margin = 0.0
@@ -423,12 +433,38 @@ class Mission:
                 self.speed = -RECOVER_SPEED
                 return -RECOVER_SPEED, self._recover_steer if self._recover_steer is not None else steer, 'RUN'
             self._recover_until = self._recover_steer = None
-        if front < 0.16 and speed > 0.0:
-            self._recover_until = now + RECOVER_SECONDS
-            self.speed = -RECOVER_SPEED
-            return -RECOVER_SPEED, steer, 'RUN'
+        recovering = self._front_recovery(now, front, speed)
+        if recovering is not None:
+            return recovering
         self.speed, self.steer = speed, steer
         return speed, steer, 'RUN'
+
+    def _outer_parallel(self, th):
+        """Heading parallel to the nearest outer wall (the field's square), the one closest to ``th``."""
+        x, y, _ = self.pose
+        base = 0.0 if 1.5 - abs(y) <= 1.5 - abs(x) else math.pi / 2
+        return min((base, base + math.pi), key=lambda target: abs(wrap(th - target)))
+
+    def _front_recovery(self, now, front, speed):
+        """The front recover (RECOVER_GAP): (speed, steer, 'RUN') while it lasts, else None."""
+        sign = 1.0 if self.selected_direction == 'ccw' else -1.0
+        th = self.pose[2]
+        if self._front_recover is None:
+            if not (speed > 0.0 and front - (OUTLINE_FRONT - LIDAR_OFFSET_X) < RECOVER_GAP):
+                return None
+            target = self._outer_parallel(th)
+            # Reversing, the heading changes by v tan(steer) / L with v < 0: a heading above the target needs + steer.
+            self._front_recover = (now, target, self.p.steer_limit * (1.0 if wrap(th - target) > 0.0 else -1.0))
+        start, target, steer = self._front_recover
+        error = wrap(th - target)
+        if now - start < RECOVER_BRAKE:
+            self.speed = 0.0
+            return 0.003, sign * steer, 'RUN'            # stopped; a tiny speed carries the steering angle (Twist)
+        if now - start >= RECOVER_BRAKE + RECOVER_MAX or abs(error) < RECOVER_PARALLEL or error * steer < 0.0:
+            self._front_recover = None
+            return None
+        self.speed = -RECOVER_SPEED
+        return -RECOVER_SPEED, sign * steer, 'RUN'
 
     # ------------------------------------------------------------- helpers
     def _walls(self, sign):
@@ -437,7 +473,8 @@ class Mission:
         left = float(np.median(left)) if left.size else math.inf
         right = float(np.median(right)) if right.size else math.inf
         inner, outer = (left, right) if sign > 0 else (right, left)
-        front_window = _window(self._scan, 0.0, FRONT_HALF_WIDTH) if self._scan else np.empty(0)
+        # 0.12 m: the scan_adapter's floor (the chassis is under it); the front recover needs the near returns
+        front_window = _window(self._scan, 0.0, FRONT_HALF_WIDTH, 0.12) if self._scan else np.empty(0)
         front = float(np.min(front_window)) if front_window.size else math.inf
         return inner, outer, front
 

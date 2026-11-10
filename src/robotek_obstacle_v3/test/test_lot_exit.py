@@ -88,3 +88,21 @@ def test_straight_steps_keep_the_wheels_centred_and_move_the_estimate():
             steers.add(steer)
         now += 0.01
     assert steers == {0.0} and abs(ex.pose[0] - x0 - 0.1) < 0.01      # 0.5 s at 0.2 m/s
+
+
+def test_front_recover_reverses_toward_parallel_to_the_outer_wall():
+    from robotek_obstacle_v3.mission import Mission
+    m = Mission({})
+    m.selected_direction, m.pose = 'ccw', (0.3, -1.0, math.radians(30))   # bottom straight, nose 30 deg up
+    steps = []
+    for k in range(200):
+        now = k * 0.02
+        out = m._front_recovery(now, 0.125 if k == 0 else 2.0, 0.3)
+        if out is None:
+            break
+        steps.append(out)
+        if out[0] < 0:   # reversing at + steer turns the heading down
+            x, y, th = m.pose
+            m.pose = (x, y, th - 0.15 * 0.02 * math.tan(out[1]) / 0.11883)
+    assert steps[0][0] == 0.003 and steps[0][1] > 0                      # brake first, wheels already turned
+    assert any(s[0] < 0 for s in steps) and abs(m.pose[2]) < math.radians(4)   # reversed until parallel
