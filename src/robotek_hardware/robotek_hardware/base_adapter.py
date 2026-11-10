@@ -70,7 +70,7 @@ class BaseAdapter(Node):
             wheel_limit_deg=0., servo_measured=True,
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
             motor_rps_per_mps=0., motor_max_rps=0., motor_min_rps=0.,
-            motor_kick_rps=0., motor_kick_s=.2, motor_pulse_rps=0., motor_pulse_period_s=.5, low_speed_states='',
+            motor_kick_rps=0., motor_kick_s=.2, motor_pulse_rps=0., motor_pulse_period_s=.5, low_speed_states='', no_ramp_states='',
             brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1., brake_reset=False,
             brake_reset_states='FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT',
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
@@ -126,6 +126,9 @@ class BaseAdapter(Node):
         # low_speed_states: the kick and the pulses only while /robotek/state is one of these ('' = always). The lot
         # exit creeps with them (LOT_EXIT); the laps keep the plain speed (9 nov 2026).
         self.low_speed_states = {s.strip() for s in str(p['low_speed_states']).split(',') if s.strip()}
+        # no_ramp_states: in these /robotek/state values the speed follows the command at once, without accel_limit
+        # and decel_limit: the lot exit's short pulses start at once and stop dead (the coach, 9 nov 2026).
+        self.no_ramp_states = {s.strip() for s in str(p['no_ramp_states']).split(',') if s.strip()}
         if float(p['motor_kick_rps']) > 0. or float(p['motor_pulse_rps']) > 0.:
             self.get_logger().info(f"Low speed: kick {float(p['motor_kick_rps']):.2f} rps for {float(p['motor_kick_s']):.2f} s "
                                    f"from a standstill, pulses of {float(p['motor_pulse_rps']):.2f} rps below it "
@@ -259,8 +262,11 @@ class BaseAdapter(Node):
             self.target = self.speed = 0.
         if self.brake.enabled and self.target == 0.:
             self.speed = 0.                # no ramp: the brake takes over from the last real speed
-        self.speed = rate_limit(self.speed, self.guarded(self.target), float(self.p['accel_limit']),
-                                float(self.p['decel_limit']), TICK)
+        if self.state in self.no_ramp_states:
+            self.speed = self.guarded(self.target)
+        else:
+            self.speed = rate_limit(self.speed, self.guarded(self.target), float(self.p['accel_limit']),
+                                    float(self.p['decel_limit']), TICK)
         if self.target == 0. and abs(self.speed) < 1e-3:
             self.speed = 0.
         self.send_speed(self.speed)

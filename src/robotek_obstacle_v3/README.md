@@ -118,7 +118,8 @@ pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
 `lot_exit_speed` (0,25 m/s), `lot_exit_pulse` (0,5 s: el primero y el último), `lot_exit_back_pulse` (0,3 s, el de
 atrás) y `lot_exit_out_pulse` (1,0 s, el tercero, el que saca el coche: con 0,5 s no salía) se cambian al lanzar. Durante la salida (estado `LOT_EXIT`) el
 motor va con golpe de arranque y pulsos de 1,8 rps (`low_speed_states` de base_adapter): así el coche avanzó 5–6 cm/s
-pidiendo 0,06 m/s. En el resto de la ronda, la velocidad normal.
+pidiendo 0,06 m/s; además, sin las rampas de aceleración y frenado (`no_ramp_states`): cada pulso arranca de golpe y
+frena a 0 en seco. En el resto de la ronda, la velocidad y las rampas normales.
 
 ```bash
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh

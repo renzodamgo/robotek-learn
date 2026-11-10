@@ -350,6 +350,9 @@ def generate_launch_description():
                                               for name, lot_value in (('motor_kick_rps', '1.8'), ('motor_pulse_rps', '1.8'))},
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('motor_kick_s', 'motor_pulse_period_s')},
+                                           'no_ramp_states': ParameterValue(PythonExpression(
+                                               ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
+                                                "'.lower() == 'true' else ''"]), value_type=str),
                                            'low_speed_states': ParameterValue(PythonExpression(
                                                ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
                                                 "'.lower() == 'true' else ''"]), value_type=str)}],
