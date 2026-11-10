@@ -14,6 +14,7 @@ from .field import SWAP, scan_points, track_s, unwrap_s, wrap
 from .localizer import Localizer, direction_from_scan
 from .perception import scan_clusters
 from . import corner, park, park_fixed, scene
+from .parking_search import move as arc_move
 from .lot_exit import DEFAULT_STEPS, REAR_MAX_AGE, LotExit, direction_in_lot, parse_steps
 from .scene import Scene
 from .settings import make
@@ -29,16 +30,17 @@ STENCIL = 0.15              # m between the points the line's heading and curvat
 LATERAL_GAIN = 6.0          # rad of steer per metre off the planned line
 RECOVER_SPEED = 0.15
 RECOVER_SECONDS = 0.8       # the contact guard's back-off (guard_gap)
-# Front recover (the coach, 9 nov 2026; plans/recover-propuesta.png in WRO-Strategies): something within RECOVER_GAP of
+# Front recover (the coach, 9 nov 2026; plans/recover-propuesta.png in WRO-Strategies): something on the arc the car drives, within RECOVER_LOOK of
 # the car's nose ahead -> brake RECOVER_BRAKE s, then reverse at full lock to the side that turns the car back parallel
 # to the nearest OUTER wall (not the lane: it can happen in a corner), until parallel within RECOVER_PARALLEL or
 # RECOVER_MAX s; then the Obstacle goes on. The LiDAR drops returns under 0.12 m, so the nearest it sees ahead of the
 # nose is ~0.10 m: the gap is 0.11.
-RECOVER_GAP = 0.11
-RECOVER_GAP_AHEAD = 0.20    # m: straight ahead (within RECOVER_AHEAD of the LiDAR's zero) it brakes earlier: at 0.11 the
-RECOVER_AHEAD = math.radians(20.0)   # car still touched after braking, head-on (the coach, 9 nov 2026)
-RECOVER_CORRIDOR = OUTLINE_HALF_WIDTH + 0.01   # m to the side of the centre line: only what the car would hit counts
-                                               # (a sign passed close beside the nose set the recover off, 9 nov 2026)
+RECOVER_LOOK = 0.18         # m along the arc the car is driving (its current steering) that must be free: turning
+                            # away from a sign is not a hit (a fixed corridor ahead fired in every close dodge and
+                            # curve, and at 0.11 m head-on the car still touched; the coach, 9 nov 2026)
+RECOVER_CORRIDOR = OUTLINE_HALF_WIDTH + 0.01   # m: half width of the outline checked (+1 cm)
+RECOVER_STRAIGHT = 0.6      # s straight back when it fires already parallel (else it looped: 168 triggers in front of the
+                            # lot's far limit, 9 nov 2026)
 RECOVER_BRAKE = 0.2
 RECOVER_MAX = 1.5
 RECOVER_PARALLEL = math.radians(4.0)
@@ -439,30 +441,40 @@ class Mission:
                 self.speed = -RECOVER_SPEED
                 return -RECOVER_SPEED, self._recover_steer if self._recover_steer is not None else steer, 'RUN'
             self._recover_until = self._recover_steer = None
-        recovering = self._front_recovery(now, front, speed)
+        recovering = self._front_recovery(now, front, speed, steer)
         if recovering is not None:
             return recovering
         self.speed, self.steer = speed, steer
         return speed, steer, 'RUN'
 
-    def _in_path(self):
-        """(ahead of the nose, sideways) in m of the nearest LiDAR return in the car's corridor within RECOVER_GAP of
-        the nose (RECOVER_GAP_AHEAD within RECOVER_AHEAD of straight ahead), or None. Returns beside the corridor (a
-        sign passed close) do not count."""
+    def _in_path(self, steer):
+        """(m along the arc, sideways m) of the first LiDAR return ahead of the nose, in the corridor now, that the
+        outline (+1 cm) would still meet within RECOVER_LOOK along the arc of ``steer`` (real frame, + left), or None."""
         if self._scan is None:
             return None
         ranges = np.asarray(self._scan.ranges, dtype=float)
         angle = self._scan.angle_min + np.arange(ranges.size) * self._scan.angle_increment
-        ok = np.isfinite(ranges) & (ranges >= 0.12)
-        ahead = ranges[ok] * np.cos(angle[ok]) + LIDAR_OFFSET_X - OUTLINE_FRONT
-        side = ranges[ok] * np.sin(angle[ok])
-        bearing = np.abs(np.arctan2(np.sin(angle[ok]), np.cos(angle[ok])))
-        gap = np.where(bearing <= RECOVER_AHEAD, RECOVER_GAP_AHEAD, RECOVER_GAP)
-        near = (ahead > -0.02) & (ahead < gap) & (np.abs(side) < RECOVER_CORRIDOR)
-        if not near.any():
+        ok = np.isfinite(ranges) & (ranges >= 0.12) & (ranges < 0.6)
+        px = ranges[ok] * np.cos(angle[ok]) + LIDAR_OFFSET_X
+        py = ranges[ok] * np.sin(angle[ok])
+        # Only what is ahead of the nose and inside the corridor now: a wall alongside that the arc would reach (the
+        # line follower steering toward the outer wall in the lab) is the line follower's business, not a head-on hit.
+        ahead = (px > OUTLINE_FRONT - 0.02) & (np.abs(py) < RECOVER_CORRIDOR)
+        px, py = px[ahead], py[ahead]
+        if px.size == 0:
             return None
-        k = int(np.argmin(np.where(near, ahead, np.inf)))
-        return float(ahead[k]), float(side[k])
+        x = y = th = 0.0
+        travelled = 0.0
+        while travelled <= RECOVER_LOOK + 1e-9:
+            c, s_ = math.cos(th), math.sin(th)
+            u = (px - x) * c + (py - y) * s_
+            v = -(px - x) * s_ + (py - y) * c
+            inside = (u > -OUTLINE_REAR) & (u < OUTLINE_FRONT) & (np.abs(v) < RECOVER_CORRIDOR)
+            if inside.any():
+                return travelled, float(v[inside][0])
+            x, y, th = arc_move(x, y, th, steer, 0.02)
+            travelled += 0.02
+        return None
 
     def _outer_parallel(self, th):
         """Heading parallel to the nearest outer wall (the field's square), the one closest to ``th``."""
@@ -470,30 +482,39 @@ class Mission:
         base = 0.0 if 1.5 - abs(y) <= 1.5 - abs(x) else math.pi / 2
         return min((base, base + math.pi), key=lambda target: abs(wrap(th - target)))
 
-    def _front_recovery(self, now, front, speed):
-        """The front recover (RECOVER_GAP): (speed, steer, 'RUN') while it lasts, else None."""
+    def _front_recovery(self, now, front, speed, drive_steer=0.0):
+        """The front recover (RECOVER_LOOK): (speed, steer, 'RUN') while it lasts, else None. ``drive_steer``: the
+        steering about to be sent (real frame)."""
         sign = 1.0 if self.selected_direction == 'ccw' else -1.0
         th = self.pose[2]
         self.brake = False
         if self._front_recover is None:
             if not speed > 0.0:
                 return None
-            hit = self._in_path()
+            hit = self._in_path(drive_steer)
             if hit is None:
                 return None
             target = self._outer_parallel(th)
             self.brake = True                              # stop dead: base_adapter's ramp let the car hit (9 nov)
-            self.events.append(dict(event='front_recover', ahead=round(hit[0], 3), side=round(hit[1], 3),
+            self.events.append(dict(event='front_recover', along=round(hit[0], 3), side=round(hit[1], 3),
+                                    steer=round(math.degrees(drive_steer), 1),
                                     heading=round(math.degrees(th), 1), target=round(math.degrees(target), 1),
                                     pose=[round(v, 3) for v in self.pose]))
             # Reversing, the heading changes by v tan(steer) / L with v < 0: a heading above the target needs + steer.
-            self._front_recover = (now, target, self.p.steer_limit * (1.0 if wrap(th - target) > 0.0 else -1.0))
+            # Already parallel: straight back for RECOVER_STRAIGHT, to make room.
+            error = wrap(th - target)
+            steer = 0.0 if abs(error) < RECOVER_PARALLEL else self.p.steer_limit * (1.0 if error > 0.0 else -1.0)
+            self._front_recover = (now, target, steer)
         start, target, steer = self._front_recover
         error = wrap(th - target)
         if now - start < RECOVER_BRAKE:
             self.speed = 0.0
             return 0.003, sign * steer, 'RUN'            # stopped; a tiny speed carries the steering angle (Twist)
-        if now - start >= RECOVER_BRAKE + RECOVER_MAX or abs(error) < RECOVER_PARALLEL or error * steer < 0.0:
+        if not steer:                                     # straight back
+            done = now - start >= RECOVER_BRAKE + RECOVER_STRAIGHT
+        else:
+            done = now - start >= RECOVER_BRAKE + RECOVER_MAX or abs(error) < RECOVER_PARALLEL or error * steer < 0.0
+        if done:
             self._front_recover = None
             return None
         self.speed = -RECOVER_SPEED
