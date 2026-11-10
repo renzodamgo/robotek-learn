@@ -293,8 +293,8 @@ def generate_launch_description():
         DeclareLaunchArgument('lot_exit_speed', default_value='0.70',
                               description='m/s of the lot exit pulses (the coach, 9 nov 2026; 0.12-0.25 barely moved it)'),
         DeclareLaunchArgument('lot_exit_steps', default_value='L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5',
-                              description="the lot exit's full-lock pulses: <L|R><+|-><seconds>, L = away from the wall "
-                                          '(mirrored in CW), + forward, - reverse; then wheels straight and the laps'),
+                              description="the lot exit's pulses: <L|R|C><+|-><seconds>, L/R full lock (L = away from the wall, "
+                                          'mirrored in CW), C wheels straight, + forward, - reverse; then the laps'),
         DeclareLaunchArgument('motor_kick_rps', default_value='0.0',
                               description='start kick: at least this many rps for motor_kick_s from a standstill (0 = off)'),
         DeclareLaunchArgument('motor_kick_s', default_value='0.2'),

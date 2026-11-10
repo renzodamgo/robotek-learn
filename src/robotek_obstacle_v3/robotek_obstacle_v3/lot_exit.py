@@ -5,8 +5,8 @@ direction comes from the LiDAR's sides: the outer wall is the near side (``direc
 counter-clockwise, on the left -> clockwise (the car faces the driving direction).
 
 The exit is the coach's sequence of full-lock pulses (9 nov 2026), ``lot_exit_steps``: space-separated steps
-``<side><direction><seconds>``, side L or R (written for CCW, mirrored for CW: L = away from the wall), direction + forward
-or - reverse. Default ``DEFAULT_STEPS``: L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5 (the coach's values at 0.70 m/s after
+``<side><direction><seconds>``, side L or R at full lock (written for CCW, mirrored for CW: L = away from the wall) or C
+with the wheels straight (servo centre, ~1403 us), direction + forward or - reverse. Default ``DEFAULT_STEPS``: L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5 (the coach's values at 0.70 m/s after
 the first car tries; 0.12-0.25 m/s barely moved the car, a 0.5 s third pulse did not get it out). Then the wheels go
 straight and the laps take over (RUN).
 
@@ -82,14 +82,14 @@ def parse_steps(text):
     """'L+0.5 R-0.5 ...' -> [(name, direction, side, seconds)]; ValueError on a bad step."""
     steps = []
     for k, word in enumerate(str(text).split()):
-        side = {'L': 1.0, 'R': -1.0}.get(word[:1].upper())
+        side = {'L': 1.0, 'R': -1.0, 'C': 0.0}.get(word[:1].upper())
         sign = {'+': 1.0, '-': -1.0}.get(word[1:2])
         try:
             seconds = float(word[2:])
         except ValueError:
             seconds = -1.0
         if side is None or sign is None or seconds <= 0:
-            raise ValueError("lot_exit_steps: bad step %r (want e.g. 'L+0.5' or 'R-1.0')" % word)
+            raise ValueError("lot_exit_steps: bad step %r (want e.g. 'L+0.5', 'R-1.0' or 'C+0.3')" % word)
         steps.append(('%d_%s%s' % (k + 1, word[0].upper(), 'FWD' if sign > 0 else 'BACK'), sign, side, seconds))
     if not steps:
         raise ValueError('lot_exit_steps: no steps')
@@ -111,6 +111,8 @@ class LotExit:
         self.settle_until = None
         self.heading = 0.0
         self.brake = False           # True for the tick of a hard brake (the node sends /robotek/estop)
+        self._last_now = 0.0
+        self._last_speed = 0.0       # speed of the last pulse tick (dead reckoning of the C steps)
         self.log = [dict(event='lot_exit_start', pose=[round(v, 3) for v in self.start], rear_mm=rear_mm,
                          steps=str(steps))]
 
@@ -133,7 +135,11 @@ class LotExit:
         curvature = math.tan(model) / WHEELBASE if steer else 0.0
         if abs(dth) > 1e-4 and abs(curvature) > 1e-6:
             self.pose = move(*self.pose, model, dth / curvature)
+        elif not steer and self._last_speed:   # wheels straight: the heading says nothing, take the commanded speed
+            self.pose = move(*self.pose, 0.0, self._last_speed * max(0.0, now - self._last_now))
+        self._last_now = now
         self.heading = heading
+        self._last_speed = 0.0
         if self.done:
             return 0.0, 0.0
         if self.settle_until is not None:
@@ -164,4 +170,5 @@ class LotExit:
                                  rear_mm=rear_mm, braked=near, pose=[round(v, 3) for v in self.pose]))
             self.settle_until = now + SETTLE_S
             return 0.0, steer
-        return direction * self.speed, steer
+        self._last_speed = direction * self.speed
+        return self._last_speed, steer

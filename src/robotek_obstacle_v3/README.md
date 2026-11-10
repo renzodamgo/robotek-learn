@@ -110,7 +110,8 @@ pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
 1. **Dirección:** el lado del LiDAR que tiene el muro cerca (o nada, porque el LiDAR no ve a menos de 12 cm). Muro a
    la derecha = antihorario; a la izquierda = horario.
 2. **Salida** (`lot_exit.py`): pulsos con todo el giro, en `lot_exit_steps` (escritos para antihorario; en horario,
-   en espejo). Cada paso es `<L|R><+|-><segundos>`: L izquierda (lejos del muro), R derecha, + adelante, − atrás.
+   en espejo). Cada paso es `<L|R|C><+|-><segundos>`: L izquierda a tope (lejos del muro), R derecha a tope, C ruedas
+   al centro (servo ~1403 µs); + adelante, − atrás.
    Por defecto `L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5` a 0,70 m/s (`lot_exit_speed`), los valores del entrenador tras
    las primeras pruebas. Antes de cada pulso gira las ruedas parado (0,5 s); en los pasos hacia atrás el sensor de
    atrás frena en seco a < 20 mm. Al final, ruedas al centro.

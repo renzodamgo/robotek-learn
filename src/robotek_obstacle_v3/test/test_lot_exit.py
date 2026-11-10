@@ -60,6 +60,7 @@ def test_default_steps_in_order_with_their_lengths():
 
 
 def test_bad_steps_are_refused():
+    assert [st[1:] for st in lot_exit.parse_steps('C+0.3 c-1')] == [(1.0, 0.0, 0.3), (-1.0, 0.0, 1.0)]
     for bad in ('', 'X+1', 'L*1', 'L+0', 'L+abc'):
         try:
             lot_exit.parse_steps(bad)
@@ -74,3 +75,16 @@ def test_reverse_brakes_on_the_rear_sensor():
     seen = run(ex, lambda e: 15 if e.name == '2_RBACK' else 100)
     assert ('BRAKE', '2_RBACK') in seen
     assert [e['braked'] for e in ex.log if e['event'] == 'lot_exit_pulse'] == [False, True, False]
+
+
+def test_straight_steps_keep_the_wheels_centred_and_move_the_estimate():
+    p = make({'start_lot': 1.0})
+    ex = lot_exit.LotExit(park_fixed.make_lot(1, p), 0.084, 10, 0.2, 0.3054, 'C+0.5')
+    x0 = ex.pose[0]
+    now, steers = 0.0, set()
+    while not ex.done and now < 5:
+        speed, steer = ex.step(now, 0.0, 100)
+        if abs(speed) > 0.01:
+            steers.add(steer)
+        now += 0.01
+    assert steers == {0.0} and abs(ex.pose[0] - x0 - 0.1) < 0.01      # 0.5 s at 0.2 m/s
