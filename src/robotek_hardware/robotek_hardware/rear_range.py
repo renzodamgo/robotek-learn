@@ -10,11 +10,14 @@ Each result: wait for RESULT_INTERRUPT_STATUS, read 12 bytes from RESULT_RANGE_S
 of byte 0 = range status, 11 = valid) and clear the interrupt. Without that init (factory registers only) the car's
 sensor read 218 mm for a book at 100 mm (9 nov 2026).
 
-Even initialised, the car's sensor reads long by a fixed offset: against a wall (9 nov 2026) it read 61 mm touching
-it (car backed into the wall, LiDAR ahead as the reference), 138 mm at 85 mm (LiDAR) and 231 mm at 170 mm (ruler),
-i.e. raw = distance + ~58 mm with scale 1.0 (line within 5 mm). The node publishes (raw - raw_offset_mm) /
-raw_scale (58 mm and 1.0); raw_scale 1 and raw_offset_mm 0 publish the raw reading. A book at 100 and 200 mm had
-given 188 and 332 (scale 1.44): those points did not repeat against the wall and are not used. A VL53L1X is not supported: the node reads the model id
+Even initialised, the car's sensor reads long, and very close it barely changes. Raw readings against a wall
+(9 nov 2026; ruler from the wall to the sensor's face unless noted): 10 mm -> 70, 20 -> 75, 30 -> 77, 40 -> 83,
+50 -> 96, 85 -> 138 (LiDAR), 170 -> 231, ~420 -> ~476 (photo). The node maps raw to mm by linear interpolation in
+that table (table_raw_mm, table_mm); past the last point it keeps slope 1 (raw ~ mm + 56), below the first it
+follows the first segment, never under 0. Between 1 and 4 cm the raw reading moves only 2-6 mm per cm against its
++-3 mm noise, so there it is good to about +-1 cm; from 5 cm on to about +-5 mm. correct:=false publishes the raw
+reading. (A book at 100 and 200 mm had given 188 and 332: not repeated against the wall, not used.)
+A VL53L1X is not supported: the node reads the model id
 (0xEE = VL53L0X) and says so. Uses lgpio for I2C, like gpio_button; on a Mac or without the
 sensor it logs it and keeps retrying, it never crashes the launch."""
 import time
@@ -58,6 +61,16 @@ TUNING = (
 def decode(block):
     """12 bytes from RESULT_RANGE_STATUS -> (distance in mm, range status)."""
     return (block[10] << 8) | block[11], (block[0] & 0x78) >> 3
+
+
+def corrected(raw, table):
+    """Raw mm -> real mm by linear interpolation in table [(raw, real), ...] (raw increasing); past the last point
+    slope 1, below the first the first segment's slope; never under 0."""
+    if raw >= table[-1][0]:
+        return max(0, round(table[-1][1] + raw - table[-1][0]))
+    i = 1 if raw < table[0][0] else next(k for k in range(1, len(table)) if raw < table[k][0])
+    (r0, m0), (r1, m1) = table[i-1], table[i]
+    return max(0, round(m0 + (raw-r0)*(m1-m0)/(r1-r0)))
 
 
 def decode_timeout(reg):
@@ -236,12 +249,17 @@ class RearRange(Node):
     def __init__(self):
         super().__init__('rear_range')
         p = {k: self.declare_parameter(k, v).value for k, v in dict(
-            bus=1, address=0x29, poll_s=.01, raw_scale=1.0, raw_offset_mm=58., min_m=.03, max_m=1.2, fov_rad=.44, frame_id='rear_range_link',
+            bus=1, address=0x29, poll_s=.01, correct=True, table_raw_mm=[70., 75., 77., 83., 96., 138., 231., 476.],
+            table_mm=[10., 20., 30., 40., 50., 85., 170., 420.], min_m=.03, max_m=1.2, fov_rad=.44, frame_id='rear_range_link',
             topic='/robotek/rear_range', topic_mm='/robotek/rear_range_mm').items()}
         self.bus, self.address = int(p['bus']), int(p['address'])
         self.min_m, self.max_m, self.fov = float(p['min_m']), float(p['max_m']), float(p['fov_rad'])
         self.frame_id = str(p['frame_id'])
-        self.scale, self.offset = float(p['raw_scale']), float(p['raw_offset_mm'])
+        self.correct = bool(p['correct'])
+        self.table = list(zip((float(x) for x in p['table_raw_mm']), (float(x) for x in p['table_mm'])))
+        if self.correct and (len(self.table) < 2 or len(p['table_raw_mm']) != len(p['table_mm'])
+                             or any(b[0] <= a[0] for a, b in zip(self.table, self.table[1:]))):
+            raise ValueError('table_raw_mm and table_mm need the same length (>= 2) and table_raw_mm must increase')
         self.pub = self.create_publisher(Range, str(p['topic']), 10)
         self.pub_mm = self.create_publisher(Int32, str(p['topic_mm']), 10)
         self.i2c = None
@@ -325,7 +343,7 @@ class RearRange(Node):
         self.i2c, self.dev, self.waited, self.failures = None, None, 0, 0
 
     def publish(self, raw, status):
-        mm = max(0, round((raw-self.offset)/self.scale))
+        mm = corrected(raw, self.table) if self.correct else raw
         valid = status == STATUS_VALID and 0 < raw < NO_TARGET_MM
         msg = Range()
         msg.header.stamp = self.get_clock().now().to_msg()

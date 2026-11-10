@@ -40,8 +40,8 @@ def test_readings():
         node.poll()
         reading[0] = block(120, status=4)   # phase failure
         node.poll()
-        assert mms == [195, -1, -1]           # 253 - 58
-        assert math.isclose(ranges[0], .195, abs_tol=1e-6) and math.isinf(ranges[1]) and math.isinf(ranges[2])
+        assert mms == [192, -1, -1]           # table: 231 -> 170, 476 -> 420
+        assert math.isclose(ranges[0], .192, abs_tol=1e-6) and math.isinf(ranges[1]) and math.isinf(ranges[2])
         node.destroy_node()
     finally:
         rclpy.try_shutdown()
@@ -73,3 +73,11 @@ def test_silent_sensor_is_reinitialised():
         node.destroy_node()
     finally:
         rclpy.try_shutdown()
+
+
+def test_corrected():
+    table = list(zip([70., 75., 77., 83., 96., 138., 231., 476.], [10., 20., 30., 40., 50., 85., 170., 420.]))
+    c = rear_range.corrected
+    assert [c(r, table) for r in (70, 75, 77, 83, 96, 138, 231, 476)] == [10, 20, 30, 40, 50, 85, 170, 420]
+    assert c(76, table) == 25 and c(500, table) == 444      # inside; past the end slope 1
+    assert c(65, table) == 0 and c(68, table) == 6          # below the first point: first slope, not under 0
