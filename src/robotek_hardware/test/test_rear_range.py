@@ -40,8 +40,8 @@ def test_readings():
         node.poll()
         reading[0] = block(120, status=4)   # phase failure
         node.poll()
-        assert mms == [145, -1, -1]           # (253 - 44) / 1.44
-        assert math.isclose(ranges[0], .145, abs_tol=1e-6) and math.isinf(ranges[1]) and math.isinf(ranges[2])
+        assert mms == [195, -1, -1]           # 253 - 58
+        assert math.isclose(ranges[0], .195, abs_tol=1e-6) and math.isinf(ranges[1]) and math.isinf(ranges[2])
         node.destroy_node()
     finally:
         rclpy.try_shutdown()

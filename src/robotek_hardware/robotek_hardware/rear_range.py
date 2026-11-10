@@ -10,9 +10,11 @@ Each result: wait for RESULT_INTERRUPT_STATUS, read 12 bytes from RESULT_RANGE_S
 of byte 0 = range status, 11 = valid) and clear the interrupt. Without that init (factory registers only) the car's
 sensor read 218 mm for a book at 100 mm (9 nov 2026).
 
-Even initialised, the car's sensor reads long and not in proportion: 188 mm at 100 mm and 332 mm at 200 mm (book,
-ruler from the sensor's face, 9 nov 2026). The node publishes (raw - raw_offset_mm) / raw_scale, a line through
-those two points (raw_scale 1.44, raw_offset_mm 44); raw_scale 1 and raw_offset_mm 0 publish the raw reading. A VL53L1X is not supported: the node reads the model id
+Even initialised, the car's sensor reads long by a fixed offset: against a wall (9 nov 2026) it read 61 mm touching
+it (car backed into the wall, LiDAR ahead as the reference), 138 mm at 85 mm (LiDAR) and 231 mm at 170 mm (ruler),
+i.e. raw = distance + ~58 mm with scale 1.0 (line within 5 mm). The node publishes (raw - raw_offset_mm) /
+raw_scale (58 mm and 1.0); raw_scale 1 and raw_offset_mm 0 publish the raw reading. A book at 100 and 200 mm had
+given 188 and 332 (scale 1.44): those points did not repeat against the wall and are not used. A VL53L1X is not supported: the node reads the model id
 (0xEE = VL53L0X) and says so. Uses lgpio for I2C, like gpio_button; on a Mac or without the
 sensor it logs it and keeps retrying, it never crashes the launch."""
 import time
@@ -234,7 +236,7 @@ class RearRange(Node):
     def __init__(self):
         super().__init__('rear_range')
         p = {k: self.declare_parameter(k, v).value for k, v in dict(
-            bus=1, address=0x29, poll_s=.01, raw_scale=1.44, raw_offset_mm=44., min_m=.03, max_m=1.2, fov_rad=.44, frame_id='rear_range_link',
+            bus=1, address=0x29, poll_s=.01, raw_scale=1.0, raw_offset_mm=58., min_m=.03, max_m=1.2, fov_rad=.44, frame_id='rear_range_link',
             topic='/robotek/rear_range', topic_mm='/robotek/rear_range_mm').items()}
         self.bus, self.address = int(p['bus']), int(p['address'])
         self.min_m, self.max_m, self.fov = float(p['min_m']), float(p['max_m']), float(p['fov_rad'])
