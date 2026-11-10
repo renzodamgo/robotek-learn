@@ -29,7 +29,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from sensor_msgs.msg import CompressedImage, Image, Imu, LaserScan
-from std_msgs.msg import Bool, Float32MultiArray, String
+from std_msgs.msg import Bool, Float32MultiArray, Int32, String
 from visualization_msgs.msg import Marker, MarkerArray
 
 from robotek_common.vehicle import REAL_CAMERA_HFOV, REAL_CAMERA_PITCH, REAL_CAMERA_YAW, WHEELBASE
@@ -84,6 +84,8 @@ class Drive(Node):
         self.bridge = CvBridge()
         self.scan_msg = None
         self.cmd = self.create_publisher(Twist, '/cmd_vel_raw', 10)
+        self.estop = self.create_publisher(Bool, '/robotek/estop', 10)   # the lot exit's hard brake
+        self.lot_logged = 0          # lot exit log entries already printed
         self.park_state = None     # last parking sub-state logged
         self.state = self.create_publisher(
             String, '/robotek/state', QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
@@ -97,6 +99,10 @@ class Drive(Node):
         self.create_subscription(Imu, '/imu', self.on_imu, qos_profile_sensor_data)
         self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
         self.create_subscription(Bool, 'start', self.on_start, 10)   # plain QoS: the referee and the car's button
+        # The push button on the Pi's GPIO 16 (gpio_button node, True on each press) also starts the round (9 nov 2026).
+        self.create_subscription(Bool, '/robotek/gpio_button', self.on_start, 10)
+        # Rear VL53L0X (rear_range node, mm, -1 = nothing in range): the lot exit backs up on it (start_lot).
+        self.create_subscription(Int32, '/robotek/rear_range_mm', self.on_rear, 10)
         self.create_timer(1.0 / CONTROL_RATE, self.control)
         p = self.strategy.mission.p
         self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s; camera %s)'
@@ -166,6 +172,9 @@ class Drive(Node):
         markers.markers.append(arrow)
         self.signs_pub.publish(markers)
 
+    def on_rear(self, msg):
+        self.strategy.mission.rear(self.now(), int(msg.data))
+
     def on_start(self, msg):
         if msg.data and not self.strategy.started:
             self.get_logger().info('Start')
@@ -181,6 +190,12 @@ class Drive(Node):
         mission = self.strategy.mission
         self.pose_pub.publish(Float32MultiArray(data=[float(v) for v in (*mission.pose, mission.phi)]))
         self._log_parking(mission)
+        if mission.lot_exit is not None:
+            if mission.lot_exit.brake:
+                self.estop.publish(Bool(data=True))
+            for entry in mission.lot_exit.log[self.lot_logged:]:
+                self.get_logger().info('lot exit: %s' % entry)
+            self.lot_logged = len(mission.lot_exit.log)
         if self.strategy.label != self.state_sent:
             self.state_sent = self.strategy.label
             if self.state_sent == 'WAIT_SENSOR':

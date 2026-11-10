@@ -4,7 +4,7 @@ Simple code (4 nov 2026, the coach's request; the buzzer of the team's board is 
 signal):
 
   booting (no strategy state yet)      off
-  ready: press the button              green
+  ready: press the button              green blinking (9 nov 2026, the coach: green blinking while it waits)
   pressed: the round runs (or ended)   blue
   battery low: change it               red blinking (over everything)
 
@@ -26,7 +26,7 @@ def status_colors(state, battery_low, blink_on):
     if not state:
         return OFF, OFF
     if state in READY:
-        return GREEN, GREEN
+        return (GREEN, GREEN) if blink_on else (OFF, OFF)
     return BLUE, BLUE
 
 

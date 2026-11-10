@@ -41,6 +41,9 @@ class Params:
     tight_speed: float = 0.15       # m/s
     preview_time: float = 0.0       # s; > 0: the curvature feed-forward looks speed x this ahead (at least PREVIEW)
     guard_gap: float = 0.0          # m; > 0: LiDAR points this close to the outline GUARD_AHEAD on -> back off
+    start_lot: float = 0.0          # 1: the car starts inside the lot and leaves it first (lot_exit.py, 9 nov 2026)
+    lot_exit_speed: float = 0.06    # m/s of the lot exit's pulses (the motor creeps with base_adapter's kick and pulses)
+    lot_exit_pulse: float = 0.5     # s of each of the lot exit's four pulses
 
 
 def validate(params):

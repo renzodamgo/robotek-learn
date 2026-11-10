@@ -1,9 +1,10 @@
 from robotek_hardware.status_colors import BLUE, GREEN, OFF, RED, scaled, status_colors
 
 
-def test_off_while_booting_green_when_ready_blue_once_pressed():
+def test_off_while_booting_green_blinking_when_ready_blue_once_pressed():
     assert status_colors('', False, True) == (OFF, OFF)
     assert status_colors('WAIT_START', False, True) == (GREEN, GREEN)
+    assert status_colors('WAIT_START', False, False) == (OFF, OFF)
     for state in ('CALIBRATE', 'DETECT_DIRECTION', 'FOLLOW', 'TURN', 'FINISH', 'DONE', 'OPERATOR_STOP'):
         assert status_colors(state, False, True) == (BLUE, BLUE)
 

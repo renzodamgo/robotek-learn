@@ -60,11 +60,12 @@ class Localizer:
         self.th = wrap(self.th+gain*wrap(th-self.th))
         return True
 
-    def initialize(self, bx, by, heading):
-        """Global start in the bottom straight: try a few along-track guesses."""
+    def initialize(self, bx, by, heading, guesses=None):
+        """Global start in the bottom straight: try a few along-track guesses. guesses: [(x, y), ...] instead
+        (the lot exit's dead-reckoned pose and its neighbours)."""
         best = None
-        for x0 in (-.35, 0., .35):
-            self.x, self.y, self.th = x0, -1., heading
+        for x0, y0 in guesses or [(-.35, -1.), (0., -1.), (.35, -1.)]:
+            self.x, self.y, self.th = x0, y0, heading
             for gate in (.45, .3, .2, .12, .08, .06):
                 self.correct(bx, by, 1., gate, 2, .5)
             px, py, nx, ny, r = self._fit(bx, by, self.x, self.y, self.th, .05)

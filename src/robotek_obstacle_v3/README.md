@@ -101,6 +101,35 @@ ros2 bag record --max-bag-duration 5 -o ~/runs/$(date +%Y%m%d-%H%M%S)-obstacle-v
     /obstacle/debug_image/compressed /rrc/acker_servo/set_state
 ```
 
+### Salir del aparcamiento al empezar (`start_lot:=true`, 9 nov 2026; sin probar en el coche)
+
+El coche espera dentro del aparcamiento, pegado al muro exterior y a ~1 cm del tope de atrás. Luces: verde
+parpadeando = listo, esperando el botón; azul = pulsado, la ronda corre. Arranca con el botón de la placa o con el
+pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
+
+1. **Dirección:** el lado del LiDAR que tiene el muro cerca (o nada, porque el LiDAR no ve a menos de 12 cm). Muro a
+   la derecha = antihorario; a la izquierda = horario.
+2. **Salida** (`lot_exit.py`), escrita para antihorario y en espejo para horario: todo a la izquierda y un pulso
+   adelante, todo a la derecha y un pulso atrás (el sensor de atrás frena en seco a < 20 mm), todo a la izquierda y un
+   pulso adelante, todo a la derecha y un pulso adelante, ruedas al centro. Antes de cada pulso gira las ruedas
+   parado (0,5 s).
+3. **Vueltas** de la v3 sin aparcar al final y sin retroceder al empezar.
+
+`lot_exit_speed` (0,12 m/s) y `lot_exit_pulse` (0,5 s) se cambian al lanzar. Durante la salida (estado `LOT_EXIT`) el
+motor va con golpe de arranque y pulsos de 1,8 rps (`low_speed_states` de base_adapter): así el coche avanzó 5–6 cm/s
+pidiendo 0,06 m/s. En el resto de la ronda, la velocidad normal.
+
+```bash
+bash tools/car-autostart.sh stop && bash tools/car-clean.sh
+RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET ROS_DOMAIN_ID=1 \
+  ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam start_lot:=true
+```
+
+Grabar desde el Mac (WRO-Strategies): `bash tools/car_bag_mac.sh salida-lote`.
+
+Límite conocido: en el modelo de contorno del coche, un solo arco adelante a tope choca con el tope de delante a los
+~11 cm (17°); los pulsos no se han comprobado en el coche.
+
 ### En el coche real (8 nov 2026): primera ronda completa
 
 - **Primera ronda que termina:** DONE a los 118,7 s del Start, con tres vueltas y la parada. Fue con el motor en M2

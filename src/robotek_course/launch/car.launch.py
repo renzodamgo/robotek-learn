@@ -108,6 +108,10 @@ def _strategy_node(context):
         if not os.path.isfile(path):
             raise RuntimeError(f'strategy_params: no such file {path}')
         parameters.append(path)
+    if _arg(context, 'start_lot').lower() == 'true':
+        # Obstacle v3: start inside the parking lot, leave it with the coach's pulses, then the laps (lot_exit.py).
+        parameters.append({'start_lot': 1.0, 'lot_exit_speed': float(_arg(context, 'lot_exit_speed')),
+                           'lot_exit_pulse': float(_arg(context, 'lot_exit_pulse'))})
     return [
         Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
              output='screen', parameters=parameters,
@@ -281,6 +285,13 @@ def generate_launch_description():
         DeclareLaunchArgument('motor_min_rps', default_value=default_min_rps,
                               description='encoder motor floor in rps while moving (robot.yaml; 0 = off). The 310 motor '
                                           'does not start the car at ~1 rps: 1.5 for the Obstacle v3'),
+        DeclareLaunchArgument('start_lot', default_value='false',
+                              description='Obstacle v3: the car starts inside the parking lot (against the wall, ~1 cm '
+                                          'from the rear limit): direction from the LiDAR sides, four short full-lock '
+                                          'pulses out (left fwd, right back, left fwd, right fwd; mirrored in CW), then '
+                                          'the laps. The motor creeps with a kick and pulses only during LOT_EXIT'),
+        DeclareLaunchArgument('lot_exit_speed', default_value='0.12', description='m/s of the lot exit pulses'),
+        DeclareLaunchArgument('lot_exit_pulse', default_value='0.5', description='s of each lot exit pulse'),
         DeclareLaunchArgument('motor_kick_rps', default_value='0.0',
                               description='start kick: at least this many rps for motor_kick_s from a standstill (0 = off)'),
         DeclareLaunchArgument('motor_kick_s', default_value='0.2'),
@@ -322,9 +333,20 @@ def generate_launch_description():
                                            'motor_min_rps': ParameterValue(LaunchConfiguration('motor_min_rps'),
                                                                            value_type=float),
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
-                                              for name in ('motor_kick_rps', 'motor_kick_s', 'motor_pulse_rps',
-                                                           'motor_pulse_period_s', 'brake_rps', 'brake_hz', 'brake_s',
-                                                           'brake_min_rps')}}],
+                                              for name in ('brake_rps', 'brake_hz', 'brake_s', 'brake_min_rps')},
+                                           # start_lot: kick and pulses of 1.8 rps (with kick 0.15 s and period 0.4 s
+                                           # the car crept 5-6 cm/s for 0.06 m/s asked, 9 nov 2026), only in LOT_EXIT,
+                                           # unless set by hand.
+                                           **{name: ParameterValue(PythonExpression(
+                                               ["(", lot_value, " if '", LaunchConfiguration('start_lot'),
+                                                "'.lower() == 'true' and float('", LaunchConfiguration(name),
+                                                "') == 0.0 else ", LaunchConfiguration(name), ")"]), value_type=float)
+                                              for name, lot_value in (('motor_kick_rps', '1.8'), ('motor_pulse_rps', '1.8'))},
+                                           **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
+                                              for name in ('motor_kick_s', 'motor_pulse_period_s')},
+                                           'low_speed_states': ParameterValue(PythonExpression(
+                                               ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
+                                                "'.lower() == 'true' else ''"]), value_type=str)}],
              remappings=[('cmd_vel', '/cmd_vel_raw')]),
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
              remappings=[('start', '/start')],

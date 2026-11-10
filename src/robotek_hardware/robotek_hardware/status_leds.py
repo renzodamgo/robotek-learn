@@ -43,7 +43,7 @@ class StatusLeds(Node):
         self.create_subscription(String, '/robotek/state', self.on_state, LATCHED)
         self.create_subscription(Bool, '/robotek/battery_low', self.on_battery_low, LATCHED)
         self.create_timer(1./float(p['rate']), self.update)
-        self.get_logger().info(f'Status RGBs at level {self.level}/255: green = ready, blue = running.')
+        self.get_logger().info(f'Status RGBs at level {self.level}/255: green blinking = ready, blue = running.')
 
     def on_state(self, msg):
         self.state = msg.data

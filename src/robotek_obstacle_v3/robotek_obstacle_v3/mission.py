@@ -14,6 +14,7 @@ from .field import SWAP, scan_points, track_s, unwrap_s, wrap
 from .localizer import Localizer, direction_from_scan
 from .perception import scan_clusters
 from . import corner, park, park_fixed, scene
+from .lot_exit import REAR_MAX_AGE, LotExit, direction_in_lot
 from .scene import Scene
 from .settings import make
 
@@ -100,12 +101,22 @@ class Mission:
         self._peek = None           # [seat, phase, yaw at start, time]
         self.parking = None
         self._park_heading = None   # gyro heading of the previous parking cycle
+        self.lot_exit = None        # LotExit while leaving the lot (start_lot)
+        self._rear = (-math.inf, -1)   # (time, mm) of the last rear sensor reading
         if self.p.park and not self.p.park_mode:
             park.nominal_plan(self.p.steer_limit)   # before the round: a few seconds
 
     # ------------------------------------------------------------- inputs
     def image(self, bgr, stamp):
         """The v3 does not use the field lines; kept so the node keeps one interface."""
+
+    def rear(self, now, mm):
+        """Rear sensor reading in mm (-1 = nothing in range)."""
+        self._rear = (now, mm)
+
+    def _rear_mm(self, now):
+        t, mm = self._rear
+        return mm if now - t <= REAR_MAX_AGE and mm >= 0 else None
 
     def observe(self, observations, stamp=None):
         self._observations = observations or []
@@ -121,6 +132,8 @@ class Mission:
             self._direction_scan = scan_stamp
             self._clusters = scan_clusters(scan)
         if self.state == 'SETUP':
+            if self.p.start_lot and self._calib[0] >= CALIBRATE_SECONDS:
+                return self._leave_lot(now, scan, yaw)
             return self._setup(dt, scan, new_scan, yaw, gyro)
         if self.state == 'STOP':
             return 0.0, 0.0, 'STOP'
@@ -152,6 +165,37 @@ class Mission:
                 self.phi = float(track_s(x, y))
                 self.state = 'RUN'
         return 0.0, 0.0, 'SETUP'
+
+    def _leave_lot(self, now, scan, yaw):
+        """start_lot: direction from the LiDAR's sides, the moves out of the lot (lot_exit.py), then RUN."""
+        if self.lot_exit is None:
+            if scan is None:
+                return 0.0, 0.0, 'SETUP'
+            sign, wall = direction_in_lot(scan)
+            if not sign:
+                return 0.0, 0.0, 'SETUP'
+            self.selected_direction = 'ccw' if sign > 0 else 'cw'
+            self.lot_exit = LotExit(park_fixed.make_lot(sign, self.p), wall, self._rear_mm(now),
+                                    self.p.lot_exit_speed, self.p.steer_limit, self.p.lot_exit_pulse)
+        sign = 1.0 if self.selected_direction == 'ccw' else -1.0
+        heading = sign * wrap(yaw - self.yaw_zero)
+        speed, steer = self.lot_exit.step(now, heading, self._rear_mm(now))
+        if not self.lot_exit.done:
+            self.speed = speed
+            return speed, sign * steer, 'LOT_EXIT'
+        if scan is None:
+            return 0.0, 0.0, 'LOT_EXIT'
+        x, y, th = self.lot_exit.pose
+        self.loc.initialize(*scan_points(scan, sign), th,
+                            guesses=[(x + dx, y + dy) for dx in (-0.15, 0.0, 0.15) for dy in (-0.08, 0.0, 0.08)])
+        self.loc_th0 = self.loc.th - heading
+        self.pose = (self.loc.x, self.loc.y, self.loc.th)
+        self.phi = float(track_s(self.loc.x, self.loc.y))
+        self.lot_exit.log.append(dict(event='lot_exit_done', estimate=[round(v, 3) for v in (x, y, th)],
+                                      localized=[round(v, 3) for v in self.pose]))
+        self._backup_to = -math.inf   # no backing up at Start: the lot is behind
+        self.state = 'RUN'
+        return 0.0, 0.0, 'RUN'
 
     # ---------------------------------------------------------------- run
     def _run(self, now, dt, yaw, gyro, distance):

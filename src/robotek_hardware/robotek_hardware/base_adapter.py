@@ -70,7 +70,7 @@ class BaseAdapter(Node):
             wheel_limit_deg=0., servo_measured=True,
             motor_backend='tb6612', rrc_motor_topic='/rrc/set_motor', rrc_motor_port=4, rrc_motor_sign=1.,
             motor_rps_per_mps=0., motor_max_rps=0., motor_min_rps=0.,
-            motor_kick_rps=0., motor_kick_s=.2, motor_pulse_rps=0., motor_pulse_period_s=.5,
+            motor_kick_rps=0., motor_kick_s=.2, motor_pulse_rps=0., motor_pulse_period_s=.5, low_speed_states='',
             brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1., brake_reset=False,
             brake_reset_states='FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT',
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
@@ -123,10 +123,15 @@ class BaseAdapter(Node):
         self.target = self.speed = 0.     # commanded and rate-limited speed (m/s)
         self.low_speed = LowSpeedDrive(p['motor_kick_rps'], p['motor_kick_s'], p['motor_pulse_rps'],
                                        p['motor_pulse_period_s'])
+        # low_speed_states: the kick and the pulses only while /robotek/state is one of these ('' = always). The lot
+        # exit creeps with them (LOT_EXIT); the laps keep the plain speed (9 nov 2026).
+        self.low_speed_states = {s.strip() for s in str(p['low_speed_states']).split(',') if s.strip()}
         if float(p['motor_kick_rps']) > 0. or float(p['motor_pulse_rps']) > 0.:
             self.get_logger().info(f"Low speed: kick {float(p['motor_kick_rps']):.2f} rps for {float(p['motor_kick_s']):.2f} s "
                                    f"from a standstill, pulses of {float(p['motor_pulse_rps']):.2f} rps below it "
-                                   f"(period {float(p['motor_pulse_period_s']):.2f} s).")
+                                   f"(period {float(p['motor_pulse_period_s']):.2f} s)"
+                                   + (f" in {', '.join(sorted(self.low_speed_states))} only." if self.low_speed_states
+                                      else "."))
         self.brake = DitherBrake(p['brake_rps'], p['brake_hz'], p['brake_s'], p['brake_min_rps']) \
             if self.backend == 'rrc' else DitherBrake()
         # brake_reset: instead of the back-and-forth, reset the board (rrc_driver /rrc/reset, RTS = RESET): the stop
@@ -223,7 +228,8 @@ class BaseAdapter(Node):
             rps_per_mps = float(p['motor_rps_per_mps'])
             rps = motor_rps(speed, rps_per_mps, float(p['motor_max_rps']), float(p['rrc_motor_sign']),
                             min_rps=float(p['motor_min_rps'])) if rps_per_mps > 0. else 0.
-            rps = self.low_speed.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
+            if not self.low_speed_states or self.state in self.low_speed_states:
+                rps = self.low_speed.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
             rps = self.brake.rps(self.get_clock().now().nanoseconds * 1e-9, rps)
             if self.brake_reset:
                 if self.brake.start is not None:      # braking: one board reset (at the end), else plain 0
