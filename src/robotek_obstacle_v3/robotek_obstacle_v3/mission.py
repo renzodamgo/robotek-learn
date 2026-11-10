@@ -177,7 +177,7 @@ class Mission:
             self.selected_direction = 'ccw' if sign > 0 else 'cw'
             self.lot_exit = LotExit(park_fixed.make_lot(sign, self.p), wall, self._rear_mm(now),
                                     self.p.lot_exit_speed, self.p.steer_limit, self.p.lot_exit_pulse,
-                                    self.p.lot_exit_back_pulse)
+                                    self.p.lot_exit_back_pulse, self.p.lot_exit_out_pulse)
         sign = 1.0 if self.selected_direction == 'ccw' else -1.0
         heading = sign * wrap(yaw - self.yaw_zero)
         speed, steer = self.lot_exit.step(now, heading, self._rear_mm(now))

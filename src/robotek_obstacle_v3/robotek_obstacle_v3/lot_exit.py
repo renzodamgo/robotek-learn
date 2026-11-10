@@ -10,7 +10,7 @@ away from the wall):
   1. full left, forward for ``lot_exit_pulse`` s;
   2. full right, reverse for ``lot_exit_back_pulse`` s (shorter: with 0.5 s the rear swung almost into the outer
      wall on the car, 9 nov 2026; the rear sensor looks straight back and does not see that wall);
-  3. full left, forward;
+  3. full left, forward for ``lot_exit_out_pulse`` s (longer: with 0.5 s it was not out yet on the car, 9 nov 2026);
   4. full right, forward;
   5. wheels straight: the laps take over (RUN).
 
@@ -88,9 +88,9 @@ class LotExit:
     PULSES = (('LEFT_FORWARD', 1.0, 1.0), ('RIGHT_BACK', -1.0, -1.0), ('LEFT_FORWARD_2', 1.0, 1.0),
               ('RIGHT_FORWARD', 1.0, -1.0), ('STRAIGHT', 0.0, 0.0))
 
-    def __init__(self, lot, wall_distance, rear_mm, speed, steer_limit, pulse=0.5, back_pulse=0.3):
+    def __init__(self, lot, wall_distance, rear_mm, speed, steer_limit, pulse=0.5, back_pulse=0.3, out_pulse=1.0):
         self.lot, self.speed, self.steer_limit, self.pulse = lot, speed, steer_limit, pulse
-        self.back_pulse = back_pulse
+        self.back_pulse, self.out_pulse = back_pulse, out_pulse
         gap = rear_mm / 1000.0 if rear_mm is not None and rear_mm >= 0 else DEFAULT_REAR_GAP
         self.start = (lot.xa + gap + REAR_SENSOR_X, -OUTER + wall_distance, 0.0)
         self.pose = self.start
@@ -144,7 +144,7 @@ class LotExit:
         if now - self.since < PRESTEER_S:
             return direction * PRESTEER_SPEED, steer
         near = direction < 0 and rear_mm is not None and 0 <= rear_mm < REAR_STOP_MM
-        length = self.back_pulse if direction < 0 else self.pulse
+        length = self.back_pulse if direction < 0 else self.out_pulse if name == 'LEFT_FORWARD_2' else self.pulse
         if near or now - self.since >= PRESTEER_S + length:
             self.brake = near
             self.log.append(dict(event='lot_exit_pulse', pulse=name, heading=round(math.degrees(heading), 1),

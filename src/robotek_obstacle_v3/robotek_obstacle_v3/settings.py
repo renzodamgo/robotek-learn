@@ -45,6 +45,7 @@ class Params:
     lot_exit_speed: float = 0.06    # m/s of the lot exit's pulses (the motor creeps with base_adapter's kick and pulses)
     lot_exit_pulse: float = 0.5     # s of each forward pulse of the lot exit
     lot_exit_back_pulse: float = 0.3  # s of its reverse pulse (0.5 s on the car, 9 nov 2026: the rear swung almost into the outer wall)
+    lot_exit_out_pulse: float = 1.0   # s of its third pulse, full left forward out of the lot (0.5 s was too short on the car, 9 nov 2026)
 
 
 def validate(params):
