@@ -13,7 +13,7 @@ PiMonitor puede buscar dispositivos en la red local: hay que permitirlo (Ajustes
 Privacidad y seguridad → Red local). Para que arranque solo: Ajustes del Sistema → General →
 Ítems de inicio → añadir `Raspberry Pi Bar.app`.
 
-El icono es `icon/raspberry-pi-bar.svg` (una frambuesa con barras); `build-app.sh` lo pasa a `AppIcon.icns` con
+El icono es `icon/raspberry-pi-bar.svg` (el logo de Raspberry Pi, marca de Raspberry Pi Ltd, SVG de Wikimedia Commons, con una insignia de barras); `build-app.sh` lo pasa a `AppIcon.icns` con
 `icon/svg2png.swift` e `iconutil`. Sin `--install` la app queda solo en `build/`.
 
 ## Qué muestra
