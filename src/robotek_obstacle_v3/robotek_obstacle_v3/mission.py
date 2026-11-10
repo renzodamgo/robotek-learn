@@ -35,6 +35,8 @@ RECOVER_SECONDS = 0.8       # the contact guard's back-off (guard_gap)
 # RECOVER_MAX s; then the Obstacle goes on. The LiDAR drops returns under 0.12 m, so the nearest it sees ahead of the
 # nose is ~0.10 m: the gap is 0.11.
 RECOVER_GAP = 0.11
+RECOVER_CORRIDOR = OUTLINE_HALF_WIDTH + 0.01   # m to the side of the centre line: only what the car would hit counts
+                                               # (a sign passed close beside the nose set the recover off, 9 nov 2026)
 RECOVER_BRAKE = 0.2
 RECOVER_MAX = 1.5
 RECOVER_PARALLEL = math.radians(4.0)
@@ -99,6 +101,8 @@ class Mission:
         self._recover_until = None
         self._recover_steer = None   # steering while backing off after the contact guard
         self._front_recover = None   # (start time, target heading, mirrored steer) of the front recover
+        self.brake = False           # True for the tick of a hard brake (the node sends /robotek/estop)
+        self.events = []             # recover triggers, for the node's log
         self._corner_gaps = {}       # corner start -> clearance its line was planned with
         self._lines = {}             # corner start -> (corner.plan arguments, line) last given (tracked_corners)
         self._direction_margin = 0.0
@@ -439,6 +443,22 @@ class Mission:
         self.speed, self.steer = speed, steer
         return speed, steer, 'RUN'
 
+    def _in_path(self):
+        """(ahead of the nose, sideways) in m of the nearest LiDAR return in the car's corridor within RECOVER_GAP of
+        the nose, or None. Returns beside the corridor (a sign passed close) do not count."""
+        if self._scan is None:
+            return None
+        ranges = np.asarray(self._scan.ranges, dtype=float)
+        angle = self._scan.angle_min + np.arange(ranges.size) * self._scan.angle_increment
+        ok = np.isfinite(ranges) & (ranges >= 0.12)
+        ahead = ranges[ok] * np.cos(angle[ok]) + LIDAR_OFFSET_X - OUTLINE_FRONT
+        side = ranges[ok] * np.sin(angle[ok])
+        near = (ahead > -0.02) & (ahead < RECOVER_GAP) & (np.abs(side) < RECOVER_CORRIDOR)
+        if not near.any():
+            return None
+        k = int(np.argmin(np.where(near, ahead, np.inf)))
+        return float(ahead[k]), float(side[k])
+
     def _outer_parallel(self, th):
         """Heading parallel to the nearest outer wall (the field's square), the one closest to ``th``."""
         x, y, _ = self.pose
@@ -449,10 +469,18 @@ class Mission:
         """The front recover (RECOVER_GAP): (speed, steer, 'RUN') while it lasts, else None."""
         sign = 1.0 if self.selected_direction == 'ccw' else -1.0
         th = self.pose[2]
+        self.brake = False
         if self._front_recover is None:
             if not (speed > 0.0 and front - (OUTLINE_FRONT - LIDAR_OFFSET_X) < RECOVER_GAP):
                 return None
+            hit = self._in_path()
+            if hit is None:
+                return None
             target = self._outer_parallel(th)
+            self.brake = True                              # stop dead: base_adapter's ramp let the car hit (9 nov)
+            self.events.append(dict(event='front_recover', ahead=round(hit[0], 3), side=round(hit[1], 3),
+                                    heading=round(math.degrees(th), 1), target=round(math.degrees(target), 1),
+                                    pose=[round(v, 3) for v in self.pose]))
             # Reversing, the heading changes by v tan(steer) / L with v < 0: a heading above the target needs + steer.
             self._front_recover = (now, target, self.p.steer_limit * (1.0 if wrap(th - target) > 0.0 else -1.0))
         start, target, steer = self._front_recover

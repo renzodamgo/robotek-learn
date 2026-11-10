@@ -90,6 +90,7 @@ class Drive(Node):
         self.cmd = self.create_publisher(Twist, '/cmd_vel_raw', 10)
         self.estop = self.create_publisher(Bool, '/robotek/estop', 10)   # the lot exit's hard brake
         self.lot_logged = 0          # lot exit log entries already printed
+        self.events_logged = 0       # recover log entries already printed
         self.park_state = None     # last parking sub-state logged
         self.state = self.create_publisher(
             String, '/robotek/state', QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
@@ -194,6 +195,11 @@ class Drive(Node):
         mission = self.strategy.mission
         self.pose_pub.publish(Float32MultiArray(data=[float(v) for v in (*mission.pose, mission.phi)]))
         self._log_parking(mission)
+        if mission.brake:                                # the front recover's hard brake
+            self.estop.publish(Bool(data=True))
+        for entry in mission.events[self.events_logged:]:
+            self.get_logger().info('recover: %s' % entry)
+        self.events_logged = len(mission.events)
         if mission.lot_exit is not None:
             if mission.lot_exit.brake:
                 self.estop.publish(Bool(data=True))

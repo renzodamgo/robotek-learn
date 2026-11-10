@@ -94,6 +94,7 @@ def test_front_recover_reverses_toward_parallel_to_the_outer_wall():
     from robotek_obstacle_v3.mission import Mission
     m = Mission({})
     m.selected_direction, m.pose = 'ccw', (0.3, -1.0, math.radians(30))   # bottom straight, nose 30 deg up
+    m._scan = scan_ahead(0.125, 0.0)                                       # a wall straight ahead of the nose
     steps = []
     for k in range(200):
         now = k * 0.02
@@ -105,4 +106,23 @@ def test_front_recover_reverses_toward_parallel_to_the_outer_wall():
             x, y, th = m.pose
             m.pose = (x, y, th - 0.15 * 0.02 * math.tan(out[1]) / 0.11883)
     assert steps[0][0] == 0.003 and steps[0][1] > 0                      # brake first, wheels already turned
+    assert m.events and m.events[0]['event'] == 'front_recover'
     assert any(s[0] < 0 for s in steps) and abs(m.pose[2]) < math.radians(4)   # reversed until parallel
+
+
+def scan_ahead(r, bearing):
+    angles = np.linspace(-math.pi, math.pi, 720, endpoint=False)
+    ranges = np.full(angles.size, 3.0)
+    ranges[np.abs(angles - bearing) < 0.02] = r
+    return types.SimpleNamespace(ranges=ranges.tolist(), angle_min=-math.pi, angle_increment=angles[1] - angles[0],
+                                 range_min=0.02, range_max=12.0)
+
+
+def test_front_recover_ignores_a_sign_beside_the_nose():
+    from robotek_obstacle_v3.mission import Mission
+    m = Mission({})
+    m.selected_direction, m.pose = 'ccw', (0.3, -1.0, 0.0)
+    m._scan = scan_ahead(0.15, math.radians(40))      # 0.115 ahead, 0.096 to the side: beside the corridor
+    assert m._front_recovery(0.0, 0.125, 0.3) is None and not m.brake
+    m._scan = scan_ahead(0.125, math.radians(5))      # in the corridor
+    assert m._front_recovery(0.0, 0.125, 0.3) is not None and m.brake
