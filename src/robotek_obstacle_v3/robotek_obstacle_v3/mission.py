@@ -35,6 +35,8 @@ RECOVER_SECONDS = 0.8       # the contact guard's back-off (guard_gap)
 # RECOVER_MAX s; then the Obstacle goes on. The LiDAR drops returns under 0.12 m, so the nearest it sees ahead of the
 # nose is ~0.10 m: the gap is 0.11.
 RECOVER_GAP = 0.11
+RECOVER_GAP_AHEAD = 0.20    # m: straight ahead (within RECOVER_AHEAD of the LiDAR's zero) it brakes earlier: at 0.11 the
+RECOVER_AHEAD = math.radians(20.0)   # car still touched after braking, head-on (the coach, 9 nov 2026)
 RECOVER_CORRIDOR = OUTLINE_HALF_WIDTH + 0.01   # m to the side of the centre line: only what the car would hit counts
                                                # (a sign passed close beside the nose set the recover off, 9 nov 2026)
 RECOVER_BRAKE = 0.2
@@ -445,7 +447,8 @@ class Mission:
 
     def _in_path(self):
         """(ahead of the nose, sideways) in m of the nearest LiDAR return in the car's corridor within RECOVER_GAP of
-        the nose, or None. Returns beside the corridor (a sign passed close) do not count."""
+        the nose (RECOVER_GAP_AHEAD within RECOVER_AHEAD of straight ahead), or None. Returns beside the corridor (a
+        sign passed close) do not count."""
         if self._scan is None:
             return None
         ranges = np.asarray(self._scan.ranges, dtype=float)
@@ -453,7 +456,9 @@ class Mission:
         ok = np.isfinite(ranges) & (ranges >= 0.12)
         ahead = ranges[ok] * np.cos(angle[ok]) + LIDAR_OFFSET_X - OUTLINE_FRONT
         side = ranges[ok] * np.sin(angle[ok])
-        near = (ahead > -0.02) & (ahead < RECOVER_GAP) & (np.abs(side) < RECOVER_CORRIDOR)
+        bearing = np.abs(np.arctan2(np.sin(angle[ok]), np.cos(angle[ok])))
+        gap = np.where(bearing <= RECOVER_AHEAD, RECOVER_GAP_AHEAD, RECOVER_GAP)
+        near = (ahead > -0.02) & (ahead < gap) & (np.abs(side) < RECOVER_CORRIDOR)
         if not near.any():
             return None
         k = int(np.argmin(np.where(near, ahead, np.inf)))
@@ -471,7 +476,7 @@ class Mission:
         th = self.pose[2]
         self.brake = False
         if self._front_recover is None:
-            if not (speed > 0.0 and front - (OUTLINE_FRONT - LIDAR_OFFSET_X) < RECOVER_GAP):
+            if not speed > 0.0:
                 return None
             hit = self._in_path()
             if hit is None:

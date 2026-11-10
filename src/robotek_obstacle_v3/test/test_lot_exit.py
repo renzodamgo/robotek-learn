@@ -126,3 +126,17 @@ def test_front_recover_ignores_a_sign_beside_the_nose():
     assert m._front_recovery(0.0, 0.125, 0.3) is None and not m.brake
     m._scan = scan_ahead(0.125, math.radians(5))      # in the corridor
     assert m._front_recovery(0.0, 0.125, 0.3) is not None and m.brake
+
+
+def test_front_recover_brakes_earlier_head_on():
+    from robotek_obstacle_v3.mission import Mission
+    m = Mission({})
+    m.selected_direction, m.pose = 'ccw', (0.3, -1.0, 0.0)
+    m._scan = scan_ahead(0.30, 0.0)                    # 0.28 ahead of the nose, straight on: not yet
+    assert m._front_recovery(0.0, 0.30, 0.3) is None
+    m._scan = scan_ahead(0.20, 0.0)                    # 0.18 ahead, straight on: brakes (0.11 would not)
+    assert m._front_recovery(0.0, 0.20, 0.3) is not None and m.brake
+    m2 = Mission({})
+    m2.selected_direction, m2.pose = 'ccw', (0.3, -1.0, 0.0)
+    m2._scan = scan_ahead(0.18, math.radians(25))      # 0.163 ahead at 25 deg (side 0.076, in the corridor): not yet
+    assert m2._front_recovery(0.0, 0.18, 0.3) is None
