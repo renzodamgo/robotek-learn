@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2f3a"/>
+      <stop offset="1" stop-color="#14161c"/>
+    </linearGradient>
+    <radialGradient id="berry" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#ff5a7a"/>
+      <stop offset="1" stop-color="#b3123e"/>
+    </radialGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <!-- leaves -->
+  <path d="M512 300 C 430 210, 320 220, 290 270 C 360 300, 430 320, 512 330 Z" fill="#4cc35a"/>
+  <path d="M512 300 C 594 210, 704 220, 734 270 C 664 300, 594 320, 512 330 Z" fill="#3aa84a"/>
+  <!-- berry: drupelets -->
+  <g fill="url(#berry)" stroke="#7d0c2b" stroke-width="6">
+    <circle cx="430" cy="400" r="62"/><circle cx="512" cy="385" r="62"/><circle cx="594" cy="400" r="62"/>
+    <circle cx="380" cy="490" r="62"/><circle cx="470" cy="480" r="62"/><circle cx="554" cy="480" r="62"/><circle cx="644" cy="490" r="62"/>
+    <circle cx="420" cy="575" r="62"/><circle cx="512" cy="570" r="62"/><circle cx="604" cy="575" r="62"/>
+    <circle cx="466" cy="655" r="58"/><circle cx="558" cy="655" r="58"/>
+    <circle cx="512" cy="720" r="50"/>
+  </g>
+  <!-- bars -->
+  <g fill="#7fd4ff">
+    <rect x="300" y="830" width="70" height="60" rx="14"/>
+    <rect x="400" y="800" width="70" height="90" rx="14"/>
+    <rect x="500" y="770" width="70" height="120" rx="14" fill="#a6e3ff"/>
+    <rect x="600" y="810" width="70" height="80" rx="14"/>
+    <rect x="700" y="790" width="70" height="100" rx="14"/>
+  </g>
+</svg>

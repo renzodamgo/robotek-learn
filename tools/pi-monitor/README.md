@@ -1,17 +1,20 @@
-# PiMonitor: salud del Raspberry Pi del coche en la barra de menús del Mac
+# Raspberry Pi Bar (PiMonitor): salud del Raspberry Pi del coche en la barra de menús del Mac
 
 App de SwiftUI para la barra de menús. Cada 2 s pregunta al Pi por SSH cómo está y lo
 muestra; guarda un historial para ver cuándo se cayó el Wi-Fi o se reinició el Pi.
 
 ```bash
-tools/pi-monitor/build-app.sh            # compila y crea tools/pi-monitor/build/PiMonitor.app
-open tools/pi-monitor/build/PiMonitor.app
+tools/pi-monitor/build-app.sh --install  # compila, crea build/Raspberry Pi Bar.app y lo copia a /Applications
+open "/Applications/Raspberry Pi Bar.app"
 ```
 
 Hace falta Xcode (o sus Command Line Tools) y macOS 14 o más nuevo. La primera vez, macOS pregunta si
 PiMonitor puede buscar dispositivos en la red local: hay que permitirlo (Ajustes del Sistema →
 Privacidad y seguridad → Red local). Para que arranque solo: Ajustes del Sistema → General →
-Ítems de inicio → añadir `PiMonitor.app`.
+Ítems de inicio → añadir `Raspberry Pi Bar.app`.
+
+El icono es `icon/raspberry-pi-bar.svg` (una frambuesa con barras); `build-app.sh` lo pasa a `AppIcon.icns` con
+`icon/svg2png.swift` e `iconutil`. Sin `--install` la app queda solo en `build/`.
 
 ## Qué muestra
 
