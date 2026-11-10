@@ -35,6 +35,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from robotek_common.vehicle import REAL_CAMERA_HFOV, REAL_CAMERA_PITCH, REAL_CAMERA_YAW, WHEELBASE
 from robotek_course.obstacle_vision import COLOR_RANGES, associate, color_blocks
 
+from .lot_exit import DEFAULT_STEPS, parse_steps
 from .perception import scan_clusters
 from .settings import Params
 from .strategy import Strategy
@@ -73,6 +74,9 @@ class Drive(Node):
         # Only the parameters changed by hand: a default park=0 must not cancel parking:=true.
         params = {name: value for name, value in values.items() if value != defaults[name]}
         self.strategy = Strategy(self.declare_parameter('direction', 'auto').value, parking=parking, params=params)
+        steps = str(self.declare_parameter('lot_exit_steps', DEFAULT_STEPS).value)
+        parse_steps(steps)                               # a bad sequence stops the node at launch, not in the lot
+        self.strategy.mission.lot_exit_steps = steps
         self.strategy.auto_start = False                 # the referee (or the button on the car) publishes /start
         self.camera = dict(
             hfov=float(self.declare_parameter('camera_hfov', REAL_CAMERA_HFOV).value),

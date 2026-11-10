@@ -14,7 +14,7 @@ from .field import SWAP, scan_points, track_s, unwrap_s, wrap
 from .localizer import Localizer, direction_from_scan
 from .perception import scan_clusters
 from . import corner, park, park_fixed, scene
-from .lot_exit import REAR_MAX_AGE, LotExit, direction_in_lot
+from .lot_exit import DEFAULT_STEPS, REAR_MAX_AGE, LotExit, direction_in_lot, parse_steps
 from .scene import Scene
 from .settings import make
 
@@ -102,6 +102,7 @@ class Mission:
         self.parking = None
         self._park_heading = None   # gyro heading of the previous parking cycle
         self.lot_exit = None        # LotExit while leaving the lot (start_lot)
+        self.lot_exit_steps = DEFAULT_STEPS   # the pulses (a string: the node sets it from its lot_exit_steps parameter)
         self._rear = (-math.inf, -1)   # (time, mm) of the last rear sensor reading
         if self.p.park and not self.p.park_mode:
             park.nominal_plan(self.p.steer_limit)   # before the round: a few seconds
@@ -176,8 +177,7 @@ class Mission:
                 return 0.0, 0.0, 'SETUP'
             self.selected_direction = 'ccw' if sign > 0 else 'cw'
             self.lot_exit = LotExit(park_fixed.make_lot(sign, self.p), wall, self._rear_mm(now),
-                                    self.p.lot_exit_speed, self.p.steer_limit, self.p.lot_exit_pulse,
-                                    self.p.lot_exit_back_pulse, self.p.lot_exit_out_pulse)
+                                    self.p.lot_exit_speed, self.p.steer_limit, self.lot_exit_steps)
         sign = 1.0 if self.selected_direction == 'ccw' else -1.0
         heading = sign * wrap(yaw - self.yaw_zero)
         speed, steer = self.lot_exit.step(now, heading, self._rear_mm(now))

@@ -109,14 +109,14 @@ pulsador nuevo del GPIO 16 (`/robotek/gpio_button`).
 
 1. **Dirección:** el lado del LiDAR que tiene el muro cerca (o nada, porque el LiDAR no ve a menos de 12 cm). Muro a
    la derecha = antihorario; a la izquierda = horario.
-2. **Salida** (`lot_exit.py`), escrita para antihorario y en espejo para horario: todo a la izquierda y un pulso
-   adelante, todo a la derecha y un pulso atrás (el sensor de atrás frena en seco a < 20 mm), todo a la izquierda y un
-   pulso adelante, todo a la derecha y un pulso adelante, ruedas al centro. Antes de cada pulso gira las ruedas
-   parado (0,5 s).
+2. **Salida** (`lot_exit.py`): pulsos con todo el giro, en `lot_exit_steps` (escritos para antihorario; en horario,
+   en espejo). Cada paso es `<L|R><+|-><segundos>`: L izquierda (lejos del muro), R derecha, + adelante, − atrás.
+   Por defecto `L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5` a 0,70 m/s (`lot_exit_speed`), los valores del entrenador tras
+   las primeras pruebas. Antes de cada pulso gira las ruedas parado (0,5 s); en los pasos hacia atrás el sensor de
+   atrás frena en seco a < 20 mm. Al final, ruedas al centro.
 3. **Vueltas** de la v3 sin aparcar al final y sin retroceder al empezar.
 
-`lot_exit_speed` (0,25 m/s), `lot_exit_pulse` (0,5 s: el primero y el último), `lot_exit_back_pulse` (0,3 s, el de
-atrás) y `lot_exit_out_pulse` (1,0 s, el tercero, el que saca el coche: con 0,5 s no salía) se cambian al lanzar. Durante la salida (estado `LOT_EXIT`) el
+Durante la salida (estado `LOT_EXIT`) el
 motor va con golpe de arranque y pulsos de 1,8 rps (`low_speed_states` de base_adapter): así el coche avanzó 5–6 cm/s
 pidiendo 0,06 m/s; además, sin las rampas de aceleración y frenado (`no_ramp_states`): cada pulso arranca de golpe y
 frena a 0 en seco. En el resto de la ronda, la velocidad y las rampas normales.
@@ -125,7 +125,7 @@ frena a 0 en seco. En el resto de la ronda, la velocidad y las rampas normales.
 bash tools/car-autostart.sh stop && bash tools/car-clean.sh
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET ROS_DOMAIN_ID=1 \
   ros2 launch robotek_course car.launch.py strategy:=robotek_obstacle_v3 camera_driver:=picam start_lot:=true \
-  motor_min_rps:=1.5
+  motor_min_rps:=1.5 lot_exit_speed:=0.70 lot_exit_steps:="L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5"
 ```
 
 Grabar desde el Mac (WRO-Strategies): `bash tools/car_bag_mac.sh salida-lote`.

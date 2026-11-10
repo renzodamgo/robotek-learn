@@ -39,20 +39,38 @@ def run(ex, rear):
     return seen
 
 
-def test_pulses_in_order():
+def test_default_steps_in_order_with_their_lengths():
     p = make({'start_lot': 1.0})
-    ex = lot_exit.LotExit(park_fixed.make_lot(1, p), 0.084, 10, 0.06, 0.3054, 0.5)
-    seen = run(ex, lambda e: 100)
+    ex = lot_exit.LotExit(park_fixed.make_lot(1, p), 0.084, 10, 0.06, 0.3054)
+    now, starts, last = 0.0, [], None
+    while not ex.done and now < 30:
+        speed, steer = ex.step(now, 0.0, 100)
+        moving = (ex.name, speed > 0, steer > 0) if abs(speed) > 0.01 else None
+        if moving and moving != last:
+            starts.append([*moving, now])
+        if moving and starts:
+            starts[-1].append(now)
+        last = moving
+        now += 0.01
     assert ex.done
-    assert list(dict.fromkeys(seen)) == [('LEFT_FORWARD', True, True), ('RIGHT_BACK', False, False),
-                                         ('LEFT_FORWARD_2', True, True), ('RIGHT_FORWARD', True, False)]
-    assert [e['pulse'] for e in ex.log if e['event'] == 'lot_exit_pulse'] == [
-        'LEFT_FORWARD', 'RIGHT_BACK', 'LEFT_FORWARD_2', 'RIGHT_FORWARD']
+    assert [tuple(s[:3]) for s in starts] == [('1_LFWD', True, True), ('2_RBACK', False, False), ('3_LFWD', True, True),
+                                              ('4_RFWD', True, False), ('5_RBACK', False, False), ('6_LFWD', True, True)]
+    lengths = [round(s[-1] - s[3] + 0.01, 1) for s in starts]
+    assert lengths == [0.5, 0.5, 2.0, 0.5, 1.0, 0.5]
+
+
+def test_bad_steps_are_refused():
+    for bad in ('', 'X+1', 'L*1', 'L+0', 'L+abc'):
+        try:
+            lot_exit.parse_steps(bad)
+        except ValueError:
+            continue
+        raise AssertionError(bad)
 
 
 def test_reverse_brakes_on_the_rear_sensor():
     p = make({'start_lot': 1.0})
-    ex = lot_exit.LotExit(park_fixed.make_lot(1, p), 0.084, 10, 0.06, 0.3054, 0.5)
-    seen = run(ex, lambda e: 15 if e.name == 'RIGHT_BACK' else 100)
-    assert ('BRAKE', 'RIGHT_BACK') in seen
-    assert [e['braked'] for e in ex.log if e['event'] == 'lot_exit_pulse'] == [False, True, False, False]
+    ex = lot_exit.LotExit(park_fixed.make_lot(1, p), 0.084, 10, 0.06, 0.3054, 'L+0.5 R-0.5 L+0.5')
+    seen = run(ex, lambda e: 15 if e.name == '2_RBACK' else 100)
+    assert ('BRAKE', '2_RBACK') in seen
+    assert [e['braked'] for e in ex.log if e['event'] == 'lot_exit_pulse'] == [False, True, False]

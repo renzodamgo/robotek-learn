@@ -4,15 +4,11 @@ The car waits in the lot, parallel to the outer wall and ~1 cm from the rear lim
 direction comes from the LiDAR's sides: the outer wall is the near side (``direction_in_lot``). Wall on the right ->
 counter-clockwise, on the left -> clockwise (the car faces the driving direction).
 
-The exit is the coach's fixed sequence of short pulses (9 nov 2026), written for CCW and mirrored for CW ("left" =
-away from the wall):
-
-  1. full left, forward for ``lot_exit_pulse`` s;
-  2. full right, reverse for ``lot_exit_back_pulse`` s (shorter: with 0.5 s the rear swung almost into the outer
-     wall on the car, 9 nov 2026; the rear sensor looks straight back and does not see that wall);
-  3. full left, forward for ``lot_exit_out_pulse`` s (longer: with 0.5 s it was not out yet on the car, 9 nov 2026);
-  4. full right, forward;
-  5. wheels straight: the laps take over (RUN).
+The exit is the coach's sequence of full-lock pulses (9 nov 2026), ``lot_exit_steps``: space-separated steps
+``<side><direction><seconds>``, side L or R (written for CCW, mirrored for CW: L = away from the wall), direction + forward
+or - reverse. Default ``DEFAULT_STEPS``: L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5 (the coach's values at 0.70 m/s after
+the first car tries; 0.12-0.25 m/s barely moved the car, a 0.5 s third pulse did not get it out). Then the wheels go
+straight and the laps take over (RUN).
 
 Before each pulse the wheels turn with the car stopped (``PRESTEER_S``; the command is a Twist, so a tiny speed under
 the motor's deadband, ``PRESTEER_SPEED``, carries the angle), and after it the car stands for ``SETTLE_S``. While
@@ -21,9 +17,8 @@ reversing, the rear sensor nearer than ``REAR_STOP_MM`` ends the pulse with a ha
 
 Why not one arc: in the car's outline model (``parking_search.Lot.free``, lot 0.3675 m, steer 17.5 deg, car 1 cm off the
 rear limit and 2 cm off the wall) a forward arc at full lock meets the far limit after ~11 cm, at ~17 deg; out, then
-back, then out is what the model needs too. The speed is ``lot_exit_speed``; the real motor only creeps with
-base_adapter's kick and pulses, which car.launch turns on for the LOT_EXIT state only (start_lot:=true).
-Not yet run on the car.
+back, then out is what the model needs too. The speed is ``lot_exit_speed``; car.launch (start_lot:=true) gives
+base_adapter a kick and pulses below 1.8 rps and no speed ramps, for the LOT_EXIT state only.
 
 The pose estimate for the localizer: the lot from the parameters (``park_fixed.make_lot``), x from the rear sensor,
 y from the wall gap, then the pulses as full-lock arcs (``parking_search.move``) that turn the gyro heading.
@@ -35,6 +30,7 @@ import numpy as np
 from .car import OUTLINE_HALF_WIDTH, OUTLINE_REAR, WHEELBASE
 from .parking_search import move
 
+DEFAULT_STEPS = 'L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5'
 REAR_STOP_MM = 20             # mm of the rear sensor that end the backing move
 REAR_MAX_AGE = 0.3            # s; an older rear reading is not used
 REAR_SENSOR_X = OUTLINE_REAR + 0.012   # m behind base_link to the sensor's face (car 0.245 m long, not measured)
@@ -82,15 +78,31 @@ def direction_in_lot(scan):
     return (1, wall) if near_right else (-1, wall)
 
 
+def parse_steps(text):
+    """'L+0.5 R-0.5 ...' -> [(name, direction, side, seconds)]; ValueError on a bad step."""
+    steps = []
+    for k, word in enumerate(str(text).split()):
+        side = {'L': 1.0, 'R': -1.0}.get(word[:1].upper())
+        sign = {'+': 1.0, '-': -1.0}.get(word[1:2])
+        try:
+            seconds = float(word[2:])
+        except ValueError:
+            seconds = -1.0
+        if side is None or sign is None or seconds <= 0:
+            raise ValueError("lot_exit_steps: bad step %r (want e.g. 'L+0.5' or 'R-1.0')" % word)
+        steps.append(('%d_%s%s' % (k + 1, word[0].upper(), 'FWD' if sign > 0 else 'BACK'), sign, side, seconds))
+    if not steps:
+        raise ValueError('lot_exit_steps: no steps')
+    return steps
+
+
 class LotExit:
     """The pulses out of the lot. ``step`` -> (speed, steer) in the mirrored frame (+ steer = away from the wall)."""
 
-    PULSES = (('LEFT_FORWARD', 1.0, 1.0), ('RIGHT_BACK', -1.0, -1.0), ('LEFT_FORWARD_2', 1.0, 1.0),
-              ('RIGHT_FORWARD', 1.0, -1.0), ('STRAIGHT', 0.0, 0.0))
-
-    def __init__(self, lot, wall_distance, rear_mm, speed, steer_limit, pulse=0.5, back_pulse=0.3, out_pulse=1.0):
-        self.lot, self.speed, self.steer_limit, self.pulse = lot, speed, steer_limit, pulse
-        self.back_pulse, self.out_pulse = back_pulse, out_pulse
+    def __init__(self, lot, wall_distance, rear_mm, speed, steer_limit, steps=DEFAULT_STEPS):
+        self.lot, self.speed, self.steer_limit = lot, speed, steer_limit
+        self.PULSES = tuple((name, d, side) for name, d, side, _ in parse_steps(steps)) + (('STRAIGHT', 0.0, 0.0),)
+        self.lengths = [seconds for *_, seconds in parse_steps(steps)]
         gap = rear_mm / 1000.0 if rear_mm is not None and rear_mm >= 0 else DEFAULT_REAR_GAP
         self.start = (lot.xa + gap + REAR_SENSOR_X, -OUTER + wall_distance, 0.0)
         self.pose = self.start
@@ -99,7 +111,8 @@ class LotExit:
         self.settle_until = None
         self.heading = 0.0
         self.brake = False           # True for the tick of a hard brake (the node sends /robotek/estop)
-        self.log = [dict(event='lot_exit_start', pose=[round(v, 3) for v in self.start], rear_mm=rear_mm)]
+        self.log = [dict(event='lot_exit_start', pose=[round(v, 3) for v in self.start], rear_mm=rear_mm,
+                         steps=str(steps))]
 
     @property
     def done(self):
@@ -144,7 +157,7 @@ class LotExit:
         if now - self.since < PRESTEER_S:
             return direction * PRESTEER_SPEED, steer
         near = direction < 0 and rear_mm is not None and 0 <= rear_mm < REAR_STOP_MM
-        length = self.back_pulse if direction < 0 else self.out_pulse if name == 'LEFT_FORWARD_2' else self.pulse
+        length = self.lengths[self.index]
         if near or now - self.since >= PRESTEER_S + length:
             self.brake = near
             self.log.append(dict(event='lot_exit_pulse', pulse=name, heading=round(math.degrees(heading), 1),
