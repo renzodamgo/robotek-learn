@@ -91,7 +91,7 @@ def test_straight_steps_keep_the_wheels_centred_and_move_the_estimate():
 
 
 def test_front_recover_reverses_right_in_ccw_left_in_cw():
-    from robotek_obstacle_v3.mission import Mission, RECOVER_BACK, RECOVER_BRAKE
+    from robotek_obstacle_v3.mission import Mission
     for direction, side in (('ccw', -1.0), ('cw', 1.0)):
         m = Mission({})
         m.selected_direction, m.pose = direction, (0.3, -1.0, math.radians(30))
@@ -106,11 +106,11 @@ def test_front_recover_reverses_right_in_ccw_left_in_cw():
         assert outs[0][0] == 0.003 and m.events[0]['event'] == 'front_recover'       # brake first
         backing = [o for o in outs if o[0] < 0]
         assert backing and all(o[1] * side > 0 for o in backing)                     # real steer: right in CCW
-        assert abs(len(backing) * 0.02 - RECOVER_BACK) < 0.05
+        assert abs(len(backing) * 0.02 - m.p.recover_back) < 0.05
 
 
 def test_front_recover_repeats_back_further():
-    from robotek_obstacle_v3.mission import Mission, RECOVER_BACK, RECOVER_STRAIGHT
+    from robotek_obstacle_v3.mission import Mission, RECOVER_STRAIGHT
     m = Mission({})
     m.selected_direction, m.pose = 'ccw', (0.1, -1.0, 0.0)
     lengths, now = [], 0.0
@@ -125,7 +125,7 @@ def test_front_recover_repeats_back_further():
             m._scan = scan_ahead(3.0, 0.0)
             n += out[0] < 0
         lengths.append(n * 0.02)
-    assert abs(lengths[0] - RECOVER_BACK) < 0.05 and abs(lengths[1] - RECOVER_BACK - RECOVER_STRAIGHT) < 0.05
+    assert abs(lengths[0] - m.p.recover_back) < 0.05 and abs(lengths[1] - m.p.recover_back - RECOVER_STRAIGHT) < 0.05
 
 
 def scan_ahead(r, bearing):

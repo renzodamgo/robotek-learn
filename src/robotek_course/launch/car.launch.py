@@ -108,6 +108,8 @@ def _strategy_node(context):
         if not os.path.isfile(path):
             raise RuntimeError(f'strategy_params: no such file {path}')
         parameters.append(path)
+    if _arg(context, 'strategy') == 'robotek_obstacle_v3':
+        parameters.append({'recover_back': float(_arg(context, 'recover_back'))})
     if _arg(context, 'start_lot').lower() == 'true':
         # Obstacle v3: start inside the parking lot, leave it with the coach's pulses, then the laps (lot_exit.py).
         parameters.append({'start_lot': 1.0, 'lot_exit_speed': float(_arg(context, 'lot_exit_speed')),
@@ -290,6 +292,9 @@ def generate_launch_description():
                                           'from the rear limit): direction from the LiDAR sides, four short full-lock '
                                           'pulses out (left fwd, right back, left fwd, right fwd; mirrored in CW), then '
                                           'the laps. The motor creeps with a kick and pulses only during LOT_EXIT'),
+        DeclareLaunchArgument('recover_back', default_value='1.0',
+                              description='Obstacle v3: s of reverse at full lock in the front recover (right in CCW, '
+                                          'left in CW)'),
         DeclareLaunchArgument('lot_exit_speed', default_value='0.70',
                               description='m/s of the lot exit pulses (the coach, 9 nov 2026; 0.12-0.25 barely moved it)'),
         DeclareLaunchArgument('lot_exit_steps', default_value='L+0.5 R-0.5 L+2.0 R+0.5 R-1.0 L+0.5',

@@ -31,7 +31,7 @@ LATERAL_GAIN = 6.0          # rad of steer per metre off the planned line
 RECOVER_SPEED = 0.15
 RECOVER_SECONDS = 0.8       # the contact guard's back-off (guard_gap)
 # Front recover (the coach, 9 nov 2026; plans/recover-propuesta.png in WRO-Strategies): something on the arc the car
-# drives, within RECOVER_LOOK of the nose -> brake dead RECOVER_BRAKE s, then reverse RECOVER_BACK s at full lock, full
+# drives, within RECOVER_LOOK of the nose -> brake dead RECOVER_BRAKE s, then reverse ``recover_back`` s at full lock, full
 # right in CCW and full left in CW (from the direction, not the heading estimate), then the Obstacle goes on.
 RECOVER_LOOK = 0.18         # m along the arc the car is driving (its current steering) that must be free: turning
                             # away from a sign is not a hit (a fixed corridor ahead fired in every close dodge and
@@ -42,7 +42,6 @@ RECOVER_NOSE = 0.05         # m: only the front of the outline counts (the sides
 RECOVER_REPEAT = (0.3, 8.0)  # m and s: a trigger this near the previous one is a repeat: each adds RECOVER_STRAIGHT of
                              # reverse (at most 3), so the line gets room (it looped 5 times on one sign, 9 nov 2026)
 RECOVER_BRAKE = 0.2
-RECOVER_BACK = 1.0          # s of reverse at full lock, the side from the direction
 SECTOR = 0.2                # m from the lane centre a sign still counts (rows at +-0.1; the lot limits reach -0.3)
 UNKNOWN_OFFSET = 0.12       # m away from a sign whose colour is still unknown
 LOOKOUT = 0.15              # m to the island side to see an inner sign ahead
@@ -506,7 +505,7 @@ class Mission:
         if now - start < RECOVER_BRAKE:
             self.speed = 0.0
             return 0.003, sign * steer, 'RUN'            # stopped; a tiny speed carries the steering angle (Twist)
-        if now - start >= RECOVER_BRAKE + RECOVER_BACK + extra:
+        if now - start >= RECOVER_BRAKE + self.p.recover_back + extra:
             self._front_recover = None
             return None
         self.speed = -RECOVER_SPEED
