@@ -7,6 +7,7 @@ strategy:
     inner_gap: 0.35
     turn_delay_distance: 0.0
     wall_heading_gain: 0.3
+    corner_lookahead: 0.45      # was 0.35: lab real_v3 std12, 4 seeds: 30/48 valid vs 26/48, no contact either (11 nov 2026)
     finish_speed: 0.32          # -20 % of 0.4
     cruise_speed: 1.02          # -20 % of the v5's 1.28 (coach, 11 nov 2026)
     last_corner_speed: 0.48     # -20 % of 0.6
