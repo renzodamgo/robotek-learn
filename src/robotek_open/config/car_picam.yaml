@@ -4,10 +4,6 @@
 # 17:29, new motor, 54:30 gears; no judge); in the lab (real_v4) the same speeds, look-ahead and island gap had no contact
 # in std12. The 14:50 record (23.4 s) used cruise 1.02 without the corner speed; it crashed in the fields with a narrow
 # corner.
-strategy:=robotek_open with
-# camera_driver:=picam (strategy_params auto), with motor_max_rps auto = 6.7.
-# Record round with these values: 3 laps in 23.4 s from Start to DONE (11 nov 2026, 14:50, new motor, 54:30 gears; no
-# judge). Copied from the Pi's ~/.config/robotek/open_v5_car_picam.yaml.
 strategy:
   ros__parameters:
     inner_gap: 0.50          # m from the island on the straights (lab real_v4: 0.50 with corner_speed was best)
