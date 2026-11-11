@@ -47,6 +47,11 @@ class Params:
     # rad: the arc ends this short of the 90 deg goal and the straight-line control takes over (keeps inner_gap from
     # the island); higher = a shorter turn (TURN_TOLERANCE 0.12 before 11 nov 2026). The last corner keeps 0.4.
     turn_tolerance: float = TURN_TOLERANCE
+    # Straight-line PD on the island distance (inner_gap): a heading offset of lateral_kp x (distance - inner_gap) +
+    # lateral_kd x (its rate, m/s), at most LATERAL_MAX. 0.3 / 0 before 11 nov 2026 (5 cm off -> 0.9 deg only: after a
+    # corner the car took the whole straight to line up, the coach).
+    lateral_kp: float = LATERAL_GAIN
+    lateral_kd: float = 0.0
     brake_margin: float = 0.15            # m: the slow-down for a corner ends this far before turn_front_distance;
                                           # higher = brakes earlier (it starts (speed - corner speed) / 2 m before that)
     inner_gap: float = 0.25               # m kept from the island wall
@@ -200,7 +205,7 @@ class OpenMission:
             # the outer wall in the lab (3 contacts in 12 rounds). The last corner keeps its own speed's rate.
             rate_speed = corner_speed if last else self.p.cruise_speed
             return corner_speed, self._arc_steer(dt, gyro, sign, rate_speed)
-        bias = self._lateral(inner, island_open, sign)
+        bias = self._lateral(inner, island_open, sign, dt)
         steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
         return self._straight_speed(scene, last, corner_speed), steer
 
@@ -271,11 +276,20 @@ class OpenMission:
             return True
         return self._ended_at is not None and self.travelled - self._ended_at >= self.p.turn_delay_distance
 
-    def _lateral(self, inner, island_open, sign):
-        """Heading offset that keeps inner_gap from the island wall (none at a corner)."""
+    def _lateral(self, inner, island_open, sign, dt=0.0):
+        """Heading offset that keeps inner_gap from the island wall (none at a corner): PD on the distance."""
         if not math.isfinite(inner) or island_open:
+            self._inner_prev = None
             return 0.0
-        return clamp(sign * LATERAL_GAIN * (inner - self.p.inner_gap), -LATERAL_MAX, LATERAL_MAX)
+        rate = 0.0
+        prev = getattr(self, '_inner_prev', None)
+        if prev is not None and dt > 0.0:
+            raw = (inner - prev) / dt
+            self._inner_rate = 0.7 * getattr(self, '_inner_rate', 0.0) + 0.3 * raw   # scans are noisy: low-pass
+            rate = self._inner_rate
+        self._inner_prev = inner
+        error = inner - self.p.inner_gap
+        return clamp(sign * (self.p.lateral_kp * error + self.p.lateral_kd * rate), -LATERAL_MAX, LATERAL_MAX)
 
     def _straight_speed(self, scene, last, corner_speed):
         speed = self.p.cruise_speed

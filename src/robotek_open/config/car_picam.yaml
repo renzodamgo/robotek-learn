@@ -9,6 +9,8 @@ strategy:
     wall_heading_gain: 0.3
     corner_speed: 0.77          # -25 % of cruise in every corner but the last (coach, 11 nov 2026; 0 = cruise)
     turn_tolerance: 0.30        # rad (~17 deg): end each corner's arc earlier; 0.12 overshot into the island with corner_lookahead 0.55 uncapped (coach, 11 nov 2026)
+    lateral_kp: 1.0             # rad per m off inner_gap (was 0.3): line up with the island faster after a corner (coach, 11 nov 2026)
+    lateral_kd: 0.2             # rad per m/s of the island distance's rate: damps the line-up
     brake_margin: 0.35          # brake 0.2 m earlier than the 0.15 default (coach, 11 nov 2026)
     corner_lookahead: 0.55      # the coach's value, without the cap (11 nov 2026: on the track there is more room)
     lookahead_cap: 0.0            # the coach: no cap. The lab hit the island in 12/12 rounds without it (not used here)
