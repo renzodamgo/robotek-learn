@@ -110,7 +110,10 @@ int main(int argc, char **argv) {
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher = 
       node->create_publisher<sensor_msgs::msg::LaserScan>(topic_name, 10);
   
-  rclcpp::WallRate r(10); //10hz
+  // Poll at 200 Hz, not 10 Hz (robotek, 11 nov 2026): GetLaserScanData does not wait and keeps only the newest turn,
+  // and the LD19 turns at ~9.9 Hz, so a 10 Hz poll drifted into phase with it every ~10 s and lost a turn (0.2 s
+  // without a scan), more with the Pi busy (0.68 per second while driving). The poll itself is a mutex and a flag.
+  rclcpp::WallRate r(200);
 
   ldlidar::Points2D laser_scan_points;
   double lidar_scan_freq;
