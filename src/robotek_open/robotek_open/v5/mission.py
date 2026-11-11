@@ -120,12 +120,15 @@ class OpenMission:
     def operator_stop(self):
         self._stop('operator_stop')
 
+    def crash_stop(self):
+        self._stop('crash')
+
     @property
     def label(self):
         """The name the rest of the system reads (telemetry, judge, LEDs, /robotek/state): the v4 names."""
         if self.state == 'STOP':
             return {'done': 'DONE', 'direction_fault': 'DIRECTION_FAULT',
-                    'operator_stop': 'OPERATOR_STOP'}[self.stop_reason]
+                    'operator_stop': 'OPERATOR_STOP', 'crash': 'CRASH'}[self.stop_reason]
         if self.state == 'SETUP':
             return 'DETECT_DIRECTION' if self._calibrated else 'CALIBRATE' if self.started else 'WAIT_START'
         return 'FINISH' if self.completed >= self.corners else 'TURN' if self.arc else 'FOLLOW'

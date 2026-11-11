@@ -30,6 +30,7 @@ from robotek_common.lidar_odometry import LidarOdometry
 from robotek_common.vehicle import DISTANCE_MODEL_ACCEL, LIDAR_OFFSET_X, WHEELBASE
 from ..open_mission_clock import mission_clock
 from ..open_vision import OpenVision
+from .crash_watch import CrashWatch
 from .mission import CONFIRMATIONS, OpenMission, Params
 from .recording import V5Recording
 from .scene import Scene, island_wall, scan_arrays, scene_from_scan
@@ -37,6 +38,8 @@ from .settings import PARAMETERS
 
 CONTROL_RATE = 50.0
 MAX_CONTROL_DT = 0.2       # s: the longest step a late control tick integrates
+DRIVING = ('FOLLOW', 'TURN', 'FINISH')   # labels in which the crash detector watches
+CRASH_HOLD = 1.0           # s between the crash stop and the node's end (the 0 and the board reset go out)
 
 
 class OpenV5Node(Node):
@@ -64,6 +67,12 @@ class OpenV5Node(Node):
             telemetry = os.path.join(os.path.expanduser('~/runs'), time.strftime('%Y%m%d-%H%M%S') + '-open-v5',
                                      'telemetry.csv')
         self.recording = V5Recording(telemetry, cfg['telemetry_sync_seconds'])
+        # Crash detector: the last crash_window_s s of ticks and scans; on a crash -> CRASH, file, end.
+        self.crash = CrashWatch(window_s=cfg['crash_window_s'], min_rays=cfg['crash_min_rays'],
+                                clear_rays=cfg['crash_clear_rays'], blind_s=cfg['crash_blind_s'],
+                                gyro_jump=cfg['crash_gyro_jump']) if cfg['detect_crash'] else None
+        self._crash_dir = os.path.dirname(telemetry) if telemetry else os.path.expanduser('~/runs')
+        self._crash_mark, self._last_rays = None, None
         self.scene, self._scene_stamp = Scene(), None
         self._gyro_z = 0.0
         self._scan_time = self._imu_time = self._image_time = self._image_stamp = None
@@ -132,6 +141,11 @@ class OpenV5Node(Node):
             if self._turn_pub.get_subscription_count():
                 self._publish_turn(msg)
         self.recording.record_scan(msg, self.sim_seconds)
+        if self.crash is not None:
+            fields_ = {'stamp': self._scan_time, 'angle_min': msg.angle_min, 'angle_increment': msg.angle_increment,
+                       'range_min': msg.range_min, 'range_max': msg.range_max, 'ranges': list(msg.ranges)}
+            self.crash.scan(self.get_clock().now().nanoseconds * 1e-9, fields_, self.mission.label in DRIVING)
+            self._last_rays = self.crash.scans[-1]['valid']
         if self.cfg['auto_start'] and not self.mission.started:
             self.get_logger().info('scan received -> requesting start')
             self.request_start('auto_first_scan')
@@ -219,7 +233,40 @@ class OpenV5Node(Node):
         self.recording.record_mission(
             sim_seconds=self.sim_seconds, mission=self.mission, gyro=self.mission.gyro, scene=self.scene,
             vision=self.vision, odometry=self.odometry, command=cmd, travelled=self.travelled)
+        if self.crash is not None:
+            self._watch_crash(now, label, speed, steer, cmd)
         self.finish_if_done()
+
+    def _watch_crash(self, now, label, speed, steer, cmd):
+        """Adds this tick to the crash window; on a crash: stop (CRASH -> base_adapter sends 0 and resets the board),
+        write the window to crash-<time>.json and end the node CRASH_HOLD s later (finish_if_done)."""
+        age = lambda stamp: None if stamp is None else round(now - stamp, 3)
+        sc = self.scene
+        finite = lambda v: v if math.isfinite(v) else None
+        row = {'state': label, 'corners': self.mission.completed, 'v_mission': speed, 'steer': steer,
+               'v_cmd': cmd.linear.x, 'w_cmd': cmd.angular.z, 'gyro': self._gyro_z, 'yaw': self.mission.yaw,
+               'left': finite(sc.left), 'right': finite(sc.right), 'front_axis': finite(sc.front_axis),
+               'island_end': finite(sc.island_end), 'travelled': self.travelled, 'valid_rays': self._last_rays,
+               'scan_age': age(self._scan_time), 'imu_age': age(self._imu_time),
+               't_round': None if self._round_start is None else now - self._round_start}
+        self.crash.tick(now, row, self._gyro_z, label in DRIVING)
+        if self.crash.reason is None or self._crash_mark is not None:
+            return
+        self._crash_mark, self._crash_wall = now, time.monotonic()
+        self.mission.crash_stop()
+        self.cmd_pub.publish(Twist())
+        self._state_pub.publish(String(data='CRASH'))
+        self._state_sent = 'CRASH'
+        self._log_progress(now, 'CRASH')
+        self.recording.record_event('crash', self.crash.reason, self.sim_seconds)
+        os.makedirs(self._crash_dir, exist_ok=True)
+        path = os.path.join(self._crash_dir, 'crash-' + time.strftime('%H%M%S') + '.json')
+        try:
+            self.crash.dump(path, {'crash_time': now, 'round_start': self._round_start,
+                                   'direction': self.mission.direction, 'params': self.cfg})
+            self.get_logger().error(f'CRASH: {self.crash.reason} -> stopped; last {self.crash.window_s:.0f} s in {path}')
+        except OSError as error:
+            self.get_logger().error(f'CRASH: {self.crash.reason} -> stopped; could not write {path}: {error}')
 
     # ------------------------------------------------------------------ RViz
     def _with_progress(self, image):
@@ -328,6 +375,9 @@ class OpenV5Node(Node):
             now = self.sim_seconds if self._done_clock == 'sim' else time.monotonic()
             if self.cfg['shutdown_on_done'] and now - self._done_mark >= self.cfg['done_hold']:
                 self.get_logger().info(f'mission complete -> shutting down after {self.cfg["done_hold"]:.1f} s')
+                rclpy.shutdown()
+        elif self.mission.label == 'CRASH':
+            if time.monotonic() - self._crash_wall >= CRASH_HOLD:
                 rclpy.shutdown()
         elif self.mission.label == 'DIRECTION_FAULT':
             self.get_logger().error('Direction unresolved; stopped without guessing.')

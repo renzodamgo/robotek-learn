@@ -34,7 +34,7 @@ import sys
 import yaml
 from ament_index_python.packages import PackageNotFoundError, get_package_prefix, get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction, Shutdown
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PythonExpression
@@ -127,6 +127,8 @@ def _strategy_node(context):
         # stayed 0.45).
         values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin', 'lookahead_cap', 'turn_tolerance', 'lateral_kp', 'lateral_kd', 'inner_gap', 'turn_scan_max_age')
                   if _arg(context, name)}
+        if _arg(context, 'detect_crash'):
+            values['detect_crash'] = _arg(context, 'detect_crash').lower() == 'true'
         if values:
             parameters.append(_node_params_file(values))
     if _arg(context, 'start_lot').lower() == 'true':
@@ -136,6 +138,8 @@ def _strategy_node(context):
     return [
         Node(package=LaunchConfiguration('strategy'), executable=LaunchConfiguration('executable'), name='strategy',
              output='screen', parameters=parameters,
+             # Open v5: when it ends (after a CRASH, its file written and the board reset) the whole launch ends.
+             on_exit=[Shutdown(reason='strategy ended')] if _arg(context, 'strategy') == 'robotek_open' else None,
              condition=UnlessCondition(LaunchConfiguration('teleop')),
              # robotek_course.vision on the car: ignore the bottom of the image (the LiDAR) and look only inside the walls.
              additional_env={'ROBOTEK_CAMERA_BOTTOM_CROP': LaunchConfiguration('camera_bottom_crop'),
@@ -330,6 +334,9 @@ def generate_launch_description():
         DeclareLaunchArgument('turn_scan_max_age', default_value='',
                               description='Open v5: s of LiDAR age allowed mid-corner before braking ("" = params file, '
                                           '0.6 on the car)'),
+        DeclareLaunchArgument('detect_crash', default_value='',
+                              description='Open v5: stop, reset the board and save the last 5 s on a crash '
+                                          '("" = params file, true on the car)'),
         DeclareLaunchArgument('inner_gap', default_value='',
                               description='Open v5: m kept from the island on the straights ("" = params file, 0.35 on the car)'),
         DeclareLaunchArgument('brake_margin', default_value='',
@@ -339,7 +346,7 @@ def generate_launch_description():
                               description='Open v5: m/s on the straights; "" = the params file (1.02 on the car)'),
         DeclareLaunchArgument('done_reset', default_value='auto',
                               description='base_adapter: states that send 0 and then reset the RRC board to stop the motor '
-                                          '(auto = DONE for the Open; none = off)'),
+                                          '(auto = DONE and CRASH for the Open; none = off)'),
         DeclareLaunchArgument('board_button', default_value='false',
                               description="also start/stop with the RRC Lite's button (the GPIO 16 button is the one used "
                                           'since 10 nov 2026)'),
@@ -417,7 +424,7 @@ def generate_launch_description():
                                            # done_reset:=auto -> DONE for the Open (its motor ran on after the
                                            # final 0, 11 nov 2026); '' = never; or a list of states.
                                            'done_reset_states': ParameterValue(PythonExpression(
-                                               ["('DONE' if '", LaunchConfiguration('strategy'), "' == 'robotek_open' else '') if '",
+                                               ["('DONE,CRASH' if '", LaunchConfiguration('strategy'), "' == 'robotek_open' else '') if '",
                                                 LaunchConfiguration('done_reset'), "' == 'auto' else ('' if '",
                                                 LaunchConfiguration('done_reset'), "' == 'none' else '",
                                                 LaunchConfiguration('done_reset'), "')"]), value_type=str),

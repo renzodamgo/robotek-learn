@@ -15,6 +15,12 @@ OPERATION = {
     # s of LiDAR age allowed while a corner's arc is driven (the gyro steers it); 0 = scan_max_age. On the car the
     # LD19 skipped 0.2-0.5 s of scans and the stop in mid-corner broke two corners (11 nov 2026).
     'turn_scan_max_age': 0.0,
+    # Crash detector (crash_watch.py): on a crash the car stops (state CRASH; base_adapter resets the board) and the
+    # last crash_window_s s go to crash-<time>.json next to the telemetry. A crash = crash_blind_s s of scans under
+    # crash_min_rays valid rays (until one with crash_clear_rays), or a gyro jump of crash_gyro_jump rad/s in 0.1 s
+    # (0 = off), while driving. Off in the simulation; on in config/car_picam.yaml.
+    'detect_crash': False, 'crash_window_s': 5.0, 'crash_min_rays': 120, 'crash_clear_rays': 180,
+    'crash_blind_s': 0.4, 'crash_gyro_jump': 3.0,
 }
 # Camera colours (OpenCV HSV: h_min, h_max, s_min, v_min; h_min > h_max wraps through red).
 VISION = {
