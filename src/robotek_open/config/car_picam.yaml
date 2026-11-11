@@ -1,0 +1,25 @@
+# Open v5 on the team's car with the IMX708 camera (picam): the car.launch default for strategy:=robotek_open with
+# camera_driver:=picam (strategy_params auto), with motor_max_rps auto = 6.7.
+# Record round with these values: 3 laps in 23.4 s from Start to DONE (11 nov 2026, 14:50, new motor, 54:30 gears; no
+# judge). Copied from the Pi's ~/.config/robotek/open_v5_car_picam.yaml.
+strategy:
+  ros__parameters:
+    inner_gap: 0.35
+    turn_delay_distance: 0.0
+    wall_heading_gain: 0.3
+    finish_speed: 0.32          # -20 % of 0.4
+    cruise_speed: 1.02          # -20 % of the v5's 1.28 (coach, 11 nov 2026)
+    last_corner_speed: 0.48     # -20 % of 0.6
+    finish_lead: 0.25
+    direction_fallback: ccw
+    vision_blue_h_min: 95
+    vision_blue_h_max: 135
+    vision_blue_s_min: 60
+    vision_blue_v_min: 60
+    vision_orange_h_min: 2
+    vision_orange_h_max: 25
+    vision_orange_s_min: 60
+    vision_orange_v_min: 60
+    vision_wall_v_max: 70
+    vision_line_contrast: 30
+    vision_line_tint: 8

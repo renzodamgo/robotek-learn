@@ -18,7 +18,7 @@ REPO=$(cd "$(dirname "$0")/.." && pwd)
 UNIT=robotek-car.service
 UNIT_FILE=$HOME/.config/systemd/user/$UNIT
 ARGS_FILE=$HOME/.config/robotek/autostart-args
-DEFAULT_ARGS="strategy:=robotek_open executable:=open_v5"
+DEFAULT_ARGS="strategy:=robotek_open executable:=open_v5 camera_driver:=picam"   # motor cap and params: car.launch auto
 
 run() {
     # Wait (up to 60 s) for an IPv4 address other than loopback: Cyclone DDS picks its network interface when it

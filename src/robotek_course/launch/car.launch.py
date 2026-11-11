@@ -101,8 +101,9 @@ def _strategy_node(context):
     if extra == 'auto':
         # The team's Obstacle v3 with the IMX708: its car file (camera, colours, 17.5 deg; 8 nov 2026: DONE 85.0 s).
         extra = ''
-        if _arg(context, 'strategy') == 'robotek_obstacle_v3' and _arg(context, 'camera_driver') == 'picam':
-            extra = os.path.join(get_package_share_directory('robotek_obstacle_v3'), 'config', 'car_picam.yaml')
+        if _arg(context, 'strategy') in ('robotek_obstacle_v3', 'robotek_open') and _arg(context, 'camera_driver') == 'picam':
+            # the Open v5's: 3 laps in 23.4 s (11 nov 2026, record)
+            extra = os.path.join(get_package_share_directory(_arg(context, 'strategy')), 'config', 'car_picam.yaml')
     if extra:
         path = os.path.expanduser(extra)
         if not os.path.isfile(path):
@@ -256,7 +257,7 @@ def generate_launch_description():
                               description='true: no strategy, drive with keyboard_drive (hold:=true) from another terminal'),
         DeclareLaunchArgument('strategy_params', default_value='auto',
                               description='optional YAML file with ROS parameters for your node (strategy: ros__parameters: ...); '
-                                          'auto = robotek_obstacle_v3/config/car_picam.yaml for the Obstacle v3 with the picam, '
+                                          'auto = <strategy>/config/car_picam.yaml for the Obstacle v3 or the Open with the picam, '
                                           "else none; '' = none"),
         DeclareLaunchArgument('debug', default_value='false',
                               description='true: report states, direction, corners, laps and lines in this terminal'),
@@ -282,7 +283,8 @@ def generate_launch_description():
         DeclareLaunchArgument('camera_wall_mask', default_value='true',
                               description='line detector only looks inside the black walls'),
         DeclareLaunchArgument('motor_max_rps', default_value='auto',
-                              description='encoder motor cap in rps; auto = 4 for the Obstacle v3 (8 nov 2026: DONE 85.0 s), '
+                              description='encoder motor cap in rps; auto = 4 for the Obstacle v3 (8 nov 2026: DONE 85.0 s), 6.7 for the '
+                                          'Open (11 nov 2026: 3 laps in 23.4 s), '
                                           'else robot.yaml (%s)' % default_max_rps),
         DeclareLaunchArgument('motor_min_rps', default_value=default_min_rps,
                               description='encoder motor floor in rps while moving (robot.yaml; 0 = off). The 310 motor '
@@ -338,7 +340,8 @@ def generate_launch_description():
              parameters=[hardware_config, {'motor_max_pct': ParameterValue(LaunchConfiguration('motor_max_pct'),
                                                                            value_type=float),
                                            'motor_max_rps': ParameterValue(PythonExpression(
-                                               ["(4.0 if '", LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else ",
+                                               ["(4.0 if '", LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else 6.7 if '",
+                                                LaunchConfiguration('strategy'), "' == 'robotek_open' else ",
                                                 default_max_rps, ") if '", LaunchConfiguration('motor_max_rps'),
                                                 "' == 'auto' else ", LaunchConfiguration('motor_max_rps')]), value_type=float),
                                            # start_lot: 1.5 rps floor unless set (the 310 motor does not start the car
