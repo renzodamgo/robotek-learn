@@ -337,6 +337,9 @@ def generate_launch_description():
                                           '0.35 on the car)'),
         DeclareLaunchArgument('cruise_speed', default_value='',
                               description='Open v5: m/s on the straights; "" = the params file (1.02 on the car)'),
+        DeclareLaunchArgument('done_reset', default_value='auto',
+                              description='base_adapter: states that send 0 and then reset the RRC board to stop the motor '
+                                          '(auto = DONE for the Open; none = off)'),
         DeclareLaunchArgument('board_button', default_value='false',
                               description="also start/stop with the RRC Lite's button (the GPIO 16 button is the one used "
                                           'since 10 nov 2026)'),
@@ -411,6 +414,13 @@ def generate_launch_description():
                                               for name, lot_value in (('motor_kick_rps', '1.8'), ('motor_pulse_rps', '1.8'))},
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('motor_kick_s', 'motor_pulse_period_s')},
+                                           # done_reset:=auto -> DONE for the Open (its motor ran on after the
+                                           # final 0, 11 nov 2026); '' = never; or a list of states.
+                                           'done_reset_states': ParameterValue(PythonExpression(
+                                               ["('DONE' if '", LaunchConfiguration('strategy'), "' == 'robotek_open' else '') if '",
+                                                LaunchConfiguration('done_reset'), "' == 'auto' else ('' if '",
+                                                LaunchConfiguration('done_reset'), "' == 'none' else '",
+                                                LaunchConfiguration('done_reset'), "')"]), value_type=str),
                                            'no_ramp_states': ParameterValue(PythonExpression(
                                                ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
                                                 "'.lower() == 'true' else ''"]), value_type=str),

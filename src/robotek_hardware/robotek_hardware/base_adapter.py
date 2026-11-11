@@ -72,7 +72,7 @@ class BaseAdapter(Node):
             motor_rps_per_mps=0., motor_max_rps=0., motor_min_rps=0.,
             motor_kick_rps=0., motor_kick_s=.2, motor_pulse_rps=0., motor_pulse_period_s=.5, low_speed_states='', no_ramp_states='',
             brake_rps=0., brake_hz=10., brake_s=1.5, brake_min_rps=1., brake_reset=False,
-            brake_reset_states='FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT',
+            brake_reset_states='FINISH,DONE,OPERATOR_STOP,DIRECTION_FAULT', done_reset_states='',
             wall_stop_m=0., wall_slow_m=0.6, wall_half_deg=15., scan_topic='/robotek/scan').items()}
         servo_pts = [math.radians(float(x)) for x in p['wheel_table_servo_deg'] if float(x) > 0.]
         n = len(servo_pts)
@@ -140,7 +140,13 @@ class BaseAdapter(Node):
         # brake_reset: instead of the back-and-forth, reset the board (rrc_driver /rrc/reset, RTS = RESET): the stop
         # the 310 motor obeyed every time (4 nov 2026). The board is set up again ~2.5 s later.
         self.brake_reset = bool(p['brake_reset']) and self.brake.enabled
-        self.reset_pub = self.create_publisher(Empty, '/rrc/reset', 1) if self.brake_reset else None
+        # done_reset_states (rrc backend): when /robotek/state becomes one of these, send 0 and then reset the board
+        # once; no motor command after it. The new motor of 11 nov 2026 ran on at ~0.35 m/s for 4 s after the Open's
+        # 0 and DONE, into the wall (no board reboot): a board reset is the stop it always obeyed (4 nov).
+        self.done_reset_states = {s.strip() for s in str(p['done_reset_states']).split(',') if s.strip()} \
+            if self.backend == 'rrc' else set()
+        self.reset_pub = self.create_publisher(Empty, '/rrc/reset', 1) \
+            if (self.brake_reset or self.done_reset_states) else None
         self.reset_sent = False
         # After the final board reset nothing more goes to the drive motor until a restart (the coach's request,
         # 4 nov 2026): the reset is the stop, and a later command (the strategy still publishing, a stale brake)
@@ -166,6 +172,13 @@ class BaseAdapter(Node):
 
     def on_state(self, msg):
         self.state = msg.data
+        if self.state in self.done_reset_states and not self.motor_halted:
+            self.target = self.speed = 0.
+            self.send_speed(0.)                    # the 0 first, then the reset
+            self.reset_pub.publish(Empty())
+            self.reset_sent = self.motor_halted = True
+            self.get_logger().warning(f'State {self.state}: 0 sent and board reset to stop the motor; no more '
+                                      'motor commands until a restart.')
 
     def final_stop(self):
         """A stop the board reset may do: the end of the round, the button stop or lost commands."""
