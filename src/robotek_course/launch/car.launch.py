@@ -125,7 +125,7 @@ def _strategy_node(context):
         # Open v5 overrides from the command line. As a file keyed by the node name: a plain dict goes in as '/**',
         # which the params file's 'strategy:' entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55
         # stayed 0.45).
-        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed')
+        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin')
                   if _arg(context, name)}
         if values:
             parameters.append(_node_params_file(values))
@@ -313,6 +313,9 @@ def generate_launch_description():
         DeclareLaunchArgument('corner_speed', default_value='',
                               description='Open v5: m/s in every corner but the last (it slows down to it on the '
                                           'approach); "" = the params file (0.77 on the car), 0 = cruise_speed'),
+        DeclareLaunchArgument('brake_margin', default_value='',
+                              description='Open v5: m; higher = slows down for a corner earlier ("" = the params file, '
+                                          '0.35 on the car)'),
         DeclareLaunchArgument('cruise_speed', default_value='',
                               description='Open v5: m/s on the straights; "" = the params file (1.02 on the car)'),
         DeclareLaunchArgument('board_button', default_value='false',

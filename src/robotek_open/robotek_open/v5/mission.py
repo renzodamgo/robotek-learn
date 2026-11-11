@@ -28,7 +28,6 @@ ISLAND_OPEN = 1.0           # m: an island wall farther than this beside the car
 END_CLEARANCE = 0.08        # m: the look-ahead shrinks in a narrow lane (inner distance minus this)
 LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
 BRAKE_GAIN = 2.0            # 1/s: speed above the last corner's grows this much per metre of gap
-BRAKE_MARGIN = 0.15         # m
 DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
 WALL_HEADING_MAX = math.radians(25.0)   # rad: a larger gyro-vs-walls difference is a bad fit, not drift
 WRONG_SIDE_OPEN = 1.2       # m: before the first corner, the side away from the island wider than this (outer walls
@@ -42,6 +41,8 @@ class Params:
     # m/s in every other corner (0 = cruise_speed, as before 11 nov 2026). The car slows down to it on the approach,
     # once the front wall is near (the same ramp as the last corner's), and drives the arc at it.
     corner_speed: float = 0.0
+    brake_margin: float = 0.15            # m: the slow-down for a corner ends this far before turn_front_distance;
+                                          # higher = brakes earlier (it starts (speed - corner speed) / 2 m before that)
     inner_gap: float = 0.25               # m kept from the island wall
     turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
     corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
@@ -271,7 +272,7 @@ class OpenMission:
     def _straight_speed(self, scene, last, corner_speed):
         speed = self.p.cruise_speed
         if corner_speed < speed and math.isfinite(scene.front_axis):   # slow down for the corner ahead
-            gap = scene.front_axis - self.p.turn_front_distance - BRAKE_MARGIN
+            gap = scene.front_axis - self.p.turn_front_distance - self.p.brake_margin
             speed = min(speed, corner_speed + BRAKE_GAIN * max(0.0, gap))
         return speed
 
