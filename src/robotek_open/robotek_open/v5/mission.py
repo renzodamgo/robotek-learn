@@ -41,6 +41,9 @@ class Params:
     # m/s in every other corner (0 = cruise_speed, as before 11 nov 2026). The car slows down to it on the approach,
     # once the front wall is near (the same ramp as the last corner's), and drives the arc at it.
     corner_speed: float = 0.0
+    # 1: the look-ahead to the island end is capped at the island distance - END_CLEARANCE (narrow lane); 0: no cap,
+    # corner_lookahead as set (the car, 11 nov 2026: the cap held 0.55 at 0.35 and the turn started late)
+    lookahead_cap: float = 1.0
     brake_margin: float = 0.15            # m: the slow-down for a corner ends this far before turn_front_distance;
                                           # higher = brakes earlier (it starts (speed - corner speed) / 2 m before that)
     inner_gap: float = 0.25               # m kept from the island wall
@@ -236,6 +239,8 @@ class OpenMission:
 
     def lookahead(self, inner):
         """How far ahead (base_link x) the island end must be seen to count: shorter in a narrow lane."""
+        if not self.p.lookahead_cap:
+            return self.p.corner_lookahead
         return min(self.p.corner_lookahead, max(0.0, inner - END_CLEARANCE))
 
     def _observe(self, scene, inner):

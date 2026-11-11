@@ -125,7 +125,7 @@ def _strategy_node(context):
         # Open v5 overrides from the command line. As a file keyed by the node name: a plain dict goes in as '/**',
         # which the params file's 'strategy:' entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55
         # stayed 0.45).
-        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin')
+        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin', 'lookahead_cap')
                   if _arg(context, name)}
         if values:
             parameters.append(_node_params_file(values))
@@ -309,10 +309,14 @@ def generate_launch_description():
                                           'does not start the car at ~1 rps: 1.5 for the Obstacle v3'),
         DeclareLaunchArgument('corner_lookahead', default_value='',
                               description='Open v5: m of look-ahead to the island end that starts a turn; higher = turns '
-                                          'earlier ("" = the params file, 0.35 on the car; capped at the island distance - 0.08 m)'),
+                                          'earlier ("" = the params file, 0.35 on the car; capped at the island distance - 0.08 m unless '
+                                          'lookahead_cap:=0)'),
         DeclareLaunchArgument('corner_speed', default_value='',
                               description='Open v5: m/s in every corner but the last (it slows down to it on the '
                                           'approach); "" = the params file (0.77 on the car), 0 = cruise_speed'),
+        DeclareLaunchArgument('lookahead_cap', default_value='',
+                              description='Open v5: 1 caps corner_lookahead at the island distance - 0.08 m, 0 does not '
+                                          '("" = the params file, 1 on the car)'),
         DeclareLaunchArgument('brake_margin', default_value='',
                               description='Open v5: m; higher = slows down for a corner earlier ("" = the params file, '
                                           '0.35 on the car)'),
