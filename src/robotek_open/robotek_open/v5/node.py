@@ -189,15 +189,8 @@ class OpenV5Node(Node):
         if label == 'DONE':
             self.get_logger().info(f'\033[1;32mDONE: {t:.2f} s from Start\033[0m')
 
-    def sensors_fresh(self, now):
-        scan_limit = self.cfg['scan_max_age']
-        if self.mission.arc and self.cfg['turn_scan_max_age'] > 0.0:
-            scan_limit = max(scan_limit, self.cfg['turn_scan_max_age'])   # mid-corner: the gyro steers
-        for limit, stamp in ((scan_limit, self._scan_time),
-                             (self.cfg['imu_max_age'], self._imu_time)):
-            if limit > 0.0 and (stamp is None or now - stamp > limit):
-                return False
-        return True
+    def _fresh(self, limit, stamp, now):
+        return limit <= 0.0 or (stamp is not None and now - stamp <= limit)
 
     # --------------------------------------------------------------- control
     def control(self):
@@ -212,9 +205,11 @@ class OpenV5Node(Node):
         distance = self.odometry.read()
         self.travelled += distance
         self.odometry.read_measured()
-        if self.sensors_fresh(now):
-            speed, steer = self.mission.step(dt, self.scene, self._gyro_z, distance, camera)
-        else:
+        # The gyro keeps integrating through a LiDAR gap (the LD19 skips 0.2-0.5 s while driving; the yaw lost in the
+        # gaps bent the next corners, 12 nov 2026 lab); a stale IMU skips the step (its last rate would be integrated).
+        imu_fresh = self._fresh(self.cfg['imu_max_age'], self._imu_time, now)
+        speed, steer = self.mission.step(dt, self.scene, self._gyro_z, distance, camera) if imu_fresh else (0.0, 0.0)
+        if not (imu_fresh and self._fresh(self.cfg['scan_max_age'], self._scan_time, now)):
             speed, steer = 0.0, 0.0     # stale LiDAR/IMU: brake until they recover
             self.get_logger().warning('Stale LiDAR/IMU: braking until sensors recover.',
                                       throttle_duration_sec=1.0)

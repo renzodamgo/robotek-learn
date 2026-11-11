@@ -4,7 +4,7 @@ import math
 import pytest
 
 from robotek_common.vehicle import REAL_STEER_LIMIT
-from robotek_open.v5.mission import CORNERS, OpenMission, Params, real_speed
+from robotek_open.v5.mission import CORNERS, OpenMission, Params
 from robotek_open.v5.scene import Scene
 
 DT = 0.02
@@ -22,12 +22,6 @@ def ready(direction='ccw', **params):
     run_setup(mission)
     assert mission.state == 'RUN'
     return mission
-
-
-def test_real_speed_follows_the_measured_table():
-    assert real_speed(1.28) == pytest.approx(0.60)
-    assert real_speed(0.60) == pytest.approx(0.42)
-    assert real_speed(0.45) == pytest.approx(0.3 + 0.12 * 0.05 / 0.2)
 
 
 def test_setup_is_quiet_calibrates_the_gyro_and_remembers_the_start_range():
@@ -118,12 +112,23 @@ def test_an_arc_ends_when_the_heading_reaches_the_goal_and_the_next_one_needs_th
     assert mission.armed
 
 
-def test_the_last_corner_is_slower_and_the_car_brakes_towards_it():
-    mission = ready()
-    mission.completed = CORNERS - 1
+def test_the_car_brakes_towards_corner_speed_before_a_corner():
+    mission = ready(corner_speed=0.6)
     far = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=3.0), 0.004, 0.0)[0]
     near = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.3), 0.004, 0.0)[0]
     assert far == pytest.approx(1.28) and 0.6 <= near < far
+
+
+def test_between_scans_the_front_wall_is_dead_reckoned_with_the_commanded_speed():
+    mission = ready()
+    mission.travelled = 1.0
+    scene = Scene(left=0.45, right=0.55, front_axis=1.5)
+    speed, _ = mission.step(DT, scene, 0.004, 0.0)
+    for _ in range(10):                                   # no new scan for 0.2 s (the LD19 skips some)
+        mission.step(DT, scene, 0.004, 0.0)
+    assert 1.5 - speed * 10 * DT <= mission.front < 1.5 - 0.1   # it brakes as the wall nears: a bit less
+    mission.step(DT, Scene(left=0.45, right=0.55, front_axis=1.2), 0.004, 0.0)
+    assert mission.front == 1.2                           # a new scan resets it
 
 
 def test_after_the_twelfth_corner_it_stops_where_the_front_range_matches_the_start():
@@ -167,18 +172,6 @@ def test_the_direction_check_ignores_a_normal_corner_and_stops_after_the_first_o
     mission.arc = False
     corner_scans(mission, Scene(left=0.45, right=5.0, front_axis=1.8), 5)    # after corner 1: never flips
     assert mission.direction == 'ccw'
-
-
-def test_turn_delay_distance_waits_after_the_island_has_ended():
-    mission = ready('cw', turn_delay_distance=0.25)
-    mission.travelled = 1.0
-    ended = Scene(left=0.55, right=2.4, front_axis=0.9)
-    mission.step(DT, ended, 0.004, 0.10)
-    assert not mission.arc                                   # island just ended: keep going
-    mission.step(DT, Scene(left=0.55, right=2.4, front_axis=0.8), 0.004, 0.10)
-    assert not mission.arc                                   # 0.10 m past the end
-    mission.step(DT, Scene(left=0.55, right=2.4, front_axis=0.7), 0.004, 0.16)
-    assert mission.arc and mission.goal == pytest.approx(-math.pi / 2)   # 0.26 m: turn
 
 
 def test_wall_heading_pulls_the_gyro_yaw_towards_the_walls_on_a_straight():

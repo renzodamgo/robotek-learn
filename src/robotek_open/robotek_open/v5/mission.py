@@ -13,21 +13,17 @@ from robotek_common.vehicle import REAL_STEER_LIMIT, WHEELBASE
 LAPS = 3
 CORNERS = 4 * LAPS
 
-# Speed the car really reaches for each commanded speed (real_car_v1.yaml, measured 8 oct 2026).
-REAL_SPEED = ((0.0, 0.0), (0.15, 0.18), (0.30, 0.27), (0.40, 0.30), (0.60, 0.42), (1.28, 0.60))
-
 STEER = REAL_STEER_LIMIT
 KP = 0.8                    # heading error -> steering
 DAMPING = 0.1               # yaw rate error -> steering (straights and arcs alike)
 EXIT_ANGLE = 0.25           # rad: the arc's feed-forward fades out over the last quarter radian
-TURN_TOLERANCE = 0.12       # rad: arc done within this of the goal heading (0.4 on the last corner)
-LAST_TOLERANCE = 0.4
+TURN_TOLERANCE = 0.3        # rad: arc done within this of the goal heading (0.12, 0.4 on the last, before 12 nov 2026)
 CONFIRMATIONS = 2           # consecutive scans with the island end inside the look-ahead
 ARM_DISTANCE = 0.25         # m driven after a corner before the next one can start
 ISLAND_OPEN = 1.0           # m: an island wall farther than this beside the car means it has ended
 END_CLEARANCE = 0.08        # m: the look-ahead shrinks in a narrow lane (inner distance minus this)
 LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
-BRAKE_GAIN = 2.0            # 1/s: speed above the last corner's grows this much per metre of gap
+BRAKE_GAIN = 2.0            # 1/s: speed above the corner speed grows this much per metre of gap
 DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
 WALL_HEADING_MAX = math.radians(25.0)   # rad: a larger gyro-vs-walls difference is a bad fit, not drift
 WRONG_SIDE_OPEN = 1.2       # m: before the first corner, the side away from the island wider than this (outer walls
@@ -37,27 +33,20 @@ WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the islan
 @dataclass
 class Params:
     cruise_speed: float = 1.28
-    last_corner_speed: float = 0.6
-    # m/s in every other corner (0 = cruise_speed, as before 11 nov 2026). The car slows down to it on the approach,
-    # once the front wall is near (the same ramp as the last corner's), and drives the arc at it.
-    corner_speed: float = 0.0
-    # 1: the look-ahead to the island end is capped at the island distance - END_CLEARANCE (narrow lane); 0: no cap,
-    # corner_lookahead as set (the car, 11 nov 2026: the cap held 0.55 at 0.35 and the turn started late)
-    lookahead_cap: float = 1.0
+    # m/s in every corner. The car slows down to it on the approach, once the front wall is near, and drives the arc
+    # at it. (Before 12 nov 2026 the last corner had its own last_corner_speed; one speed was as good in the lab.)
+    corner_speed: float = 1.0
     # rad: the arc ends this short of the 90 deg goal and the straight-line control takes over (keeps inner_gap from
-    # the island); higher = a shorter turn (TURN_TOLERANCE 0.12 before 11 nov 2026). The last corner keeps 0.4.
+    # the island); higher = a shorter turn.
     turn_tolerance: float = TURN_TOLERANCE
-    # Straight-line PD on the island distance (inner_gap): a heading offset of lateral_kp x (distance - inner_gap) +
-    # lateral_kd x (its rate, m/s), at most LATERAL_MAX. 0.3 / 0 before 11 nov 2026 (5 cm off -> 0.9 deg only: after a
-    # corner the car took the whole straight to line up, the coach).
+    # Straight line: a heading offset of lateral_kp x (island distance - inner_gap), at most LATERAL_MAX. 0.3 before
+    # 11 nov 2026 (5 cm off -> 0.9 deg only: after a corner the car took the whole straight to line up, the coach).
     lateral_kp: float = LATERAL_GAIN
-    lateral_kd: float = 0.0
     brake_margin: float = 0.15            # m: the slow-down for a corner ends this far before turn_front_distance;
                                           # higher = brakes earlier (it starts (speed - corner speed) / 2 m before that)
     inner_gap: float = 0.25               # m kept from the island wall
     turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
     corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
-    turn_delay_distance: float = 0.0      # m driven after the island has ended before the turn starts (real car)
     wall_heading_gain: float = 0.0        # share of the gyro-vs-walls heading difference corrected per scan (0 = off)
     finish_speed: float = 0.15
     finish_lead: float = 0.08             # m: brake when the front range is this close to the start's
@@ -80,11 +69,6 @@ def clamp(value, low, high):
     return max(low, min(high, value))
 
 
-def real_speed(command):
-    (x0, y0), (x1, y1) = next((a, b) for a, b in zip(REAL_SPEED, REAL_SPEED[1:]) if command <= b[0])
-    return y0 + (y1 - y0) * (min(command, x1) - x0) / (x1 - x0)
-
-
 class OpenMission:
     def __init__(self, params=None):
         self.p = params or Params()
@@ -105,9 +89,10 @@ class OpenMission:
         self._start_front = math.inf
         self._time = self._rest = 0.0
         self._hits = 0
-        self._ended_at = None                      # travelled when the island was last seen ending
         self._wall_scene = None
         self._scene = None
+        self._speed, self._front_scene, self._front_moved = 0.0, None, 0.0
+        self.front = math.inf                      # front_axis of the last scan minus the distance driven since
         self._braking = False
         self._wrong_side, self._check_scene = 0, None
         self.direction_flipped = False             # the LiDAR overruled the camera's direction before corner 1
@@ -150,7 +135,16 @@ class OpenMission:
         gyro = self.gyro = gyro_z - self._bias
         self.yaw += gyro * dt
         self.travelled += max(0.0, travelled)
-        return self._run(dt, scene, gyro)
+        # The front wall between scans: the last scan's minus the commanded speed x the time since (the LD19 skips
+        # 0.2-0.5 s of scans while driving; 11 nov 2026).
+        if scene is not self._front_scene:
+            self._front_scene, self._front_moved = scene, 0.0
+        else:
+            self._front_moved += self._speed * dt
+        self.front = scene.front_axis - self._front_moved
+        speed, steer = self._run(dt, scene, gyro)
+        self._speed = speed
+        return speed, steer
 
     def _setup(self, dt, scene, gyro_z, camera):
         """Quiet while the gyro bias and the start range are measured, then until the camera gives the direction."""
@@ -192,25 +186,14 @@ class OpenMission:
         self._correct_heading(scene)
         if self.completed >= self.corners:
             return self._finish(dt, scene, gyro)
-        last = self.completed == self.corners - 1
-        corner_speed = self.p.last_corner_speed if last else (self.p.corner_speed or self.p.cruise_speed)
-        ended = island_open or self._hits >= CONFIRMATIONS
-        if not ended:
-            self._ended_at = None
-        elif self._ended_at is None:
-            self._ended_at = self.travelled
         if self._turn_due(scene, island_open):
             self.goal = wrap(self.goal + sign * math.pi / 2)
             self.arc, self.armed = True, False
         if self.arc:
-            # The heading reference turns at the cruise speed's full-lock rate, not corner_speed's: the car is still
-            # faster than corner_speed when the arc starts (motor lag), and a slower reference widened the arc into
-            # the outer wall in the lab (3 contacts in 12 rounds). The last corner keeps its own speed's rate.
-            rate_speed = corner_speed if last else self.p.cruise_speed
-            return corner_speed, self._arc_steer(dt, gyro, sign, rate_speed)
-        bias = self._lateral(inner, island_open, sign, dt)
+            return self.p.corner_speed, self._arc_steer(dt, gyro, sign)
+        bias = self._lateral(inner, island_open, sign)
         steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
-        return self._straight_speed(scene, last, corner_speed), steer
+        return self._straight_speed(), steer
 
     def _check_direction(self, scene):
         """Before corner 1: the side that opens is the island's. If it is the other one, the camera got it wrong.
@@ -249,17 +232,15 @@ class OpenMission:
         return inner, math.isfinite(inner) and inner > ISLAND_OPEN
 
     def lookahead(self, inner):
-        """How far ahead (base_link x) the island end must be seen to count: shorter in a narrow lane."""
-        if not self.p.lookahead_cap:
-            return self.p.corner_lookahead
+        """How far ahead (base_link x) the island end must be seen to count: shorter close to the island (with
+        inner_gap 0.25 the uncapped 0.35 turned into the island; 12 nov 2026, lab)."""
         return min(self.p.corner_lookahead, max(0.0, inner - END_CLEARANCE))
 
     def _observe(self, scene, inner):
         """Count the island-end sightings (one per new scan) and re-arm the next corner."""
         if scene is not self._scene:
             self._scene = scene
-            limit = self.lookahead(inner)
-            self._hits = self._hits + 1 if 0.0 <= scene.island_end <= limit else 0
+            self._hits = self._hits + 1 if 0.0 <= scene.island_end <= self.lookahead(inner) else 0
         seen_again = math.isfinite(inner) and inner < ISLAND_OPEN and self.travelled >= ARM_DISTANCE
         self.armed = self.armed or (seen_again and not self.arc)
 
@@ -270,40 +251,23 @@ class OpenMission:
     def turn_checks(self, scene, island_open):
         """The three conditions of a turn, (armed, front wall near, island ended); also shown in RViz."""
         return (self.armed and not self.arc and self.travelled >= ARM_DISTANCE,
-                scene.front_axis <= self.p.turn_front_distance,
-                (island_open or self._hits >= CONFIRMATIONS) and self._past_island_end())
+                self.front <= self.p.turn_front_distance,
+                island_open or self._hits >= CONFIRMATIONS)
 
-    def _past_island_end(self):
-        """Driven turn_delay_distance since the island ended (always, with the default 0)."""
-        if self.p.turn_delay_distance <= 0.0:
-            return True
-        return self._ended_at is not None and self.travelled - self._ended_at >= self.p.turn_delay_distance
-
-    def _lateral(self, inner, island_open, sign, dt=0.0):
-        """Heading offset that keeps inner_gap from the island wall (none at a corner): PD on the distance."""
+    def _lateral(self, inner, island_open, sign):
+        """Heading offset that keeps inner_gap from the island wall (none at a corner)."""
         if not math.isfinite(inner) or island_open:
-            self._inner_prev = None
             return 0.0
-        rate = 0.0
-        prev = getattr(self, '_inner_prev', None)
-        if prev is not None and dt > 0.0:
-            raw = (inner - prev) / dt
-            self._inner_rate = 0.7 * getattr(self, '_inner_rate', 0.0) + 0.3 * raw   # scans are noisy: low-pass
-            rate = self._inner_rate
-        self._inner_prev = inner
-        error = inner - self.p.inner_gap
-        return clamp(sign * (self.p.lateral_kp * error + self.p.lateral_kd * rate), -LATERAL_MAX, LATERAL_MAX)
+        return clamp(sign * self.p.lateral_kp * (inner - self.p.inner_gap), -LATERAL_MAX, LATERAL_MAX)
 
-    def _straight_speed(self, scene, last, corner_speed):
-        speed = self.p.cruise_speed
-        if corner_speed < speed and math.isfinite(scene.front_axis):   # slow down for the corner ahead
-            gap = scene.front_axis - self.p.turn_front_distance - self.p.brake_margin
-            speed = min(speed, corner_speed + BRAKE_GAIN * max(0.0, gap))
-        return speed
+    def _straight_speed(self):
+        """Cruise, slowing down to corner_speed as the front wall nears turn_front_distance + brake_margin."""
+        gap = self.front - self.p.turn_front_distance - self.p.brake_margin
+        return min(self.p.cruise_speed, self.p.corner_speed + BRAKE_GAIN * max(0.0, gap))
 
-    def _arc_steer(self, dt, gyro, sign, corner_speed):
+    def _arc_steer(self, dt, gyro, sign):
         """The same heading law with the reference ramped at the full-lock yaw rate and a fading feed-forward."""
-        rate = real_speed(corner_speed) * math.tan(STEER) / WHEELBASE
+        rate = self.p.corner_speed * math.tan(STEER) / WHEELBASE      # full-lock yaw rate at corner_speed
         ramping = self.ref != self.goal
         if ramping:
             gap = wrap(self.goal - self.ref)
@@ -311,9 +275,8 @@ class OpenMission:
         fade = min(1.0, max(0.0, sign * wrap(self.goal - self.yaw)) / EXIT_ANGLE)
         feed, expected = (sign * STEER * fade, sign * rate * fade) if ramping else (0.0, 0.0)
         steer = clamp(KP * wrap(self.ref - self.yaw) + feed - DAMPING * (gyro - expected), -STEER, STEER)
-        tolerance = LAST_TOLERANCE if self.completed == self.corners - 1 else self.p.turn_tolerance
-        if abs(wrap(self.goal - self.yaw)) <= tolerance:
-            self.arc, self.ref, self.travelled, self._ended_at = False, self.goal, 0.0, None
+        if abs(wrap(self.goal - self.yaw)) <= self.p.turn_tolerance:
+            self.arc, self.ref, self.travelled = False, self.goal, 0.0
             self.completed += 1
         return steer
 

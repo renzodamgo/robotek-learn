@@ -125,7 +125,7 @@ def _strategy_node(context):
         # Open v5 overrides from the command line. As a file keyed by the node name: a plain dict goes in as '/**',
         # which the params file's 'strategy:' entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55
         # stayed 0.45).
-        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin', 'lookahead_cap', 'turn_tolerance', 'lateral_kp', 'lateral_kd', 'inner_gap', 'turn_scan_max_age')
+        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin', 'turn_tolerance', 'lateral_kp', 'inner_gap')
                   if _arg(context, name)}
         if _arg(context, 'detect_crash'):
             values['detect_crash'] = _arg(context, 'detect_crash').lower() == 'true'
@@ -315,25 +315,16 @@ def generate_launch_description():
                                           'does not start the car at ~1 rps: 1.5 for the Obstacle v3'),
         DeclareLaunchArgument('corner_lookahead', default_value='',
                               description='Open v5: m of look-ahead to the island end that starts a turn; higher = turns '
-                                          'earlier ("" = the params file, 0.35 on the car; capped at the island distance - 0.08 m unless '
-                                          'lookahead_cap:=0)'),
+                                          'earlier ("" = the params file, 0.35 on the car; capped at the island distance - 0.08 m)'),
         DeclareLaunchArgument('corner_speed', default_value='',
-                              description='Open v5: m/s in every corner but the last (it slows down to it on the '
-                                          'approach); "" = the params file (0.77 on the car), 0 = cruise_speed'),
-        DeclareLaunchArgument('lookahead_cap', default_value='',
-                              description='Open v5: 1 caps corner_lookahead at the island distance - 0.08 m, 0 does not '
-                                          '("" = the params file, 1 on the car)'),
+                              description='Open v5: m/s in every corner (it slows down to it on the '
+                                          'approach); "" = the params file (0.64 on the car)'),
         DeclareLaunchArgument('turn_tolerance', default_value='',
                               description='Open v5: rad short of 90 deg where a corner ends; higher = shorter turn ("" = '
                                           'the params file, 0.30 on the car)'),
         DeclareLaunchArgument('lateral_kp', default_value='',
                               description='Open v5: rad of heading per m off inner_gap on the straights ("" = params file, '
                                           '1.0 on the car)'),
-        DeclareLaunchArgument('lateral_kd', default_value='',
-                              description='Open v5: rad per m/s of the island distance rate ("" = params file, 0.2 on the car)'),
-        DeclareLaunchArgument('turn_scan_max_age', default_value='',
-                              description='Open v5: s of LiDAR age allowed mid-corner before braking ("" = params file, '
-                                          '0.6 on the car)'),
         DeclareLaunchArgument('detect_crash', default_value='',
                               description='Open v5: stop, reset the board and save the last 5 s on a crash '
                                           '("" = params file, true on the car)'),
