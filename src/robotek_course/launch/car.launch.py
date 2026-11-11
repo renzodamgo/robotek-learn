@@ -287,6 +287,9 @@ def generate_launch_description():
         DeclareLaunchArgument('motor_min_rps', default_value=default_min_rps,
                               description='encoder motor floor in rps while moving (robot.yaml; 0 = off). The 310 motor '
                                           'does not start the car at ~1 rps: 1.5 for the Obstacle v3'),
+        DeclareLaunchArgument('board_button', default_value='false',
+                              description="also start/stop with the RRC Lite's button (the GPIO 16 button is the one used "
+                                          'since 10 nov 2026)'),
         DeclareLaunchArgument('start_lot', default_value='false',
                               description='Obstacle v3: the car starts inside the parking lot (against the wall, ~1 cm '
                                           'from the rear limit): direction from the LiDAR sides, four short full-lock '
@@ -366,7 +369,10 @@ def generate_launch_description():
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
              remappings=[('start', '/start')],
              # button:=false (quick tests): start by itself after start_delay s; the first press is then the stop.
-             parameters=[{'auto_start_delay': ParameterValue(PythonExpression(
+             # The press comes from the GPIO 16 button; board_button:=true adds the RRC Lite's (10 nov 2026: not used).
+             parameters=[{'board_button': ParameterValue(LaunchConfiguration('board_button'), value_type=bool),
+                          'gpio_button': ParameterValue(LaunchConfiguration('gpio_button'), value_type=bool),
+                          'auto_start_delay': ParameterValue(PythonExpression(
                  ["0.0 if '", LaunchConfiguration('button'), "'.lower() == 'true' else ((20.0 if '",
                   LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else 12.0) if '",
                   LaunchConfiguration('start_delay'), "' == 'auto' else ", LaunchConfiguration('start_delay'), ")"]),
