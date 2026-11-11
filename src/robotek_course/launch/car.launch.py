@@ -94,6 +94,16 @@ def _reporter_node(context):
                      ('/camera/image', _camera_topic(context))])]
 
 
+def _node_params_file(values, node='strategy'):
+    """A temporary params file with ``values`` under the node's own name (beats a params file's node entry)."""
+    import tempfile
+    import yaml
+    handle = tempfile.NamedTemporaryFile('w', suffix='.yaml', prefix='car_launch_', delete=False)
+    yaml.safe_dump({node: {'ros__parameters': values}}, handle)
+    handle.close()
+    return handle.name
+
+
 def _strategy_node(context):
     """Your node; strategy_params:=<file.yaml> adds its ROS parameters (e.g. inner_gap: 0.35 for the Open v5)."""
     parameters = [{'use_sim_time': False}]
@@ -112,8 +122,10 @@ def _strategy_node(context):
     if _arg(context, 'strategy') == 'robotek_obstacle_v3':
         parameters.append({'recover_back': float(_arg(context, 'recover_back'))})
     if _arg(context, 'strategy') == 'robotek_open' and _arg(context, 'corner_lookahead'):
-        # Open v5: island end this close (m) starts the turn; higher = turns earlier (config/car_picam.yaml: 0.45)
-        parameters.append({'corner_lookahead': float(_arg(context, 'corner_lookahead'))})
+        # Open v5: island end this close (m) starts the turn; higher = turns earlier (config/car_picam.yaml: 0.45).
+        # As a file keyed by the node name: a plain dict goes in as '/**', which the params file's 'strategy:'
+        # entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55 stayed 0.45).
+        parameters.append(_node_params_file({'corner_lookahead': float(_arg(context, 'corner_lookahead'))}))
     if _arg(context, 'start_lot').lower() == 'true':
         # Obstacle v3: start inside the parking lot, leave it with the coach's pulses, then the laps (lot_exit.py).
         parameters.append({'start_lot': 1.0, 'lot_exit_speed': float(_arg(context, 'lot_exit_speed')),
