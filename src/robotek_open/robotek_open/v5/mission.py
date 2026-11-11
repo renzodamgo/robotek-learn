@@ -44,6 +44,9 @@ class Params:
     # 1: the look-ahead to the island end is capped at the island distance - END_CLEARANCE (narrow lane); 0: no cap,
     # corner_lookahead as set (the car, 11 nov 2026: the cap held 0.55 at 0.35 and the turn started late)
     lookahead_cap: float = 1.0
+    # rad: the arc ends this short of the 90 deg goal and the straight-line control takes over (keeps inner_gap from
+    # the island); higher = a shorter turn (TURN_TOLERANCE 0.12 before 11 nov 2026). The last corner keeps 0.4.
+    turn_tolerance: float = TURN_TOLERANCE
     brake_margin: float = 0.15            # m: the slow-down for a corner ends this far before turn_front_distance;
                                           # higher = brakes earlier (it starts (speed - corner speed) / 2 m before that)
     inner_gap: float = 0.25               # m kept from the island wall
@@ -291,7 +294,7 @@ class OpenMission:
         fade = min(1.0, max(0.0, sign * wrap(self.goal - self.yaw)) / EXIT_ANGLE)
         feed, expected = (sign * STEER * fade, sign * rate * fade) if ramping else (0.0, 0.0)
         steer = clamp(KP * wrap(self.ref - self.yaw) + feed - DAMPING * (gyro - expected), -STEER, STEER)
-        tolerance = LAST_TOLERANCE if self.completed == self.corners - 1 else TURN_TOLERANCE
+        tolerance = LAST_TOLERANCE if self.completed == self.corners - 1 else self.p.turn_tolerance
         if abs(wrap(self.goal - self.yaw)) <= tolerance:
             self.arc, self.ref, self.travelled, self._ended_at = False, self.goal, 0.0, None
             self.completed += 1
