@@ -125,7 +125,7 @@ def _strategy_node(context):
         # Open v5 overrides from the command line. As a file keyed by the node name: a plain dict goes in as '/**',
         # which the params file's 'strategy:' entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55
         # stayed 0.45).
-        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin', 'lookahead_cap', 'turn_tolerance', 'lateral_kp', 'lateral_kd', 'inner_gap')
+        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed', 'brake_margin', 'lookahead_cap', 'turn_tolerance', 'lateral_kp', 'lateral_kd', 'inner_gap', 'turn_scan_max_age')
                   if _arg(context, name)}
         if values:
             parameters.append(_node_params_file(values))
@@ -325,6 +325,9 @@ def generate_launch_description():
                                           '1.0 on the car)'),
         DeclareLaunchArgument('lateral_kd', default_value='',
                               description='Open v5: rad per m/s of the island distance rate ("" = params file, 0.2 on the car)'),
+        DeclareLaunchArgument('turn_scan_max_age', default_value='',
+                              description='Open v5: s of LiDAR age allowed mid-corner before braking ("" = params file, '
+                                          '0.6 on the car)'),
         DeclareLaunchArgument('inner_gap', default_value='',
                               description='Open v5: m kept from the island on the straights ("" = params file, 0.35 on the car)'),
         DeclareLaunchArgument('brake_margin', default_value='',

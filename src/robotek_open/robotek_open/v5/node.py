@@ -158,7 +158,10 @@ class OpenV5Node(Node):
             self.mission.operator_stop()
 
     def sensors_fresh(self, now):
-        for limit, stamp in ((self.cfg['scan_max_age'], self._scan_time),
+        scan_limit = self.cfg['scan_max_age']
+        if self.mission.arc and self.cfg['turn_scan_max_age'] > 0.0:
+            scan_limit = max(scan_limit, self.cfg['turn_scan_max_age'])   # mid-corner: the gyro steers
+        for limit, stamp in ((scan_limit, self._scan_time),
                              (self.cfg['imu_max_age'], self._imu_time)):
             if limit > 0.0 and (stamp is None or now - stamp > limit):
                 return False
