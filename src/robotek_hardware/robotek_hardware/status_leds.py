@@ -16,7 +16,7 @@ from rclpy.signals import SignalHandlerOptions
 from rclpy.qos import DurabilityPolicy, QoSProfile
 from std_msgs.msg import Bool, String
 
-from .status_colors import OFF, scaled, status_colors
+from .status_colors import OFF, READY, scaled, status_colors
 
 try:
     from rrc_lite_msgs.msg import RGBState, RGBStates
@@ -46,6 +46,11 @@ class StatusLeds(Node):
         self.get_logger().info(f'Status RGBs at level {self.level}/255: green blinking = ready, blue = running.')
 
     def on_state(self, msg):
+        if msg.data != self.state:
+            if msg.data in READY:      # green in the terminal too, like the LEDs (11 nov 2026)
+                self.get_logger().info(f'\033[1;32mREADY ({msg.data}): press the button to start\033[0m')
+            elif self.state in READY:
+                self.get_logger().info(f'\033[1;34mRUNNING ({msg.data})\033[0m')
         self.state = msg.data
 
     def on_battery_low(self, msg):
