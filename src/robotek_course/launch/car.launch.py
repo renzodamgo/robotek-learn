@@ -238,6 +238,7 @@ def generate_launch_description():
         default_max_pct = str(base['motor_max_pct'])
         default_max_rps = str(base.get('motor_max_rps', 0.0))
         default_min_rps = str(base.get('motor_min_rps', 0.0))
+        motor_backend = str(base.get('motor_backend', 'tb6612'))
         brake_defaults = {name: str(base.get(name, value)) for name, value in (
             ('brake_rps', 0.0), ('brake_hz', 10.0), ('brake_s', 1.5), ('brake_min_rps', 1.0))}
     return LaunchDescription([
@@ -286,9 +287,10 @@ def generate_launch_description():
                                           'only reports for now, it does not start or stop the round'),
         DeclareLaunchArgument('gpio_button_pin', default_value='16',
                               description='BCM GPIO of the push button (other leg on GND, internal pull-up)'),
-        DeclareLaunchArgument('rear_range', default_value='true',
+        DeclareLaunchArgument('rear_range', default_value='auto',
                               description='VL53L0X distance sensor on the Pi I2C bus -> /robotek/rear_range (Range, m) '
-                                          'and /robotek/rear_range_mm (Int32, mm); only reports for now'),
+                                          'and /robotek/rear_range_mm (Int32, mm). auto = only for the Obstacle v3 (the lot '
+                                          'exit); the Open does not use it (11 nov 2026: its I2C errors during Open rounds)'),
         DeclareLaunchArgument('start_delay', default_value='auto',
                               description='seconds from launch to the automatic start with button:=false; auto = 20 for '
                                           'the Obstacle v3 (ready only after 13-17 s), else 12'),
@@ -379,8 +381,9 @@ def generate_launch_description():
         Node(package='robotek_hardware', executable='imu_adapter', name='imu_adapter', output='screen',
              parameters=[hardware_config],
              remappings=[('imu_in', LaunchConfiguration('imu_topic')), ('imu_out', '/robotek/imu')]),
+        # The TB6612 bridge only with motor_backend tb6612 (robot.yaml): the car's motor is on the RRC Lite (M2).
         Node(package='robotek_hardware', executable='motor_driver', name='tb6612fng_motor', output='screen',
-             parameters=[hardware_config]),
+             parameters=[hardware_config], condition=IfCondition(str(motor_backend == 'tb6612'))),
         # Your /cmd_vel_raw is the base_adapter's input (in the simulator sim_actuator_model reads the same topic).
         Node(package='robotek_hardware', executable='base_adapter', name='base_adapter', output='screen',
              parameters=[hardware_config, {'motor_max_pct': ParameterValue(LaunchConfiguration('motor_max_pct'),
@@ -430,7 +433,9 @@ def generate_launch_description():
              condition=IfCondition(LaunchConfiguration('gpio_button')),
              parameters=[{'pin': ParameterValue(LaunchConfiguration('gpio_button_pin'), value_type=int)}]),
         Node(package='robotek_hardware', executable='rear_range', name='rear_range', output='screen',
-             condition=IfCondition(LaunchConfiguration('rear_range'))),
+             condition=IfCondition(PythonExpression(
+                 ["'", LaunchConfiguration('rear_range'), "'.lower() == 'true' or ('", LaunchConfiguration('rear_range'),
+                  "' == 'auto' and '", LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3')"]))),
         Node(package='robotek_hardware', executable='battery_guard', name='battery_guard', output='screen',
              condition=IfCondition(LaunchConfiguration('battery_guard')),
              parameters=[{'min_voltage': ParameterValue(LaunchConfiguration('battery_min_v'), value_type=float)}]),
