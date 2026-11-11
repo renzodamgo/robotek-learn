@@ -1,22 +1,28 @@
-# Open v5 on the team's car with the IMX708 camera (picam): the car.launch default for strategy:=robotek_open with
+# Open v5 on the team's car with the IMX708 camera (picam): car.launch loads it by itself for strategy:=robotek_open
+# (strategy_params auto, camera_driver picam by default), with motor_max_rps auto = 6.7.
+# These values gave a complete round, 3 laps in 30.9 s from Start to DONE, the coach's "perfect" one (11 nov 2026,
+# 17:29, new motor, 54:30 gears; no judge); in the lab (real_v4) the same speeds, look-ahead and island gap had no contact
+# in std12. The 14:50 record (23.4 s) used cruise 1.02 without the corner speed; it crashed in the fields with a narrow
+# corner.
+strategy:=robotek_open with
 # camera_driver:=picam (strategy_params auto), with motor_max_rps auto = 6.7.
 # Record round with these values: 3 laps in 23.4 s from Start to DONE (11 nov 2026, 14:50, new motor, 54:30 gears; no
 # judge). Copied from the Pi's ~/.config/robotek/open_v5_car_picam.yaml.
 strategy:
   ros__parameters:
-    inner_gap: 0.35
+    inner_gap: 0.50          # m from the island on the straights (lab real_v4: 0.50 with corner_speed was best)
     turn_delay_distance: 0.0
     wall_heading_gain: 0.3
-    corner_speed: 0.77          # -25 % of cruise in every corner but the last (coach, 11 nov 2026; 0 = cruise)
+    corner_speed: 0.64          # m/s in every corner but the last (-25 % of cruise)
     turn_tolerance: 0.30        # rad (~17 deg): end each corner's arc earlier; 0.12 overshot into the island with corner_lookahead 0.55 uncapped (coach, 11 nov 2026)
     lateral_kp: 1.0             # rad per m off inner_gap (was 0.3): line up with the island faster after a corner (coach, 11 nov 2026)
     lateral_kd: 0.2             # rad per m/s of the island distance's rate: damps the line-up
     turn_scan_max_age: 0.6      # s: keep turning through a LiDAR gap mid-corner (the LD19 skipped up to 0.5 s; 11 nov 2026)
     brake_margin: 0.35          # brake 0.2 m earlier than the 0.15 default (coach, 11 nov 2026)
-    corner_lookahead: 0.55      # the coach's value, without the cap (11 nov 2026: on the track there is more room)
-    lookahead_cap: 0.0            # the coach: no cap. The lab hit the island in 12/12 rounds without it (not used here)
+    corner_lookahead: 0.35      # with the cap (lookahead_cap 1): island distance - 0.08 m at most
+    lookahead_cap: 1.0
     finish_speed: 0.32          # -20 % of 0.4
-    cruise_speed: 1.02          # -20 % of the v5's 1.28 (coach, 11 nov 2026)
+    cruise_speed: 0.85          # m/s on the straights (11 nov 2026, 17:29 round)
     last_corner_speed: 0.48     # -20 % of 0.6
     finish_lead: 0.25
     direction_fallback: ccw

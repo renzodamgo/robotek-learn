@@ -253,7 +253,7 @@ def generate_launch_description():
         DeclareLaunchArgument('raw_scan_topic', default_value='/scan', description='what the LiDAR driver publishes'),
         DeclareLaunchArgument('imu_topic', default_value='/rrc/imu_raw', description='what the RRC Lite driver publishes'),
         DeclareLaunchArgument('camera', default_value='true', description='start the camera node'),
-        DeclareLaunchArgument('camera_driver', default_value='camera_publisher',
+        DeclareLaunchArgument('camera_driver', default_value='picam',
                               description="'camera_publisher' (USB camera, robotek_hardware), 'usb_cam' (the ROS "
                                           "package) or 'picam' (the Raspberry Pi camera on the CSI ribbon, IMX708)"),
         DeclareLaunchArgument('picam_rotation', default_value='180',
