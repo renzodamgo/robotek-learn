@@ -39,6 +39,9 @@ WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the islan
 class Params:
     cruise_speed: float = 1.28
     last_corner_speed: float = 0.6
+    # m/s in every other corner (0 = cruise_speed, as before 11 nov 2026). The car slows down to it on the approach,
+    # once the front wall is near (the same ramp as the last corner's), and drives the arc at it.
+    corner_speed: float = 0.0
     inner_gap: float = 0.25               # m kept from the island wall
     turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
     corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
@@ -175,7 +178,7 @@ class OpenMission:
         if self.completed >= self.corners:
             return self._finish(dt, scene, gyro)
         last = self.completed == self.corners - 1
-        corner_speed = self.p.last_corner_speed if last else self.p.cruise_speed
+        corner_speed = self.p.last_corner_speed if last else (self.p.corner_speed or self.p.cruise_speed)
         ended = island_open or self._hits >= CONFIRMATIONS
         if not ended:
             self._ended_at = None
@@ -185,7 +188,11 @@ class OpenMission:
             self.goal = wrap(self.goal + sign * math.pi / 2)
             self.arc, self.armed = True, False
         if self.arc:
-            return corner_speed, self._arc_steer(dt, gyro, sign, corner_speed)
+            # The heading reference turns at the cruise speed's full-lock rate, not corner_speed's: the car is still
+            # faster than corner_speed when the arc starts (motor lag), and a slower reference widened the arc into
+            # the outer wall in the lab (3 contacts in 12 rounds). The last corner keeps its own speed's rate.
+            rate_speed = corner_speed if last else self.p.cruise_speed
+            return corner_speed, self._arc_steer(dt, gyro, sign, rate_speed)
         bias = self._lateral(inner, island_open, sign)
         steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
         return self._straight_speed(scene, last, corner_speed), steer
@@ -263,7 +270,7 @@ class OpenMission:
 
     def _straight_speed(self, scene, last, corner_speed):
         speed = self.p.cruise_speed
-        if last and math.isfinite(scene.front_axis):      # slow down for the last corner
+        if corner_speed < speed and math.isfinite(scene.front_axis):   # slow down for the corner ahead
             gap = scene.front_axis - self.p.turn_front_distance - BRAKE_MARGIN
             speed = min(speed, corner_speed + BRAKE_GAIN * max(0.0, gap))
         return speed

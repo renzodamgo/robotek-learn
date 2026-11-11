@@ -121,11 +121,14 @@ def _strategy_node(context):
         parameters.append(path)
     if _arg(context, 'strategy') == 'robotek_obstacle_v3':
         parameters.append({'recover_back': float(_arg(context, 'recover_back'))})
-    if _arg(context, 'strategy') == 'robotek_open' and _arg(context, 'corner_lookahead'):
-        # Open v5: island end this close (m) starts the turn; higher = turns earlier (config/car_picam.yaml: 0.45).
-        # As a file keyed by the node name: a plain dict goes in as '/**', which the params file's 'strategy:'
-        # entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55 stayed 0.45).
-        parameters.append(_node_params_file({'corner_lookahead': float(_arg(context, 'corner_lookahead'))}))
+    if _arg(context, 'strategy') == 'robotek_open':
+        # Open v5 overrides from the command line. As a file keyed by the node name: a plain dict goes in as '/**',
+        # which the params file's 'strategy:' entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55
+        # stayed 0.45).
+        values = {name: float(_arg(context, name)) for name in ('corner_lookahead', 'corner_speed', 'cruise_speed')
+                  if _arg(context, name)}
+        if values:
+            parameters.append(_node_params_file(values))
     if _arg(context, 'start_lot').lower() == 'true':
         # Obstacle v3: start inside the parking lot, leave it with the coach's pulses, then the laps (lot_exit.py).
         parameters.append({'start_lot': 1.0, 'lot_exit_speed': float(_arg(context, 'lot_exit_speed')),
@@ -306,7 +309,12 @@ def generate_launch_description():
                                           'does not start the car at ~1 rps: 1.5 for the Obstacle v3'),
         DeclareLaunchArgument('corner_lookahead', default_value='',
                               description='Open v5: m of look-ahead to the island end that starts a turn; higher = turns '
-                                          'earlier ("" = the params file, 0.45 on the car)'),
+                                          'earlier ("" = the params file, 0.35 on the car; capped at the island distance - 0.08 m)'),
+        DeclareLaunchArgument('corner_speed', default_value='',
+                              description='Open v5: m/s in every corner but the last (it slows down to it on the '
+                                          'approach); "" = the params file (0.77 on the car), 0 = cruise_speed'),
+        DeclareLaunchArgument('cruise_speed', default_value='',
+                              description='Open v5: m/s on the straights; "" = the params file (1.02 on the car)'),
         DeclareLaunchArgument('board_button', default_value='false',
                               description="also start/stop with the RRC Lite's button (the GPIO 16 button is the one used "
                                           'since 10 nov 2026)'),
