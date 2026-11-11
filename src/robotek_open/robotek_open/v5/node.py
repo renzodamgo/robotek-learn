@@ -70,6 +70,7 @@ class OpenV5Node(Node):
         self._clock_received, self.sim_seconds, self.travelled = False, 0.0, 0.0
         self._done_mark, self._done_clock, self._state_sent = None, 'wall', None
         self._control_time = None
+        self._round_start, self._lap_start, self._laps_logged = None, 0.0, 0
         self.get_logger().info(
             f'Open v5 | direction={self.mission.p.direction} cruise={self.mission.p.cruise_speed} m/s'
             f' | telemetry {telemetry or "off"}')
@@ -157,6 +158,23 @@ class OpenV5Node(Node):
             self.recording.record_event('operator_stop', 'stop_topic', self.sim_seconds)
             self.mission.operator_stop()
 
+    def _log_progress(self, now, label):
+        """One short line per state change, per lap and at the end, with the time since Start (the terminal summary
+        tools/car-run.sh keeps)."""
+        if label not in ('WAIT_START',) and self._round_start is None:
+            self._round_start = now
+        t = 0.0 if self._round_start is None else now - self._round_start
+        corners = self.mission.completed
+        extra = f' (corner {corners + 1})' if label == 'TURN' else ''
+        self.get_logger().info(f'[{t:6.2f} s] state {label}{extra}')
+        laps = corners // 4
+        if laps > self._laps_logged and label != 'TURN':
+            lap_time = t - self._lap_start
+            self._lap_start, self._laps_logged = t, laps
+            self.get_logger().info(f'\033[1;36mLAP {laps}: {lap_time:.2f} s (total {t:.2f} s)\033[0m')
+        if label == 'DONE':
+            self.get_logger().info(f'\033[1;32mDONE: {t:.2f} s from Start\033[0m')
+
     def sensors_fresh(self, now):
         scan_limit = self.cfg['scan_max_age']
         if self.mission.arc and self.cfg['turn_scan_max_age'] > 0.0:
@@ -195,6 +213,7 @@ class OpenV5Node(Node):
         self._publish_steer(0.0 if blind else steer)
         label = self.mission.label
         if label != self._state_sent:
+            self._log_progress(now, label)
             self._state_sent = label
             self._state_pub.publish(String(data=label))
         self.recording.record_mission(
