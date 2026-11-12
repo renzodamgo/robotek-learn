@@ -4,7 +4,7 @@
 #
 #   bash tools/car-run.sh open                      # Open v5 with the car defaults (robotek_open/config/car_picam.yaml)
 #   bash tools/car-run.sh obstacle                  # Obstacle v3 (robotek_obstacle_v3/config/car_picam.yaml)
-#   bash tools/car-run.sh obstacle motor_rps_per_mps:=8.0   # 1:1 gears (12 nov 2026: 8.0 is the Open's good value)
+#   bash tools/car-run.sh obstacle motor_rps_per_mps:=8.0   # motor turns per m/s (robot.yaml: 7.0, 1:1 gears)
 #   bash tools/car-run.sh open cruise_speed:=0.8    # any car.launch argument after the name
 #   bash tools/car-run.sh open camera_always:=true  # the camera on for the whole round, to watch or record it in RViz
 #   VERBOSE=1 bash tools/car-run.sh open             # every log line (default: only the summary below)

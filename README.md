@@ -116,7 +116,7 @@ El Open v5 está en `src/robotek_open` y es el que corre el coche del equipo. Co
 
 ```bash
 cd ~/robotek-learn && git pull && colcon build --symlink-install
-bash tools/car-run.sh open motor_rps_per_mps:=8.0      # engranajes 1:1 (desde el 11 nov 2026)
+bash tools/car-run.sh open
 ```
 
 `car-run.sh` para el arranque automático y los nodos que hayan quedado (`car-clean.sh`), pone la red que ve el
@@ -125,8 +125,8 @@ ordenador (Cyclone DDS, dominio 1) y lanza `car.launch.py` con el Open v5 y los 
 de la placa es el Start. Imprime cada cambio de estado con su tiempo, las vueltas y el tiempo final. La telemetría
 queda en `~/runs/<fecha>-<hora>-open-v5/`.
 
-* **Engranajes.** `robot.yaml` trae `motor_rps_per_mps: 4.4`, de los engranajes 54:30. Con los 1:1 son 8,0: pásalo al
-  lanzar, como arriba. El tope del Open es `motor_max_rps` 6,7.
+* **Engranajes.** El coche lleva engranajes 1:1 y `robot.yaml` trae `motor_rps_per_mps: 7.0` (con 8,0 el coche va un
+  poco más rápido: `motor_rps_per_mps:=8.0` al lanzar). El tope del Open es `motor_max_rps` 6,7.
 * **Valores del coche** (`car_picam.yaml`): `cruise_speed` 0,85, `corner_speed` 0,64, `inner_gap` 0,50,
   `turn_tolerance` 0,30, `lateral_kp` 1,0, `brake_margin` 0,35, `wall_heading_gain` 0,3, `finish_speed` 0,32,
   `finish_lead` 0,14, `direction_fallback: ccw`, y los colores de la cámara IMX708. Cualquiera se cambia al lanzar:
@@ -147,7 +147,7 @@ La guía, paso a paso: [Correr el Open en el Pi desde cero](https://renzodamian.
 ### Que arranque solo al encender el Pi
 
 ```bash
-bash tools/car-autostart.sh on motor_rps_per_mps:=8.0   # el Open v5 con los valores del coche; 8.0 = engranajes 1:1
+bash tools/car-autostart.sh on                    # el Open v5 con los valores del coche
 bash tools/car-autostart.sh status                # ¿está corriendo?   ... log: su salida
 bash tools/car-autostart.sh stop                  # pararlo ahora (p. ej. para lanzar otra cosa a mano)
 bash tools/car-autostart.sh start                 # otra ronda: el Open termina en DONE y hay que relanzarlo
