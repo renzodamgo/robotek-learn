@@ -1,39 +1,61 @@
-"""Step 1: drive a circle with the wheels fixed and compare it with the bicycle model."""
+"""Step 2: stand still to measure the gyroscope bias, then drive straight holding heading 0."""
 import math
 
 from geometry_msgs.msg import Twist
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+from sensor_msgs.msg import Imu
 from std_msgs.msg import Bool
 
 from robotek_common.vehicle import WHEELBASE
 
-from .model import turn_radius
+from .heading import GyroHeading, heading_steer
 
 CONTROL_RATE = 50.0       # Hz, on the simulation clock
-SPEED = 0.6               # m/s commanded (the real car reaches 0.42 m/s with this command)
+SPEED = 0.6               # m/s commanded
+CALIBRATE_SECONDS = 0.6   # standing still after Start, measuring the gyroscope bias
 
 
 class Drive(Node):
     def __init__(self):
         super().__init__('strategy')
-        self.steer = self.declare_parameter('steer', 0.25).value      # rad, positive = left
-        self.started = False
+        self.calibrate = self.declare_parameter('calibrate', True).value    # False: see the drift
+        self.heading = GyroHeading()
+        self.gyro = 0.0                      # the latest reading of the gyroscope, rad/s
+        self.samples = []                    # readings taken while standing still
+        self.time = None                     # seconds since Start (None before Start)
         self.cmd = self.create_publisher(Twist, '/cmd_vel_raw', 10)
+        self.create_subscription(Imu, '/imu', self.on_imu, qos_profile_sensor_data)
         self.create_subscription(Bool, 'start', self.on_start, 10)   # plain QoS: works with the referee and with the car's button
         self.create_timer(1.0 / CONTROL_RATE, self.control)
 
+    def on_imu(self, msg):
+        self.gyro = msg.angular_velocity.z
+
     def on_start(self, msg):
-        if msg.data and not self.started:
-            self.started = True
-            self.get_logger().info('Start: con el volante a %.2f rad el modelo espera un circulo de radio %.3f m'
-                                   % (self.steer, turn_radius(self.steer)))
+        if msg.data and self.time is None:
+            self.get_logger().info('Start: quieto %.1f s para medir el sesgo del giroscopio' % CALIBRATE_SECONDS)
+            self.time = 0.0
 
     def control(self):
+        dt = 1.0 / CONTROL_RATE
+        speed, steer = 0.0, 0.0
+        if self.time is not None:
+            self.time += dt
+            if self.time < CALIBRATE_SECONDS:
+                self.samples.append(self.gyro)
+            else:
+                if self.samples:
+                    if self.calibrate:
+                        self.heading.calibrate(self.samples)
+                    self.get_logger().info('Sesgo del giroscopio: %.4f rad/s' % self.heading.bias)
+                    self.samples = []
+                yaw = self.heading.update(self.gyro, dt)
+                speed, steer = SPEED, heading_steer(0.0, yaw)
         cmd = Twist()
-        if self.started:
-            cmd.linear.x = SPEED
-            cmd.angular.z = SPEED * math.tan(self.steer) / WHEELBASE
+        cmd.linear.x = float(speed)
+        cmd.angular.z = float(speed * math.tan(steer) / WHEELBASE)
         self.cmd.publish(cmd)
 
 
