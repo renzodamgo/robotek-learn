@@ -48,7 +48,9 @@ class SteerWatch:
 
     def update(self, now, dt, speed, steer, gyro, distance):
         """Feed one control tick (the command just decided). Returns True on a new fault."""
-        side = math.copysign(1.0, steer) if abs(steer) >= LOCK * self.limit and abs(speed) > 1e-3 else 0.0
+        # Forward only: backing up at lock the car turns little and the distance's sign lags the command (lab, 12 nov
+        # 2026: two false faults while reversing at 0.08-0.10 m/s); the car's faults were all driving forward.
+        side = math.copysign(1.0, steer) if abs(steer) >= LOCK * self.limit and speed > 1e-3 else 0.0
         if side == 0.0 or side != self.lock_side:
             self.samples.clear()
             self.lock_since = now if side else None
@@ -62,9 +64,9 @@ class SteerWatch:
         span = sum(s[1] for s in self.samples)
         if span < 0.8 * WINDOW:
             return False
-        moved = sum(s[3] for s in self.samples)                 # signed: backing up counts negative
+        moved = sum(s[3] for s in self.samples)
         speed_real = moved / span
-        if abs(speed_real) < MIN_SPEED:
+        if speed_real < MIN_SPEED:
             return False
         expected = speed_real * math.tan(sum(s[2] for s in self.samples) / len(self.samples)) / self.wheelbase
         if abs(expected) < MIN_EXPECTED:
