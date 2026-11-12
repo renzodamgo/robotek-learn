@@ -7,13 +7,14 @@
 # 4 nov 2026 such leftovers ran a second strategy and a second board driver next to the new launch, and three
 # round_reporter at 22-30 % CPU each slowed the strategy to 4-14 Hz: the car drove straight into a wall.
 # It stops: the nodes of this workspace (install/*/lib), the ROS helpers car.launch.py starts (robot_state_publisher,
-# static_transform_publisher, usb_cam), ros2 launch / ros2 bag record of a car run and the debug recorder.
+# static_transform_publisher, usb_cam), ros2 launch / ros2 bag record of a car run, the debug recorder and an rpicam-vid
+# left by a killed pi_camera_publisher (12 nov 2026: it kept the camera busy, 'failed to acquire camera').
 # SIGINT first (nodes close cleanly), then SIGTERM, then SIGKILL for whatever is still there.
 set -uo pipefail
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 # Bracketed first letters: the grep does not match its own command line.
-PATTERN="[$(echo "${REPO:0:1}")]${REPO:1}/install/[^ ]*/lib/|[o]pt/ros/jazzy/lib/robot_state_publisher/|[o]pt/ros/jazzy/lib/tf2_ros/static_transform_publisher|[u]sb_cam_node|[r]os2 launch robotek_course|[r]os2 bag record|[o]pen-debug-run.sh|[t]op -b -d 1 -o %CPU|[r]os2 topic echo --once /start|[j]ournalctl -k -f -n 0"
+PATTERN="[$(echo "${REPO:0:1}")]${REPO:1}/install/[^ ]*/lib/|[o]pt/ros/jazzy/lib/robot_state_publisher/|[o]pt/ros/jazzy/lib/tf2_ros/static_transform_publisher|[u]sb_cam_node|[r]os2 launch robotek_course|[r]os2 bag record|[o]pen-debug-run.sh|[t]op -b -d 1 -o %CPU|[r]os2 topic echo --once /start|[j]ournalctl -k -f -n 0|[r]picam-vid -t 0 -n --codec yuv420"
 
 # Never this script nor any of its callers (open-debug-run.sh calls it and matches the pattern: 8 nov 2026 it killed itself).
 ANCESTORS=" "

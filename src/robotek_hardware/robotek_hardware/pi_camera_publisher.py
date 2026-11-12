@@ -38,6 +38,17 @@ FRAME_TIMEOUT = 3.0     # s without a frame: rpicam is restarted (4 nov 2026: a 
 LOG = '/tmp/pi_camera_rpicam.log'
 
 
+def _die_with_parent():
+    """rpicam-vid gets SIGTERM when this node dies, however it dies (12 nov 2026: a node killed by a timeout left
+    rpicam running, and the next launch could not open the camera: 'failed to acquire camera')."""
+    try:
+        import ctypes
+        import signal
+        ctypes.CDLL('libc.so.6', use_errno=True).prctl(1, signal.SIGTERM)   # PR_SET_PDEATHSIG
+    except OSError:
+        pass
+
+
 class PiCameraPublisher(Node):
     def __init__(self):
         super().__init__('pi_camera_publisher')
@@ -112,7 +123,7 @@ class PiCameraPublisher(Node):
             self.get_logger().info('Pi camera: ' + ' '.join(cmd))
             with open(LOG, 'w') as log:
                 self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log, bufsize=0,
-                                                env=self.camera_env())
+                                                env=self.camera_env(), preexec_fn=_die_with_parent)
             fd = self.process.stdout.fileno()
             while self.running and self.active():
                 data = self.read_frame(fd)
@@ -121,7 +132,11 @@ class PiCameraPublisher(Node):
                 self.publish(data)
             if self.process.poll() is None:
                 self.process.terminate()
-            self.process.wait()
+            try:
+                self.process.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:      # a hung rpicam would block the restart for good
+                self.process.kill()
+                self.process.wait()
             if self.running and self.active():
                 self.get_logger().warning(f'Pi camera stopped ({self.rpicam_error()}); retrying in 2 s. Busy, or the '
                                           'ribbon (rpicam-hello --list-cameras).', throttle_duration_sec=30.)
