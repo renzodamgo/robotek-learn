@@ -5,6 +5,7 @@
 #   bash tools/car-run.sh open                      # Open v5 with the car defaults (robotek_open/config/car_picam.yaml)
 #   bash tools/car-run.sh obstacle                  # Obstacle v3 (robotek_obstacle_v3/config/car_picam.yaml)
 #   bash tools/car-run.sh open cruise_speed:=0.8    # any car.launch argument after the name
+#   bash tools/car-run.sh open camera_always:=true  # the camera on for the whole round, to watch or record it in RViz
 #   VERBOSE=1 bash tools/car-run.sh open             # every log line (default: only the summary below)
 #
 # Shown by default: ready / running, Start and Stop, the strategy's state changes with the time since Start, lap times,

@@ -57,6 +57,8 @@ def _picam_states(context):
     """picam_active_states, or for the Open by default only until the direction is chosen (the camera is not used
     after that; stopping it saves the battery)."""
     states = _arg(context, 'picam_active_states')
+    if _arg(context, 'camera_always').lower() == 'true':
+        return ''                                 # the whole round, to watch or record it in RViz
     if states == 'auto':
         return 'WAIT_START,CALIBRATE,DETECT_DIRECTION' if _arg(context, 'strategy') == 'robotek_open' else ''
     return states
@@ -272,6 +274,9 @@ def generate_launch_description():
         DeclareLaunchArgument('picam_jpeg_quality', default_value='30',
                               description='picam: JPEG quality of <topic>/compressed, the copy RViz shows over Wi-Fi '
                                           '(1-100; 70 was ~51 KB per 1280x720 frame). The strategy reads the raw image'),
+        DeclareLaunchArgument('camera_always', default_value='false',
+                              description='picam: true keeps the camera on for the whole round (to watch or record '
+                                          'it in RViz); false = the Open stops it once the direction is chosen'),
         DeclareLaunchArgument('picam_active_states', default_value='auto',
                               description="picam: /robotek/state values the camera runs in ('' = always; auto = "
                                           "the Open only until the direction is chosen)"),
