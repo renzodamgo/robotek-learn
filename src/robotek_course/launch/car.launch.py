@@ -129,6 +129,8 @@ def _strategy_node(context):
             parameters.append({'camera_compressed': True})
         # Where the lot is on this field (12 nov 2026: the team's field has the far limit at ~0.31 m, the rules 0.48).
         lot = {name: float(_arg(context, name)) for name in ('park_lot_end', 'park_lot_length') if _arg(context, name)}
+        if _arg(context, 'park_finish_steps'):     # pulses after the partial park (beats the params file)
+            lot['park_finish_steps'] = _arg(context, 'park_finish_steps')
         if lot:
             parameters.append(_node_params_file(lot))
     if _arg(context, 'strategy') == 'robotek_open':
@@ -377,6 +379,10 @@ def generate_launch_description():
         DeclareLaunchArgument('park_lot_end', default_value='',
                               description="Obstacle v3: m along the start straight to the lot's far limit (inner face, CCW; "
                                           "the rules 0.48, the team's field ~0.31). Empty = the strategy's default"),
+        DeclareLaunchArgument('park_finish_steps', default_value='',
+                              description="Obstacle v3: pulses after the partial park, e.g. 'L-0.2' or 'R+0.15 L-0.15' "
+                                          '(R toward the wall, L away, C straight; + forward, - reverse; seconds). '
+                                          'Empty = the params file'),
         DeclareLaunchArgument('park_lot_length', default_value='',
                               description="Obstacle v3: m between the lot limits' inner faces (empty = 0.3675, 1.5 x 0.245 m)"),
         DeclareLaunchArgument('lot_exit_speed', default_value='0.9',

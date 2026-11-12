@@ -149,6 +149,9 @@ class Drive(Node):
         self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s; camera %s)'
                                % (p.park, p.steer_limit, params, self.camera))
         self.get_logger().info('Telemetry: %s' % (folder or 'off'))
+        if p.park:
+            self.get_logger().info('Park: mode %g, partial %g, finish steps %r' % (
+                p.park_mode, p.park_fixed_partial, self.strategy.mission.park_finish_steps))
 
     def now(self):
         return self.get_clock().now().nanoseconds * 1e-9
