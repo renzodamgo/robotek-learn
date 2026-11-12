@@ -415,6 +415,11 @@ class Drive(Node):
             self.get_logger().info('park %s at %s%s' % (parking.state, pose, what))
             self.rec.event('park_state', self._t(), state=parking.state, pose=list(own))
         for event in parking.log:
+            if event.get('event') in ('park_pulse', 'park_finish_pulses'):
+                self.get_logger().info('[%6.2f s] %s' % (self._t() or 0.0, (
+                    'park pulse %s: heading %+.1f deg, rear %s mm%s' % (event['pulse'], event['heading'], event['rear_mm'],
+                                                                    ', braked' if event.get('braked') else ''))
+                    if event['event'] == 'park_pulse' else 'park finish pulses: %s' % event['steps']))
             self.get_logger().info('park event %s' % {k: ([round(float(x), 4) for x in v] if isinstance(v, (list, tuple))
                                                           else v) for k, v in event.items()})
             if event.get('event') == 'park_end':
