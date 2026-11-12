@@ -1,8 +1,8 @@
 """Open v5 mission: SETUP -> RUN -> STOP: a heading law on the straights, full lock in the corners.
 
-Inputs every control tick: dt, the latest Scene (a new object per LiDAR stamp), the raw gyro z and the camera's
-direction vote (+1 ccw, -1 cw, 0 none). Output: (speed command, steering angle). The yaw is integrated here from the
-gyro, and the distance driven from the commanded speed.
+Inputs every control tick: dt, the latest Scene (a new object per LiDAR stamp), the raw gyro z, the distance
+travelled since the last tick, and the camera's direction vote (+1 ccw, -1 cw, 0 none).
+Output: (speed command, steering angle). The yaw is integrated here from the gyro.
 """
 import math
 from dataclasses import dataclass
@@ -27,6 +27,7 @@ DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instea
 DIRECTION_FALLBACK_WAIT = 1.0   # s the camera gets before direction_fallback is taken
 CALIBRATE_SECONDS = 0.3     # s still after Start: gyro bias and the start's front range
 FINISH_STOP_WAIT = 0.9      # s at rest before DONE
+FINISH_STRAIGHT = 0.1       # rad: the final brake waits until the car is within this of the straight
 WALL_HEADING_MAX = math.radians(25.0)   # rad: a larger gyro-vs-wall difference is a bad fit, not drift
 WRONG_SIDE_OPEN = 1.2       # m: before the first corner, the side away from the island wider than this (outer walls
 WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the island stays beside: the direction is wrong
@@ -81,7 +82,7 @@ class OpenMission:
         self.gyro = 0.0                            # yaw rate without the bias (rad/s)
         self.completed = 0                         # corners finished
         self.arc = False
-        self.travelled = 0.0                       # m since the last corner (commanded speed x time)
+        self.travelled = 0.0                       # m since the last corner
         self._bias = 0.0
         self._calibrated = False
         self._gyro, self._fronts = [], []
@@ -126,18 +127,19 @@ class OpenMission:
         self.state, self.stop_reason = 'STOP', reason
 
     # ---------------------------------------------------------------- step
-    def step(self, dt, scene, gyro_z, camera=0):
+    def step(self, dt, scene, gyro_z, travelled, camera=0):
         if self.state == 'SETUP':
             return self._setup(dt, scene, gyro_z, camera)
         if self.state == 'STOP':
             return 0.0, 0.0
         gyro = self.gyro = gyro_z - self._bias
         self.yaw += gyro * dt
-        # Distance from the commanded speed (no encoder; the LiDAR odometry gave the same rounds, 12 nov 2026 lab). The
-        # front wall between scans is the last scan's minus the distance since (the LD19 skipped 0.2-0.5 s of scans).
-        moved = self._speed * dt
-        self.travelled += moved
-        self._front_moved = 0.0 if scene is not self._front_scene else self._front_moved + moved
+        # The distance is measured (LiDAR odometry in the node): counting the commanded speed instead believed 0.25 m
+        # driven after 2 cm from a standstill, and a start near the corner turned at once (12 nov 2026 lab, 9 starts).
+        self.travelled += max(0.0, travelled)
+        # The front wall between scans: the last scan's minus the commanded speed x the time since (the LD19 skipped
+        # 0.2-0.5 s of scans while driving; 11 nov 2026).
+        self._front_moved = 0.0 if scene is not self._front_scene else self._front_moved + self._speed * dt
         self._front_scene = scene
         self.front = scene.front_axis - self._front_moved
         speed, steer = self._run(dt, scene, gyro)
@@ -277,7 +279,11 @@ class OpenMission:
         if not self._braking:
             if not math.isfinite(scene.front_axis):
                 return 0.0, steer
-            if math.isfinite(self._start_front) and scene.front_axis > self._start_front + p.finish_lead:
+            # Not while the car is still turned: a 0 speed keeps the wheels where they are (the Twist has no steering
+            # without speed), and a start 0.3 m behind the section's centre braked at full lock right after the last
+            # corner and rolled into the island (12 nov 2026 lab: 100 of 864 rounds).
+            turned = abs(wrap(self.goal - self.yaw)) > FINISH_STRAIGHT
+            if turned or (math.isfinite(self._start_front) and scene.front_axis > self._start_front + p.finish_lead):
                 return p.finish_speed, steer
             self._braking = True                           # latched: range noise must not restart the motor
         self._rest += dt

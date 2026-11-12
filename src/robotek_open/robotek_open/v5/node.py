@@ -26,7 +26,8 @@ from sensor_msgs.msg import CompressedImage, Image, Imu, JointState, LaserScan
 from std_msgs.msg import Bool, ColorRGBA, String
 from visualization_msgs.msg import Marker, MarkerArray
 
-from robotek_common.vehicle import LIDAR_OFFSET_X, WHEELBASE
+from robotek_common.lidar_odometry import LidarOdometry
+from robotek_common.vehicle import DISTANCE_MODEL_ACCEL, LIDAR_OFFSET_X, WHEELBASE
 from ..open_mission_clock import mission_clock
 from ..open_vision import OpenVision
 from .crash_watch import CrashWatch
@@ -60,6 +61,7 @@ class OpenV5Node(Node):
             line_contrast=cfg['vision_line_contrast'], line_tint=cfg['vision_line_tint'])
         from cv_bridge import CvBridge
         self._bridge = CvBridge()
+        self.odometry = LidarOdometry(accel=DISTANCE_MODEL_ACCEL)
         telemetry = cfg['telemetry_path']
         if telemetry == 'auto':
             telemetry = os.path.join(os.path.expanduser('~/runs'), time.strftime('%Y%m%d-%H%M%S') + '-open-v5',
@@ -131,6 +133,7 @@ class OpenV5Node(Node):
 
     def on_scan(self, msg):
         self._scan_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        self.odometry.scan(msg, self.mission.yaw)
         stamp = (msg.header.stamp.sec, msg.header.stamp.nanosec)
         if stamp != self._scene_stamp:
             self._scene_stamp = stamp
@@ -199,15 +202,18 @@ class OpenV5Node(Node):
         camera = 0
         if self._image_time is not None and now - self._image_time <= 0.5:
             camera = self.vision.direction
+        distance = self.odometry.read()
+        self.travelled += distance
+        self.odometry.read_measured()
         # The gyro keeps integrating through a LiDAR gap (the LD19 skips 0.2-0.5 s while driving; the yaw lost in the
         # gaps bent the next corners, 12 nov 2026 lab); a stale IMU skips the step (its last rate would be integrated).
         imu_fresh = self._fresh(self.cfg['imu_max_age'], self._imu_time, now)
-        speed, steer = self.mission.step(dt, self.scene, self._gyro_z, camera) if imu_fresh else (0.0, 0.0)
+        speed, steer = self.mission.step(dt, self.scene, self._gyro_z, distance, camera) if imu_fresh else (0.0, 0.0)
         if not (imu_fresh and self._fresh(self.cfg['scan_max_age'], self._scan_time, now)):
             speed, steer = 0.0, 0.0     # stale LiDAR/IMU: brake until they recover
             self.get_logger().warning('Stale LiDAR/IMU: braking until sensors recover.',
                                       throttle_duration_sec=1.0)
-        self.travelled += speed * dt        # telemetry: the commanded distance since Start
+        self.odometry.command(speed, dt)
         cmd = Twist()
         blind = self.scene.left == math.inf and self.scene.right == math.inf
         cmd.linear.x = 0.0 if blind else float(speed)
@@ -221,7 +227,7 @@ class OpenV5Node(Node):
             self._state_pub.publish(String(data=label))
         self.recording.record_mission(
             sim_seconds=self.sim_seconds, mission=self.mission, gyro=self.mission.gyro, scene=self.scene,
-            vision=self.vision, command=cmd, travelled=self.travelled)
+            vision=self.vision, odometry=self.odometry, command=cmd, travelled=self.travelled)
         if self.crash is not None:
             self._watch_crash(now, label, speed, steer, cmd)
         self.finish_if_done()
