@@ -214,6 +214,7 @@ def _drivers(context):
                                              'width': int(_picam_size(context)[0]),
                                              'height': int(_picam_size(context)[1]),
                                              'fps': float(_picam_size(context)[2]),
+                                             'jpeg_quality': int(_arg(context, 'picam_jpeg_quality')),
                                              'active_states': _picam_states(context)}]))
         else:
             # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
@@ -268,6 +269,9 @@ def generate_launch_description():
         DeclareLaunchArgument('picam_width', default_value='auto'),
         DeclareLaunchArgument('picam_height', default_value='auto'),
         DeclareLaunchArgument('picam_fps', default_value='auto'),
+        DeclareLaunchArgument('picam_jpeg_quality', default_value='30',
+                              description='picam: JPEG quality of <topic>/compressed, the copy RViz shows over Wi-Fi '
+                                          '(1-100; 70 was ~51 KB per 1280x720 frame). The strategy reads the raw image'),
         DeclareLaunchArgument('picam_active_states', default_value='auto',
                               description="picam: /robotek/state values the camera runs in ('' = always; auto = "
                                           "the Open only until the direction is chosen)"),
