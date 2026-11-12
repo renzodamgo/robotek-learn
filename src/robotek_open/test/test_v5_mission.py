@@ -133,6 +133,16 @@ def test_a_corner_is_driven_at_full_lock_until_turn_tolerance():
     assert not mission.arc and mission.completed == 1
 
 
+def test_in_a_narrow_corridor_the_car_keeps_away_from_the_outer_wall():
+    """11 nov 2026, 22:34, the car: inner_gap 0.50 in a 0.6 m corridor scraped the outer wall."""
+    mission = ready(inner_gap=0.5, lateral_kp=1.0)
+    mission.travelled = 1.0
+    _, wide = mission.step(DT, Scene(left=0.40, right=0.60, front_axis=2.5), 0.004)      # 1.0 m: 0.5 from the island
+    assert wide < 0.0                                                # 0.40 < 0.50: steer away from the island
+    _, narrow = mission.step(DT, Scene(left=0.40, right=0.20, front_axis=2.5), 0.004)    # 0.6 m: 0.35 from the island
+    assert narrow > 0.0                                              # 0.40 > 0.35: steer away from the outer wall
+
+
 def test_the_car_brakes_towards_corner_speed_before_a_corner():
     mission = ready(corner_speed=0.6)
     far = mission.step(DT, Scene(left=0.45, right=0.55, front_axis=3.0), 0.004)[0]

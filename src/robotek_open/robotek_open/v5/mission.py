@@ -22,6 +22,7 @@ ARM_DISTANCE = 0.25         # m driven after a corner before the next one can st
 ISLAND_OPEN = 1.0           # m: an island wall farther than this beside the car means it has ended
 END_CLEARANCE = 0.08        # m: the look-ahead shrinks in a narrow lane (inner distance minus this)
 LATERAL_GAIN, LATERAL_MAX = 0.3, 0.4
+OUTER_GAP = 0.25            # m kept from the outer wall (LiDAR) when the corridor is too narrow for inner_gap
 BRAKE_GAIN = 2.0            # 1/s: speed above the corner speed grows this much per metre of gap
 DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instead of guessing
 DIRECTION_FALLBACK_WAIT = 1.0   # s the camera gets before direction_fallback is taken
@@ -84,6 +85,7 @@ class OpenMission:
         self.arc = False
         self.travelled = 0.0                       # m since the last corner (or Start): the front wall got this nearer
         self._front_ref = None                     # front wall when this straight began
+        self._gap = self.p.inner_gap               # distance kept from the island on this straight
         self._bias = 0.0
         self._calibrated = False
         self._gyro, self._fronts = [], []
@@ -196,7 +198,7 @@ class OpenMission:
             self.arc = True
         if self.arc:
             return self.p.corner_speed, self._arc_steer(sign)
-        bias = self._lateral(inner, island_open, sign)
+        bias = self._lateral(scene, inner, island_open, sign)
         steer = clamp(KP * wrap(self.goal + bias - self.yaw) - DAMPING * gyro, -STEER, STEER)
         return self._straight_speed(), steer
 
@@ -258,11 +260,20 @@ class OpenMission:
                 self.front <= self.p.turn_front_distance,
                 island_open or self._hits >= CONFIRMATIONS)
 
-    def _lateral(self, inner, island_open, sign):
-        """Heading offset that keeps inner_gap from the island wall (none at a corner)."""
+    def _lateral(self, scene, inner, island_open, sign):
+        """Heading offset that keeps inner_gap from the island wall, and at least OUTER_GAP from the outer wall in a
+        narrow corridor (none at a corner).
+
+        11 nov 2026, 22:34, the car: inner_gap 0.50 in 0.6 m corridors left 1-10 cm to the outer wall; it scraped
+        along it and stood still against it for 3 s (63.6 s round). The corridor's middle instead started the turns
+        later (the look-ahead shrinks close to the island): 54 % vs 60 % in the lab's LiDAR-gap stress test.
+        """
         if not math.isfinite(inner) or island_open:
             return 0.0
-        return clamp(sign * self.p.lateral_kp * (inner - self.p.inner_gap), -LATERAL_MAX, LATERAL_MAX)
+        outer = scene.right if self.direction == 'ccw' else scene.left
+        if math.isfinite(outer) and outer < ISLAND_OPEN:              # the corridor's width, while both walls are seen
+            self._gap = min(self.p.inner_gap, inner + outer - OUTER_GAP)
+        return clamp(sign * self.p.lateral_kp * (inner - self._gap), -LATERAL_MAX, LATERAL_MAX)
 
     def _straight_speed(self):
         """Cruise, slowing down to corner_speed as the front wall nears turn_front_distance + brake_margin."""
@@ -274,6 +285,7 @@ class OpenMission:
         (A ramped reference with feed-forward gave the same rounds, 12 nov 2026 lab.)"""
         if abs(wrap(self.goal - self.yaw)) <= self.p.turn_tolerance:
             self.arc, self.travelled, self._front_ref = False, 0.0, None
+            self._gap = self.p.inner_gap                             # the next corridor's width is not known yet
             self.completed += 1
         return sign * STEER
 
