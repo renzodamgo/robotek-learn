@@ -142,6 +142,78 @@ queda en `~/runs/<fecha>-<hora>-open-v5/`.
 * `camera_always:=true` deja la cámara encendida toda la ronda (para verla o grabarla en RViz); `VERBOSE=1` delante
   muestra todo el registro.
 
+#### Todos los parámetros del Open v5
+
+**Cómo se cambian.** Los ocho marcados con ✓ se cambian al lanzar, sin editar nada:
+`bash tools/car-run.sh open cruise_speed:=0.8 inner_gap:=0.45`. Para los demás, copia
+`src/robotek_open/config/car_picam.yaml` entero, cambia lo que quieras y lánzalo con
+`strategy_params:=<tu archivo>`: ese archivo **sustituye** a `car_picam.yaml`, no se suma. La columna «Código» es el
+valor por defecto de `robotek_open/v5/mission.py` y `v5/settings.py`; «Coche» es el de `car_picam.yaml`, que
+`car.launch` carga solo con la cámara IMX708 (vacío = el del código).
+
+**La estrategia (la misión)**
+
+| Parámetro | Código | Coche | Al lanzar | Qué hace |
+|---|---:|---:|:-:|---|
+| `cruise_speed` | 1,28 | 0,85 m/s | ✓ | velocidad en las rectas |
+| `corner_speed` | 1,0 | 0,64 m/s | ✓ | velocidad en las 12 esquinas; frena hasta ella al acercarse |
+| `brake_margin` | 0,15 | 0,35 m | ✓ | cuánto antes de `turn_front_distance` ya va a la velocidad de esquina (más = frena antes) |
+| `inner_gap` | 0,25 | 0,50 m | ✓ | distancia a la isla en las rectas (en un pasillo estrecho guarda 0,25 m a la pared exterior) |
+| `lateral_kp` | 0,3 | 1,0 | ✓ | cuánto corrige la distancia a la isla (rad por m de error, como mucho 0,4 rad) |
+| `turn_tolerance` | 0,30 | 0,30 rad | ✓ | el arco termina a esta distancia de los 90°; más = esquina más corta |
+| `corner_lookahead` | 0,35 | 0,35 m | ✓ | el final de la isla así de cerca (o un lado abierto) empieza la esquina |
+| `turn_front_distance` | 1,19 | | | pared de enfrente (a lo largo de la pista) desde la que puede empezar una esquina |
+| `wall_heading_gain` | 0,0 | 0,3 | | parte de la diferencia entre el giroscopio y la pared de la isla que corrige en cada escaneo (el giroscopio del coche lee un 6 % de menos) |
+| `finish_speed` | 0,15 | 0,32 m/s | | velocidad del último tramo |
+| `finish_lead` | 0,08 | 0,14 m | | frena cuando la pared de enfrente está así de cerca de la que había en la salida |
+| `direction` | `auto` | | | `ccw`, `cw` o `auto` (lo decide la cámara) |
+| `direction_fallback` | (vacío) | `ccw` | | sentido si la cámara no decide al segundo de calibrar; el LiDAR lo corrige antes de la primera esquina. Vacío = espera y se para |
+| `laps` | 3 | | | vueltas (menos solo para pruebas en el coche) |
+
+**El nodo**
+
+| Parámetro | Código | Coche | Al lanzar | Qué hace |
+|---|---:|---:|:-:|---|
+| `scan_max_age` | 0,35 | 1,0 s | | un LiDAR más viejo que esto frena el coche hasta que vuelva |
+| `imu_max_age` | 0,2 s | | | lo mismo con el giroscopio |
+| `detect_crash` | `false` | `false` | ✓ | detector de choques: para el coche, reinicia la placa y guarda los últimos 5 s en `crash-<hora>.json` |
+| `crash_window_s` | 5,0 s | | | segundos que guarda el detector |
+| `crash_min_rays` / `crash_clear_rays` | 120 / 180 | | | un choque = escaneos con menos de 120 rayos válidos durante `crash_blind_s` (hasta uno con 180) |
+| `crash_blind_s` | 0,4 s | | | |
+| `crash_gyro_jump` | 3,0 rad/s | | | o un salto del giroscopio así en 0,1 s (0 = no) |
+| `telemetry_path` | `auto` | | | `auto` = `~/runs/<fecha>-<hora>-open-v5/telemetry.csv`; vacío = sin telemetría |
+| `telemetry_sync_seconds` | 0,5 s | | | cada cuánto se escribe al disco (por si se corta la batería) |
+| `auto_start` | `false` | | | `true` = sale solo, sin el botón |
+| `shutdown_on_done` / `done_hold` | `false` / 35 s | | | apagar el nodo al terminar, y cuánto espera antes |
+
+**La cámara** (colores en HSV de OpenCV; si `h_min` es mayor que `h_max`, el rango pasa por el rojo)
+
+| Parámetro | Código | Coche | Qué hace |
+|---|---:|---:|---|
+| `vision_blue_h_min` / `h_max` / `s_min` / `v_min` | 100 / 135 / 80 / 25 | 95 / 135 / 60 / 60 | la línea azul |
+| `vision_orange_h_min` / `h_max` / `s_min` / `v_min` | 158 / 4 / 60 / 40 | 2 / 25 / 60 / 60 | la línea naranja |
+| `vision_wall_v_max` | 40 | 70 | más oscuro que esto es pared negra |
+| `vision_wall_min_rows` | 8 | | filas de pared que hacen falta para recortar por ella |
+| `vision_floor_mask` | `true` | | mira solo el suelo, dentro de las paredes |
+| `vision_line_contrast` / `vision_line_tint` | 0 / 8 | 30 / 8 | cuánto tiene que destacar la línea del tapete |
+| `direction_confirmations` | 3 | | imágenes seguidas de acuerdo para elegir el sentido |
+
+**El launch del coche** (`car.launch.py`; todos se pasan igual: `nombre:=valor`)
+
+| Argumento | Para el Open | Qué hace |
+|---|---|---|
+| `motor_rps_per_mps` | 7,0 (`robot.yaml`) | vueltas del motor por m/s; con los engranajes 1:1, 8,0 va un poco más rápido |
+| `motor_max_rps` | 6,7 (`auto`) | tope del motor |
+| `motor_min_rps` | 0 | mínimo mientras el coche se mueve (0 = sin mínimo) |
+| `button` / `start_delay` | `true` / 12 s | `button:=false` arranca solo a los `start_delay` s; entonces la primera pulsación es el Stop |
+| `board_button` | `false` | también el botón de la RRC Lite (el del equipo es el GPIO 16) |
+| `camera_always` | `false` | `true` deja la cámara encendida toda la ronda (para verla en RViz); si no, se apaga al decidir el sentido |
+| `picam_jpeg_quality` | 30 (`auto`) | calidad del JPEG que ve RViz por Wi-Fi |
+| `done_reset` | `DONE,CRASH` (`auto`) | estados en que se reinicia la placa para que el motor pare del todo |
+| `battery_guard` / `battery_min_v` | `true` / 6,8 V | aviso de batería baja (luz roja) |
+| `strategy_params` | `car_picam.yaml` (`auto`) | el archivo de valores; otro lo sustituye |
+| `debug` | `false` | `true` añade el `round_reporter` (ve líneas, giros y tiempos) |
+
 La guía, paso a paso: [Correr el Open en el Pi desde cero](https://renzodamian.com/learn/open-strategy/correr-en-el-pi/).
 
 ### Que arranque solo al encender el Pi
