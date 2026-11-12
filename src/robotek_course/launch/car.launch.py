@@ -374,7 +374,7 @@ def generate_launch_description():
                               description='Obstacle v3: the car starts inside the parking lot (against the wall, ~1 cm '
                                           'from the rear limit): direction from the LiDAR sides, four short full-lock '
                                           'pulses out (left fwd, right back, left fwd, right fwd; mirrored in CW), then '
-                                          'the laps. The motor creeps with a kick and pulses only during LOT_EXIT'),
+                                          'the laps'),
         DeclareLaunchArgument('recover_back', default_value='0.5',
                               description='Obstacle v3: s of reverse at full lock in the front recover (right in CCW, '
                                           'left in CW)'),
@@ -387,8 +387,8 @@ def generate_launch_description():
                                           'Empty = the params file'),
         DeclareLaunchArgument('park_pulse_speed', default_value='',
                               description='Obstacle v3: m/s of the park_finish_steps pulses (empty = 0.2). Below '
-                                          'motor_min_rps it is the floor that counts: lower that too (e.g. motor_min_rps:=0; '
-                                          'the parking then gets the kick and 1.8 rps pulses)'),
+                                          'motor_min_rps it is the floor that counts: lower that too (0.1 m/s = 0.8 rps at 8.0 '
+                                          'rps per m/s)'),
         DeclareLaunchArgument('park_lot_length', default_value='',
                               description="Obstacle v3: m between the lot limits' inner faces (empty = 0.3675, 1.5 x 0.245 m)"),
         DeclareLaunchArgument('lot_exit_speed', default_value='0.9',
@@ -448,14 +448,11 @@ def generate_launch_description():
                                                 LaunchConfiguration('motor_min_rps'), ")"]), value_type=float),
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('brake_rps', 'brake_hz', 'brake_s', 'brake_min_rps')},
-                                           # Obstacle v3: kick and pulses of 1.8 rps (with kick 0.15 s and period 0.4 s
-                                           # the car crept 5-6 cm/s for 0.06 m/s asked, 9 nov 2026), only in LOT_EXIT
-                                           # and PARK (low_speed_states), unless set by hand.
-                                           **{name: ParameterValue(PythonExpression(
-                                               ["(", lot_value, " if '", LaunchConfiguration('strategy'),
-                                                "' == 'robotek_obstacle_v3' and float('", LaunchConfiguration(name),
-                                                "') == 0.0 else ", LaunchConfiguration(name), ")"]), value_type=float)
-                                              for name, lot_value in (('motor_kick_rps', '1.8'), ('motor_pulse_rps', '1.8'))},
+                                           # Kick and pulses: off unless set by hand (motor_kick_rps / motor_pulse_rps).
+                                           # The 1.8 rps of the 54:30 gears (9 nov 2026) are not needed with the 1:1
+                                           # gears' torque (the coach, 12 nov 2026).
+                                           **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
+                                              for name in ('motor_kick_rps', 'motor_pulse_rps')},
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('motor_kick_s', 'motor_pulse_period_s')},
                                            # done_reset:=auto -> DONE for the Open (its motor ran on after the
