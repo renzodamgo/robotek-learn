@@ -110,3 +110,31 @@ def test_partial_park_ends_after_the_entry_partly_in_the_lot(direction):
     assert parking.driven < full.driven
     assert parking.lot.xa < x < parking.lot.xb and y < parking.lot.y1, (x, y, math.degrees(th))
     assert abs(math.degrees(th)) > 10.0
+
+
+def test_partial_park_then_the_finishing_pulses():
+    """park_finish_steps after the partial park (12 nov 2026): the pulses run (park_pulse events), straighten the car
+    and the round ends."""
+    from robotek_obstacle_v3.settings import make as make_params
+
+    def drive(steps):
+        p = make_params({'steer_limit': 0.3054, 'park': 1, 'park_after': 0, 'park_mode': 1, 'park_fixed_partial': 1,
+                         'park_pulse_speed': 0.25})
+        mission = SimpleNamespace(p=p, selected_direction='ccw', park_finish_steps=steps)
+        parking = park_fixed.FixedParking(mission, 0.25, 0.015)
+        x, y, th, last = -0.3, -1.0, 0.0, (0.0, 0.0)
+        for i in range(40000):
+            speed, steer = parking.step(i * 0.02, x, y, th)
+            if parking.state in ('PARKED', 'PARK_FAIL'):
+                break
+            if speed == 0.0 and abs(last[0]) > 0.01:
+                x, y, th = move(x, y, th, math.atan(GAIN * math.tan(last[1])), math.copysign(0.012, last[0]))
+            x, y, th = move(x, y, th, math.atan(GAIN * math.tan(steer)), speed * 0.02)
+            last = (speed, steer)
+        return parking, th
+
+    plain, th_plain = drive('')
+    finished, th_finished = drive('R+0.15 L-0.15')
+    assert plain.state in ('PARKED', 'PARK_FAIL') and finished.state in ('PARKED', 'PARK_FAIL')
+    assert [e['event'] for e in finished.log].count('park_pulse') == 2
+    assert abs(th_finished) < abs(th_plain)

@@ -33,9 +33,10 @@ import numpy as np
 from .car import LIDAR_OFFSET_X, OUTLINE_HALF_WIDTH
 
 from .field import wrap
-from .lot_exit import REAR_STOP_MM
+from .lot_exit import REAR_STOP_MM, LotExit
 from .parking_search import LIMIT_THICKNESS, Lot, move
-from .park import GUARD_AHEAD, GYRO_ARC, LINE_UP, MAX_RESUME, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES, Parking
+from .park import (GUARD_AHEAD, GYRO_ARC, INSIDE, LINE_UP, MAX_RESUME, PARALLEL, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES,
+                   Parking)
 
 GAP = 0.04                  # m between the car side and the lot line while approaching
 ENTRY_MAX = 0.60            # m: the entry arc runs at most this far
@@ -99,6 +100,15 @@ class FixedParking(Parking):
         self.partial_back = p.park_partial_back if self.partial else 0.0
         self.mission = mission
         self.push_start = None
+        # park_finish_steps (12 nov 2026, the coach): after the partial park, hard-coded pulses to straighten it, with
+        # the lot exit's executor (lot_exit.LotExit: <side><direction><seconds>, R = toward the wall, L = away, C =
+        # straight; wheels turn first with the car stopped, it settles after each pulse, the rear sensor ends a reverse
+        # pulse). '' = none (the partial park as before).
+        steps = getattr(mission, 'park_finish_steps', '') if self.partial else ''
+        self.finish_steps = steps.strip() if isinstance(steps, str) else ''
+        self.pulse_speed = p.park_pulse_speed
+        self.pulses = None
+        self.th0 = 0.0
 
     # ------------------------------------------------------- the lot from the LiDAR
     def _applied(self):
@@ -114,7 +124,28 @@ class FixedParking(Parking):
 
     def step(self, now, x, y, th):
         self.raw = (x, y, th)
+        if self.state == 'PARK_PULSES':
+            return self._pulse(now, *self._corrected(x, y, th))
         return super().step(now, *self._corrected(x, y, th))
+
+    def _pulse(self, now, x, y, th):
+        """The finishing pulses; then the partial park's end (PARKED or PARK_FAIL on the own pose)."""
+        rear = self.mission._rear_mm(now) if hasattr(self.mission, '_rear_mm') else None
+        speed, steer = self.pulses.step(now, wrap(th - self.th0), rear)
+        if hasattr(self.mission, 'brake'):
+            self.mission.brake = self.pulses.brake
+        for entry in self.pulses.log:
+            if entry.get('event') == 'lot_exit_pulse':
+                self.log.append(dict(entry, event='park_pulse', pose=[round(x, 3), round(y, 3), round(th, 3)]))
+        self.pulses.log.clear()
+        if not self.pulses.done:
+            return speed, steer
+        parked = self.lot.parked(x, y, th, inside=INSIDE, parallel=PARALLEL)
+        self.state = 'PARKED' if parked else 'PARK_FAIL'
+        self.log.append(dict(event='park_end', pose=[x, y, th], parked=parked, moves=self.driven,
+                             fix=[round(v, 4) for v in self.fix], seen=list(self.seen), partial=True,
+                             pulses=len(self.pulses.lengths)))
+        return 0.0, 0.0
 
     def observe(self, bx, by):
         """A new scan (base_link points, mirrored in CW): correct the pose against the outer wall and the
@@ -198,6 +229,11 @@ class FixedParking(Parking):
             if self.partial_back > 0.0 and self.push_start is None:
                 self.push_start = -1.0
                 return (0.0, -1.0, 1.0, ('time', self.partial_back))
+            if self.finish_steps and self.pulses is None:
+                self.pulses = LotExit(self.lot, 0.2, None, self.pulse_speed, self.steer_limit, self.finish_steps)
+                self.th0 = pose[2]
+                self.log.append(dict(event='park_finish_pulses', pose=list(pose), steps=self.finish_steps))
+                return ('pulses',)
             return None
         return super()._finishing(pose)
 
@@ -237,6 +273,13 @@ class FixedParking(Parking):
         return abs(steer) >= GYRO_ARC * self.steer_limit
 
     def _next(self, now, pose):
+        if self.partial and not self.moves:          # the push, then the finishing pulses (_finishing)
+            move_ = self._finishing(pose)
+            if move_ == ('pulses',):
+                self.state = 'PARK_PULSES'
+                return
+            if move_ is not None:
+                self.moves.append(move_)
         super()._next(now, pose)
         if self.state in ('PARKED', 'PARK_FAIL') and self.log and self.log[-1].get('event') == 'park_end':
             self.log[-1].update(fix=[round(v, 4) for v in self.fix], seen=list(self.seen), partial=self.partial)
@@ -266,3 +309,4 @@ class FixedParking(Parking):
             return direction * self.speed, steer
         self.stop_pose, self.state, self.since = (x, y, th), 'PARK_SETTLE', now
         return 0.0, steer
+

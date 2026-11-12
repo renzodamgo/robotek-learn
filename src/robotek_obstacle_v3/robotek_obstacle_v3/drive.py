@@ -85,6 +85,10 @@ class Drive(Node):
         steps = str(self.declare_parameter('lot_exit_steps', DEFAULT_STEPS).value)
         parse_steps(steps)                               # a bad sequence stops the node at launch, not in the lot
         self.strategy.mission.lot_exit_steps = steps
+        finish = str(self.declare_parameter('park_finish_steps', '').value).strip()
+        if finish:
+            parse_steps(finish)                          # a bad sequence stops the node at launch
+        self.strategy.mission.park_finish_steps = finish
         self.strategy.auto_start = False                 # the referee (or the button on the car) publishes /start
         self.camera = dict(
             hfov=float(self.declare_parameter('camera_hfov', REAL_CAMERA_HFOV).value),
@@ -412,7 +416,7 @@ class Drive(Node):
                                                           else v) for k, v in event.items()})
             if event.get('event') == 'park_end':
                 inside = parking.lot.parked(*own, inside=0.0, parallel=math.radians(90.0))
-                if event.get('partial'):
+                if event.get('partial') and not event.get('parked'):
                     why = 'partial park: entry and straight into the lot done (no straightening)'
                     self.get_logger().info('park verdict PARTIAL: %s, %d moves' % (why, event.get('moves', 0)))
                     self.rec.event('park_verdict', self._t(), parked='partial', why=why,

@@ -126,6 +126,7 @@ class Mission:
         self._park_heading = None   # gyro heading of the previous parking cycle
         self.lot_exit = None        # LotExit while leaving the lot (start_lot)
         self.lot_exit_steps = DEFAULT_STEPS   # the pulses (a string: the node sets it from its lot_exit_steps parameter)
+        self.park_finish_steps = ''   # pulses after the partial park (the node sets it from park_finish_steps)
         self._rear = (-math.inf, -1)   # (time, mm) of the last rear sensor reading
         if self.p.park and not self.p.park_mode:
             park.nominal_plan(self.p.steer_limit)   # before the round: a few seconds
