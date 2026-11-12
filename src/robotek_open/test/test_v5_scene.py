@@ -60,6 +60,20 @@ def test_a_few_lost_beams_do_not_move_the_island_end():
     assert scene_from_scan(scan).island_end == pytest.approx(clean, abs=0.03)
 
 
+def test_a_stretch_of_wall_with_no_return_is_not_the_island_end():
+    """11 nov 2026, 22:28, the car: a 13 cm patch of the island wall (a panel joint) returned nothing, was read as the
+    end 0.19 m ahead with the real one 0.7 m away, and the car turned into the island."""
+    scan = scan_at(-0.2)                                              # the real end is 0.7 m ahead
+    clean = scene_from_scan(scan).island_end
+    ranges = np.array(scan.ranges)
+    angles = scan.angle_min + np.arange(ranges.size) * scan.angle_increment
+    hole = (angles > math.radians(50)) & (angles < math.radians(62))  # 12 deg of the island wall, ~0.2-0.35 m ahead
+    assert hole.sum() > 10
+    ranges[hole] = math.inf
+    scan.ranges = list(ranges)
+    assert scene_from_scan(scan).island_end == pytest.approx(clean, abs=0.03)
+
+
 def test_noise_keeps_the_island_end_within_a_few_centimetres():
     errors = [abs(scene_from_scan(scan_at(0.2, noise=0.008, seed=s)).island_end - 0.3) for s in range(20)]
     assert max(errors) < 0.06

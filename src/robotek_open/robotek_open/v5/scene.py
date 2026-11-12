@@ -13,7 +13,7 @@ WALL_TOLERANCE = 0.03             # m: a beam is on the island wall within this 
 FIT_HALF = math.radians(20.0)     # the wall line is fitted to the beams within this of the side bearing
 MAX_SLOPE = math.tan(math.radians(30.0))   # steeper than this is not a wall beside the car
 LATERAL_RANGE = (0.15, 0.90)      # m: plausible distance from the car to the island wall
-MAX_GAP_BEAMS = 2                 # beams lost to dropouts that do not end the wall
+MAX_GAP_BEAMS = 2                 # beams off the wall line that do not end the wall (noise)
 
 
 @dataclass(frozen=True)
@@ -85,7 +85,7 @@ def island_wall(angles, ranges, ok, sign):
     order = np.argsort(-bearing)                             # from the side beams towards the front
     with np.errstate(invalid='ignore'):
         on_wall = ok & (np.abs(y - (slope * x + offset)) <= WALL_TOLERANCE)
-    last = _last_on_wall(order[(bearing[order] <= math.pi / 2) & (bearing[order] >= END_FROM)], on_wall)
+    last = _last_on_wall(order[(bearing[order] <= math.pi / 2) & (bearing[order] >= END_FROM)], on_wall, ok)
     if last is None or bearing[last] <= END_FROM + 0.05:
         return IslandWall(float(slope), float(offset))       # still on the wall at the limit: no end in view
     return IslandWall(float(slope), float(offset), float(x[last]) + LIDAR_OFFSET_X)
@@ -99,14 +99,20 @@ def scan_arrays(scan):
     return angles, ranges, ok
 
 
-def _last_on_wall(beams, on_wall):
-    """The last beam on the wall before a run of more than MAX_GAP_BEAMS beams that are not."""
-    last, missing = None, 0
+def _last_on_wall(beams, on_wall, ok):
+    """The last beam on the wall before a run of more than MAX_GAP_BEAMS beams that see past it.
+
+    Only beams with a return count against the wall: past a real end the LiDAR sees what is behind (the far wall). A
+    stretch with no return at all is a hole in the data, not the end: on the car a 13 cm patch of the island wall (the
+    joint of two panels) returned nothing, read as the end 0.19 m ahead with the real one 0.7 m away, and the car
+    turned into the island (11 nov 2026, 22:28).
+    """
+    last, beyond = None, 0
     for i in beams:
         if on_wall[i]:
-            last, missing = i, 0
-        else:
-            missing += 1
-            if missing > MAX_GAP_BEAMS and last is not None:
+            last, beyond = i, 0
+        elif ok[i]:
+            beyond += 1
+            if beyond > MAX_GAP_BEAMS and last is not None:
                 break
     return last
