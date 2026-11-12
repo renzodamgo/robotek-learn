@@ -54,6 +54,11 @@ WALL_MIN = 15               # returns to fit the wall; its slope only over at le
 WALL_SPAN = 0.15
 PLATE_BAND = 0.06           # m around a limit plate's expected x for its returns
 PLATE_MIN = 3
+# park_fixed_sense 2: the plates as a pair in a wide window.
+WIDE_WINDOW = 0.35          # m beyond each end of the lot where the plates are looked for
+WIDE_REACH = 0.40           # m: largest along-track correction
+PAIR_GAP = 0.10             # m along x that splits two groups of returns
+PAIR_TOLERANCE = 0.06       # m: two groups count as the plates when this close to the lot's length apart
 SENSE_DEADBAND = (0.008, 0.008, math.radians(0.75))   # smaller parts of the correction are not applied
 
 
@@ -88,6 +93,7 @@ class FixedParking(Parking):
         self.coast = p.park_fixed_roll
         self.ladder = 0             # straightening moves driven
         self.sense = bool(p.park_fixed_sense)
+        self.sense_wide = p.park_fixed_sense >= 2   # the plates as a pair in a wide window (observe)
         self.fix = [0.0, 0.0, 0.0]  # correction of the map pose: along x, across y (m), heading (rad)
         self.pivot = (0.5 * (self.lot.xa + self.lot.xb), self.lot.y0)   # the heading turns about the lot
         self.raw = None             # last map pose
@@ -175,9 +181,9 @@ class FixedParking(Parking):
             self.fix[1] -= g * (icpt + slope * cx - lot.y0)
             self.fix[2] -= g * math.atan(slope)
             self.seen[0] += 1
-        errors = []
+        errors = self._pair_errors(px, py, x + LIDAR_OFFSET_X * c) if self.sense_wide else []
         lidar = x + LIDAR_OFFSET_X * c
-        for p in plates:
+        for p in (() if self.sense_wide else plates):
             # The LiDAR sees the plate's face toward it (the plates are LIMIT_THICKNESS thick).
             low, high = p - 0.5 * LIMIT_THICKNESS, p + 0.5 * LIMIT_THICKNESS
             face = low if lidar < low else high if lidar > high else p
@@ -187,7 +193,40 @@ class FixedParking(Parking):
         if errors:
             self.fix[0] -= g * sum(errors) / len(errors)
             self.seen[1] += 1
-        self.fix = [max(-m, min(m, v)) for v, m in zip(self.fix, SENSE_LIMIT)]
+        limits = (WIDE_REACH,) + SENSE_LIMIT[1:] if self.sense_wide else SENSE_LIMIT
+        self.fix = [max(-m, min(m, v)) for v, m in zip(self.fix, limits)]
+
+    def _pair_errors(self, px, py, lidar):
+        """park_fixed_sense 2 (12 nov 2026): the two plates found as a pair, anywhere within WIDE_WINDOW of where the
+        pose puts them. In CW the far plate is mid-straight and the pose was 20-30 cm off along it, beyond the
+        +-PLATE_BAND of mode 1 (and the plates beside the car are within the LiDAR's 0.16 m: they show ahead and
+        behind). Returns between the wall and the lot line are grouped along x (gaps over PAIR_GAP); a group's edge
+        toward the LiDAR is a plate face. Only two groups the lot's length apart (+-PAIR_TOLERANCE) count."""
+        lot = self.lot
+        band = (py > lot.y0 + 0.03) & (py < lot.y1 - 0.01) & (px > lot.xa - WIDE_WINDOW) & (px < lot.xb + WIDE_WINDOW)
+        xs = np.sort(px[band])
+        if xs.size < 2 * PLATE_MIN:
+            return []
+        groups, start = [], 0
+        for i in range(1, xs.size + 1):
+            if i == xs.size or xs[i] - xs[i - 1] > PAIR_GAP:
+                if i - start >= PLATE_MIN:
+                    groups.append(xs[start:i])
+                start = i
+        faces = [float(g.max()) if g.mean() < lidar else float(g.min()) if g.mean() > lidar else float(np.median(g))
+                 for g in groups]
+        centres = [f + (0.5 if f < lidar else -0.5) * LIMIT_THICKNESS for f in faces]
+        span = lot.xb - lot.xa + LIMIT_THICKNESS
+        best = None
+        for i in range(len(centres)):
+            for j in range(i + 1, len(centres)):
+                miss = abs(centres[j] - centres[i] - span)
+                if miss < PAIR_TOLERANCE and (best is None or miss < best[0]):
+                    best = (miss, centres[i], centres[j])
+        if best is None:
+            return []
+        expected = (lot.xa - 0.5 * LIMIT_THICKNESS, lot.xb + 0.5 * LIMIT_THICKNESS)
+        return [best[1] - expected[0], best[2] - expected[1]]
 
     def _line(self):
         return self.lot.y1 + OUTLINE_HALF_WIDTH + GAP

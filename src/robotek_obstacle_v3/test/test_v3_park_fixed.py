@@ -138,3 +138,38 @@ def test_partial_park_then_the_finishing_pulses():
     assert plain.state in ('PARKED', 'PARK_FAIL') and finished.state in ('PARKED', 'PARK_FAIL')
     assert [e['event'] for e in finished.log].count('park_pulse') == 2
     assert abs(th_finished) < abs(th_plain)
+
+
+@pytest.mark.parametrize('shift', [-0.25, 0.0, 0.28])
+def test_wide_sense_finds_the_plates_far_off(shift):
+    """park_fixed_sense 2 (12 nov 2026, CW on the car: the pose 20-30 cm off along the straight): both plates
+    `shift` m further along than the pose expects, seen from beside the lot, give fix[0] = -shift; mode 1 cannot
+    (its band is +-6 cm). One plate alone (no pair) gives no along-track correction."""
+    def plate_faces(xc, lidar_x):
+        face = xc - 0.01 if xc > lidar_x else xc + 0.01
+        return [(face, -1.5 + 0.04 + 0.01 * k) for k in range(14)]
+
+    for mode in (1, 2):
+        p = make({'steer_limit': 0.3054, 'park': 1, 'park_after': 0, 'park_mode': 1, 'park_fixed_sense': mode})
+        parking = park_fixed.FixedParking(SimpleNamespace(p=p, selected_direction='ccw'), 0.06, 0.015)
+        lot = parking.lot
+        wall = [(x / 100.0, lot.y0) for x in range(-80, 100)]
+        pose = (0.5 * (lot.xa + lot.xb) + shift, lot.y1 + 0.11, 0.0)    # beside the real lot
+        lidar = pose[0] + 0.1
+        plates = plate_faces(lot.xa - 0.01 + shift, lidar) + plate_faces(lot.xb + 0.01 + shift, lidar)
+        parking.step(0.0, *pose)
+        for _ in range(60):
+            parking.observe(*_scan_of(wall + plates, pose))
+        if mode == 2:
+            assert abs(parking.fix[0] + shift) < 0.02, (shift, parking.fix)
+        elif abs(shift) > 0.1:
+            assert abs(parking.fix[0] + shift) > 0.1          # mode 1 does not get there
+
+    p = make({'steer_limit': 0.3054, 'park': 1, 'park_after': 0, 'park_mode': 1, 'park_fixed_sense': 2})
+    parking = park_fixed.FixedParking(SimpleNamespace(p=p, selected_direction='ccw'), 0.06, 0.015)
+    lot = parking.lot
+    pose = (lot.xb + 0.2, lot.y1 + 0.11, 0.0)
+    parking.step(0.0, *pose)
+    for _ in range(30):
+        parking.observe(*_scan_of(plate_faces(lot.xb + 0.01 + 0.2, pose[0] + 0.1), pose))
+    assert parking.fix[0] == 0.0
