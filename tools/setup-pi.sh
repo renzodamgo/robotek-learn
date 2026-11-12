@@ -41,6 +41,7 @@ TARGET_USER="${SUDO_USER:-${USER:-$(id -un)}}"
 APT_PACKAGES=(
   git build-essential cmake curl rsync
   ros-jazzy-cv-bridge ros-jazzy-robot-state-publisher ros-jazzy-xacro ros-jazzy-tf2-ros
+  ros-jazzy-rmw-cyclonedds-cpp          # tools/car-run.sh and car-autostart.sh run on Cyclone DDS (the Mac sees the car)
   python3-serial python3-yaml python3-numpy python3-opencv python3-lgpio v4l-utils
 )
 
@@ -181,9 +182,12 @@ do_check() {
     local packages
     packages="$(cd "$REPO" && set +u && source /opt/ros/jazzy/setup.bash 2>/dev/null && source install/setup.bash 2>/dev/null && ros2 pkg list 2>/dev/null || true)"
     local pkg
-    for pkg in rrc_lite_msgs rrc_lite_driver ldlidar_stl_ros2 robotek_hardware robotek_course my_open; do
+    for pkg in rrc_lite_msgs rrc_lite_driver ldlidar_stl_ros2 robotek_hardware robotek_course robotek_open; do
       if grep -qx "$pkg" <<<"$packages"; then good "paquete $pkg"; else bad "paquete $pkg (compila: bash tools/setup-pi.sh)"; fi
     done
+    # my_open is the reader's own package: the team's Open (tools/car-run.sh open) does not need it.
+    if grep -qx my_open <<<"$packages"; then good "paquete my_open"; else note "sin paquete my_open (solo hace falta para correr TU estrategia: créalo o usa --with-reference)"; fi
+    if python3 -c 'import os,sys; sys.exit(0 if os.path.exists("/opt/ros/jazzy/lib/librmw_cyclonedds_cpp.so") else 1)'; then good "Cyclone DDS (ros-jazzy-rmw-cyclonedds-cpp)"; else bad "Cyclone DDS (sudo apt install ros-jazzy-rmw-cyclonedds-cpp): lo usa tools/car-run.sh"; fi
   else
     bad "workspace sin compilar (bash tools/setup-pi.sh)"
   fi
@@ -191,9 +195,10 @@ do_check() {
   local board lidar camera
   if board="$(first_existing /dev/rrc_lite /dev/ttyACM0)"; then good "placa RRC Lite en $board"; else bad "placa RRC Lite (USB 1a86:55d4, /dev/ttyACM0): enchúfala con el cable USB de datos"; fi
   if lidar="$(first_existing /dev/ldlidar /dev/ttyUSB0)"; then good "LiDAR LD19 en $lidar"; else bad "LiDAR LD19 (USB 10c4:ea60, /dev/ttyUSB0): revisa el cable"; fi
-  if camera="$(first_existing /dev/v4l/by-id/*-video-index0 2>/dev/null)"; then good "cámara en $camera"
+  if command -v rpicam-vid >/dev/null 2>&1; then good "rpicam-vid (cámara del Pi en el flex, camera_driver:=picam)"
+  elif camera="$(first_existing /dev/v4l/by-id/*-video-index0 2>/dev/null)"; then good "cámara en $camera"
   elif [ -e /dev/video0 ]; then note "cámara solo como /dev/video0 (en el Pi 5 ese número puede ser de otro aparato): ls /dev/v4l/by-id/"
-  else bad "cámara USB (/dev/v4l/by-id/...-video-index0)"; fi
+  else note "sin rpicam-vid y sin cámara USB: el Open sale en el sentido de direction_fallback y el LiDAR lo corrige"; fi
   if [ -e /dev/gpiochip4 ]; then good "GPIO del motor (/dev/gpiochip4)"; else bad "/dev/gpiochip4 (el motor TB6612 es del Pi 5; en otro Pi cambia gpiochip en robot.yaml)"; fi
   if python3 -c 'import lgpio' 2>/dev/null; then good "python3-lgpio"; else bad "python3-lgpio (sudo apt install python3-lgpio)"; fi
   if python3 -c 'import serial' 2>/dev/null; then good "python3-serial"; else bad "python3-serial (sudo apt install python3-serial)"; fi
