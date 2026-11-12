@@ -143,7 +143,12 @@ def test_front_recover_follows_the_arc_being_driven():
     m.selected_direction, m.pose = 'ccw', (0.3, -1.0, 0.0)
     m._scan = scan_ahead(0.20, math.radians(15))       # a sign a little left, ~0.17 ahead of the nose
     assert m._front_recovery(0.0, 0.2, 0.3, -0.3054) is None and not m.brake    # turning right, away: no
-    assert m._front_recovery(0.0, 0.2, 0.3, 0.0) is not None and m.brake        # straight on: it would hit
+    # Straight on it would hit, but full lock to the right still clears it: not yet (12 nov 2026: the lab's triggers were
+    # the outer wall beside a sign passed on the outer side, and the rounds ran out of time).
+    assert m._in_path(0.0) is not None
+    assert m._front_recovery(0.0, 0.2, 0.3, 0.0) is None and not m.brake
+    m._scan = scan_ahead(0.17, math.radians(15))       # 3 cm nearer: no steering clears it any more
+    assert m._front_recovery(0.0, 0.17, 0.3, 0.0) is not None and m.brake
     m2 = Mission({})
     m2.selected_direction, m2.pose = 'ccw', (0.3, -1.0, 0.0)
     m2._scan = scan_ahead(0.15, math.radians(40))      # beside the nose, passing close

@@ -44,6 +44,7 @@ RECOVER_NOSE = 0.05         # m: only the front of the outline counts (the sides
 RECOVER_REPEAT = (0.3, 8.0)  # m and s: a trigger this near the previous one is a repeat: each adds RECOVER_STRAIGHT of
                              # reverse (at most 3), so the line gets room (it looped 5 times on one sign, 9 nov 2026)
 RECOVER_BRAKE = 0.2
+RECOVER_LAG = 0.3           # s the servo needs to reach full lock (p90 of the car's corners, steer_watch.py)
 SECTOR = 0.2                # m from the lane centre a sign still counts (rows at +-0.1; the lot limits reach -0.3)
 UNKNOWN_OFFSET = 0.12       # m away from a sign whose colour is still unknown
 LOOKOUT = 0.15              # m to the island side to see an inner sign ahead
@@ -476,9 +477,10 @@ class Mission:
         self.speed, self.steer = speed, steer
         return speed, steer, 'RUN'
 
-    def _in_path(self, steer):
+    def _in_path(self, steer, first=0.0, lead=0.0):
         """(m along the arc, sideways m) of the first LiDAR return ahead of the nose, in the corridor now, that the
-        outline (+1 cm) would still meet within RECOVER_LOOK along the arc of ``steer`` (real frame, + left), or None."""
+        outline (+1 cm) would still meet within RECOVER_LOOK along the arc of ``steer`` (real frame, + left), or None.
+        ``first``, ``lead``: the steering of the first ``lead`` m of that path."""
         if self._scan is None:
             return None
         ranges = np.asarray(self._scan.ranges, dtype=float)
@@ -501,7 +503,7 @@ class Mission:
             inside = (u > OUTLINE_FRONT - RECOVER_NOSE) & (u < OUTLINE_FRONT) & (np.abs(v) < RECOVER_CORRIDOR)
             if inside.any():
                 return travelled, float(v[inside][0])
-            x, y, th = arc_move(x, y, th, steer, 0.02)
+            x, y, th = arc_move(x, y, th, first if travelled < lead else steer, 0.02)
             travelled += 0.02
         return None
 
@@ -515,7 +517,12 @@ class Mission:
             if not speed > 0.0:
                 return None
             hit = self._in_path(drive_steer)
-            if hit is None:
+            # Not a hit while full lock away from it still clears it: the line follower is steering round it (a sign
+            # passed on the outer side, 3-5 cm from the outer wall; lab, 12 nov 2026: 96 of 99 triggers were that wall
+            # and the rounds ran out of time recovering).
+            # The servo needs RECOVER_LAG s to get there: that far the escape still runs on the current steering.
+            if hit is None or self._in_path(-math.copysign(self.p.steer_limit, hit[1]), drive_steer,
+                                            speed * RECOVER_LAG) is None:
                 return None
             self.brake = True                              # stop dead: base_adapter's ramp let the car hit (9 nov)
             self.events.append(dict(event='front_recover', along=round(hit[0], 3), side=round(hit[1], 3),
