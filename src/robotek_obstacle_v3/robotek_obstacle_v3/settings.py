@@ -25,6 +25,7 @@ class Params:
     park_fixed_margin: float = 0.012  # m the fixed manoeuvre's guard keeps from the limits and the wall
     park_fixed_roll: float = 0.012  # m the car rolls after a stop at first (then the measured roll)
     park_fixed_roll_arc: float = 0.0  # m of arc it rolls after a stop at full lock at first (0 = park_fixed_roll)
+    park_fixed_partial: float = 0.0  # 1: the fixed park stops after the entry arc and the straight into the lot (a basic partial park, 12 nov 2026)
     park_fixed_sense: float = 0.0   # 1: the fixed manoeuvre places the lot from the outer wall and limits the LiDAR sees
     park_lot_length: float = 0.3675  # m between the limits' inner faces (rules: 1.5 x the real car's 0.245 m, 9 nov 2026; fixed manoeuvre, lot exit)
     park_lot_depth: float = 0.20    # m from the outer wall (rules; fixed manoeuvre)

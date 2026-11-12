@@ -89,6 +89,9 @@ class FixedParking(Parking):
         self.pivot = (0.5 * (self.lot.xa + self.lot.xb), self.lot.y0)   # the heading turns about the lot
         self.raw = None             # last map pose
         self.seen = [0, 0]          # scans that saw the wall, a limit plate
+        # park_fixed_partial 1 (12 nov 2026): a basic partial park, only APPROACH, ENTRY and DOWN (the rear into the
+        # lot at ~park_fixed_entry), no straightening or centring: the car ends partly in the lot and stays.
+        self.partial = bool(p.park_fixed_partial)
 
     # ------------------------------------------------------- the lot from the LiDAR
     def _applied(self):
@@ -183,6 +186,11 @@ class FixedParking(Parking):
         self.log.append(dict(event='park_fixed', pose=list(pose), entry=self.entry, ahead=self.ahead,
                              fix=[round(v, 4) for v in self.fix], seen=list(self.seen)))
 
+    def _finishing(self, pose):
+        if self.partial:
+            return None              # partial: end after the entry and the straight into the lot
+        return super()._finishing(pose)
+
     def _straighten(self, pose):
         """``park.Parking._straighten`` with up to LADDER_MOVES moves."""
         if self.ladder < LADDER_MOVES:   # park.py stops at its own 12
@@ -219,7 +227,7 @@ class FixedParking(Parking):
     def _next(self, now, pose):
         super()._next(now, pose)
         if self.state in ('PARKED', 'PARK_FAIL') and self.log and self.log[-1].get('event') == 'park_end':
-            self.log[-1].update(fix=[round(v, 4) for v in self.fix], seen=list(self.seen))
+            self.log[-1].update(fix=[round(v, 4) for v in self.fix], seen=list(self.seen), partial=self.partial)
         if self.current is not None:
             self.coast = self.rolls[self._is_arc(self.current[0]) and self.split]
 

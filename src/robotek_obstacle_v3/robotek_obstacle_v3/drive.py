@@ -391,6 +391,12 @@ class Drive(Node):
                                                           else v) for k, v in event.items()})
             if event.get('event') == 'park_end':
                 inside = parking.lot.parked(*own, inside=0.0, parallel=math.radians(90.0))
+                if event.get('partial'):
+                    why = 'partial park: entry and straight into the lot done (no straightening)'
+                    self.get_logger().info('park verdict PARTIAL: %s, %d moves' % (why, event.get('moves', 0)))
+                    self.rec.event('park_verdict', self._t(), parked='partial', why=why,
+                                   moves=event.get('moves', 0), pose=list(own))
+                    continue
                 why = 'parked: inside and parallel (own pose)' if event.get('parked') else (
                     'not parallel: heading %.1f deg' % math.degrees(own[2]) if inside
                     else 'not inside the lot (own pose)')

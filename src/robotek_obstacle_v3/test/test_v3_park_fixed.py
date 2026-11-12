@@ -98,3 +98,15 @@ def test_sense_off_keeps_the_map_pose():
     parking.step(0.0, 0.5, -1.2, 0.0)
     parking.observe([0.0, 0.1], [-0.35, -0.35])
     assert parking.fix == [0.0, 0.0, 0.0]
+
+
+@pytest.mark.parametrize('direction', ['ccw', 'cw'])
+def test_partial_park_ends_after_the_entry_partly_in_the_lot(direction):
+    """park_fixed_partial 1: approach, entry arc, straight into the lot, then stop (no straightening), without
+    contact; the car's centre is past the lot's line and between its limits, angled (12 nov 2026)."""
+    parking, (x, y, th) = _drive(direction, {'park_fixed_partial': 1})
+    full, _ = _drive(direction)
+    assert parking.state in ('PARKED', 'PARK_FAIL') and parking.log[-1].get('partial') is True
+    assert parking.driven < full.driven
+    assert parking.lot.xa < x < parking.lot.xb and y < parking.lot.y1, (x, y, math.degrees(th))
+    assert abs(math.degrees(th)) > 10.0
