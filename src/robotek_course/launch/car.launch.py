@@ -133,7 +133,7 @@ def _strategy_node(context):
             lot['park_finish_steps'] = _arg(context, 'park_finish_steps')
         if _arg(context, 'direction') in ('ccw', 'cw'):   # skip the walls' vote at SETUP (parking tests)
             lot['direction'] = _arg(context, 'direction')
-        for name in ('park_pulse_speed', 'park_speed', 'park_align_speed'):   # m/s of the parking's parts
+        for name in ('park_pulse_speed', 'park_speed', 'park_align_speed', 'park_fixed_ahead', 'park_fixed_sense'):
             if _arg(context, name):
                 lot[name] = float(_arg(context, name))
         if lot:
@@ -395,6 +395,13 @@ def generate_launch_description():
         DeclareLaunchArgument('direction', default_value='',
                               description="Obstacle v3: 'ccw' or 'cw' given by hand (no wait for the walls at SETUP; "
                                           '12 nov 2026: beside the lot it took 27.8 s). Empty = from the walls'),
+        DeclareLaunchArgument('park_fixed_ahead', default_value='',
+                              description="Obstacle v3: m past the lot's far limit where the line-up stops before the "
+                                          'entry (empty = the params file: 0.2 in car_picam_park_*.yaml); smaller = parks '
+                                          'further back'),
+        DeclareLaunchArgument('park_fixed_sense', default_value='',
+                              description='Obstacle v3: 1 = place the lot from the wall and the limits the LiDAR sees '
+                                          '(corrects a pose that is off along the straight); empty = the params file (0)'),
         DeclareLaunchArgument('park_speed', default_value='',
                               description='Obstacle v3: m/s of the parking moves (entry arc, straight, push; empty = 0.06, '
                                           'which motor_min_rps raises)'),
