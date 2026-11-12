@@ -18,7 +18,8 @@ strategy:
     corner_lookahead: 0.35      # m (at most the island distance - 0.08 m)
     finish_speed: 0.32          # -20 % of 0.4
     cruise_speed: 0.85          # m/s on the straights (11 nov 2026, 17:29 round)
-    finish_lead: 0.25
+    finish_lead: 0.14           # m before the start's front range (0.25 with base_adapter's ramp; FINISH and DONE now
+                                # stop without it and the car stops ~11 cm sooner; 12 nov 2026 lab, check on the car)
     direction_fallback: ccw
     vision_blue_h_min: 95
     vision_blue_h_max: 135

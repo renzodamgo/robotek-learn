@@ -1,8 +1,8 @@
 """Open v5 mission: SETUP -> RUN -> STOP: a heading law on the straights, full lock in the corners.
 
-Inputs every control tick: dt, the latest Scene (a new object per LiDAR stamp), the raw gyro z, the distance
-travelled since the last tick, and the camera's direction vote (+1 ccw, -1 cw, 0 none).
-Output: (speed command, steering angle). The yaw is integrated here from the gyro.
+Inputs every control tick: dt, the latest Scene (a new object per LiDAR stamp), the raw gyro z and the camera's
+direction vote (+1 ccw, -1 cw, 0 none). Output: (speed command, steering angle). The yaw is integrated here from the
+gyro; the distance driven on a straight is how much nearer the front wall is (no odometry).
 """
 import math
 from dataclasses import dataclass
@@ -82,7 +82,8 @@ class OpenMission:
         self.gyro = 0.0                            # yaw rate without the bias (rad/s)
         self.completed = 0                         # corners finished
         self.arc = False
-        self.travelled = 0.0                       # m since the last corner
+        self.travelled = 0.0                       # m since the last corner (or Start): the front wall got this nearer
+        self._front_ref = None                     # front wall when this straight began
         self._bias = 0.0
         self._calibrated = False
         self._gyro, self._fronts = [], []
@@ -127,21 +128,25 @@ class OpenMission:
         self.state, self.stop_reason = 'STOP', reason
 
     # ---------------------------------------------------------------- step
-    def step(self, dt, scene, gyro_z, travelled, camera=0):
+    def step(self, dt, scene, gyro_z, camera=0):
         if self.state == 'SETUP':
             return self._setup(dt, scene, gyro_z, camera)
         if self.state == 'STOP':
             return 0.0, 0.0
         gyro = self.gyro = gyro_z - self._bias
         self.yaw += gyro * dt
-        # The distance is measured (LiDAR odometry in the node): counting the commanded speed instead believed 0.25 m
-        # driven after 2 cm from a standstill, and a start near the corner turned at once (12 nov 2026 lab, 9 starts).
-        self.travelled += max(0.0, travelled)
         # The front wall between scans: the last scan's minus the commanded speed x the time since (the LD19 skipped
         # 0.2-0.5 s of scans while driving; 11 nov 2026).
         self._front_moved = 0.0 if scene is not self._front_scene else self._front_moved + self._speed * dt
         self._front_scene = scene
         self.front = scene.front_axis - self._front_moved
+        # Distance driven on this straight = how much nearer the front wall is than when the straight began: measured,
+        # like the LiDAR odometry it replaces (same rounds from 9 starts, 12 nov 2026 lab). Counting the commanded
+        # speed instead believed 0.25 m driven after 2 cm from a standstill and turned at once.
+        if not self.arc and math.isfinite(scene.front_axis):       # the scan's own front, not the estimate above
+            if self._front_ref is None:
+                self._front_ref = scene.front_axis
+            self.travelled = max(self.travelled, self._front_ref - scene.front_axis)
         speed, steer = self._run(dt, scene, gyro)
         self._speed = speed
         return speed, steer
@@ -268,7 +273,7 @@ class OpenMission:
         """Full lock until the heading is within turn_tolerance of the goal; the straight-line law finishes the turn.
         (A ramped reference with feed-forward gave the same rounds, 12 nov 2026 lab.)"""
         if abs(wrap(self.goal - self.yaw)) <= self.p.turn_tolerance:
-            self.arc, self.travelled = False, 0.0
+            self.arc, self.travelled, self._front_ref = False, 0.0, None
             self.completed += 1
         return sign * STEER
 
@@ -281,7 +286,8 @@ class OpenMission:
                 return 0.0, steer
             # Not while the car is still turned: a 0 speed keeps the wheels where they are (the Twist has no steering
             # without speed), and a start 0.3 m behind the section's centre braked at full lock right after the last
-            # corner and rolled into the island (12 nov 2026 lab: 100 of 864 rounds).
+            # corner and rolled into the island (12 nov 2026 lab: 100 of 864 rounds). Judged by the heading: the
+            # commanded steering is already small while the car still turns (212 of 2592 rounds).
             turned = abs(wrap(self.goal - self.yaw)) > FINISH_STRAIGHT
             if turned or (math.isfinite(self._start_front) and scene.front_axis > self._start_front + p.finish_lead):
                 return p.finish_speed, steer

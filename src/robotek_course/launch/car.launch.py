@@ -428,9 +428,14 @@ def generate_launch_description():
                                                 LaunchConfiguration('done_reset'), "' == 'auto' else ('' if '",
                                                 LaunchConfiguration('done_reset'), "' == 'none' else '",
                                                 LaunchConfiguration('done_reset'), "')"]), value_type=str),
+                                           # No decel_limit ramp at the end of the Open: a 0 right after the last
+                                           # corner rolled ~34 cm at full lock into the island with the ramp (the
+                                           # coach: brake straight to 0; 12 nov 2026 lab), and the lot exit's pulses.
                                            'no_ramp_states': ParameterValue(PythonExpression(
                                                ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
-                                                "'.lower() == 'true' else ''"]), value_type=str),
+                                                "'.lower() == 'true' else ('FINISH,DONE,CRASH,OPERATOR_STOP' if '",
+                                                LaunchConfiguration('strategy'), "' == 'robotek_open' else '')"]),
+                                               value_type=str),
                                            'low_speed_states': ParameterValue(PythonExpression(
                                                ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
                                                 "'.lower() == 'true' else ''"]), value_type=str)}],

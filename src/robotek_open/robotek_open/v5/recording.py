@@ -6,7 +6,7 @@ from ..open_recording import OpenRecording, TELEMETRY_COLUMNS
 
 
 class V5Recording(OpenRecording):
-    def record_mission(self, *, sim_seconds, mission, gyro, scene, vision, odometry, command, travelled):
+    def record_mission(self, *, sim_seconds, mission, gyro, scene, vision, command, travelled):
         if self._telemetry_file and mission.label == 'DONE' and not self._recorded_done:
             self.record_event('done', 'mission', sim_seconds)
             self._recorded_done = True
@@ -27,8 +27,7 @@ class V5Recording(OpenRecording):
             'yaw_ref': mission.goal, 'heading_error': mission.goal - mission.yaw,
             'selected_direction': mission.direction, 'visual_direction': vision.direction,
             'blue_length': vision.blue_length, 'orange_length': vision.orange_length,
-            'vision_confidence': vision.confidence, 'distance_source': 'lidar', 'travelled': travelled,
-            'lidar_odom_quality': odometry.last_quality, 'lidar_odom_matches': odometry.matches,
+            'vision_confidence': vision.confidence, 'distance_source': 'front_wall', 'travelled': travelled,
             'turn_trigger': f'arc={mission.arc} dist={mission.travelled:.2f} front={mission.front:.2f}',
         })
         self._telemetry.writerow(sample)
