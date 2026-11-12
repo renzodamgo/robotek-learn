@@ -18,6 +18,7 @@ from .parking_search import move as arc_move
 from .lot_exit import DEFAULT_STEPS, REAR_MAX_AGE, LotExit, direction_in_lot, parse_steps
 from .scene import Scene
 from .settings import make
+from .steer_watch import SteerWatch
 
 CALIBRATE_SECONDS = 0.3
 DIRECTION_MARGIN = (0.10, 0.03)  # inlier-fraction margin to pick the direction: at once, and after
@@ -106,7 +107,9 @@ class Mission:
         self._last_recover = None    # (time, x, y) of the last trigger, and the repeats so far
         self._recover_repeats = 0
         self.brake = False           # True for the tick of a hard brake (the node sends /robotek/estop)
-        self.events = []             # recover triggers, for the node's log
+        self.events = []             # recover triggers and steer faults, for the node's log
+        # The steering that stops answering (steer_watch.py): full lock asked, the gyro sees no turn -> stop, centre.
+        self.steer_watch = SteerWatch(self.p.steer_limit, WHEELBASE) if self.p.steer_watch else None
         self._corner_gaps = {}       # corner start -> clearance its line was planned with
         self._lines = {}             # corner start -> (corner.plan arguments, line) last given (tracked_corners)
         self._direction_margin = 0.0
@@ -158,7 +161,17 @@ class Mission:
             return 0.0, 0.0, 'STOP'
         if self.state == 'PARK':
             return self._park(now, yaw, gyro, distance, scan if new_scan else None)
-        return self._run(now, dt, yaw, gyro, distance)
+        travelled = distance if self.speed >= 0 else -distance     # before _run changes self.speed
+        speed, steer, state = self._run(now, dt, yaw, gyro, distance)
+        watch = self.steer_watch
+        if watch is None or state != 'RUN':
+            return speed, steer, state
+        if watch.holding(now) or watch.update(now, dt, speed, steer, gyro, travelled):
+            if watch.last is not None and (not self.events or self.events[-1] is not watch.last):
+                self.events.append(watch.last)
+            self.speed, self.steer = 0.0, 0.0
+            return 0.0, 0.0, state
+        return speed, steer, state
 
     # -------------------------------------------------------------- setup
     def _setup(self, dt, scan, new_scan, yaw, gyro):
@@ -366,9 +379,14 @@ class Mission:
         """With lot_laps 0 the laps ignore the lot (as a round without it); parking itself always sees it."""
         return self.p.lot_laps > 0.0 or self.state == 'PARK'
 
+    def _lot_on_field(self):
+        """The lot is on the field when the car parks or starts in it (12 nov 2026, 00:12: with start_lot and no park the
+        laps did not know it; a red sign on the start straight took the line to the outer wall, into the lot's limit)."""
+        return bool(self.p.park or self.p.start_lot)
+
     def _lot_zone(self, progress):
         """Whether a progress value is on the start straight beside the lot (rounds with the lot)."""
-        if not self.p.park or not self._lot_in_laps():
+        if not self._lot_on_field() or not self._lot_in_laps():
             return False
         s = progress % scene.UNITS_PER_LAP
         low, high = (0.43, 1.18) if self.selected_direction == 'ccw' else (-0.18, 0.57)
@@ -684,7 +702,7 @@ class Mission:
     def _lot_limits(self, start):
         """Smallest offsets before and after a corner: beside the lot (rounds with it) the line
         keeps off its limits, before corner 1 in CCW and after corner 7 in CW."""
-        if not self.p.park or not self._lot_in_laps():
+        if not self._lot_on_field() or not self._lot_in_laps():
             return -1.0, -1.0
         ccw = self.selected_direction == 'ccw'
         return (LOT_OFFSET if ccw and start % 8 == 1 else -1.0,

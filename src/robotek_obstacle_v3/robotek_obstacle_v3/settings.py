@@ -13,6 +13,7 @@ class Params:
     steer_kd: float = 0.2           # gyro damping
     steer_limit: float = 0.307      # rad, the real car after per-side compensation (17.6 deg)
     stop_progress: float = 24.7     # track units: 3 laps + 0.7 into the start straight
+    steer_watch: float = 1.0        # 1: stop and centre the wheels when full lock gives no turn on the gyro (steer_watch.py, 12 nov 2026)
     park: float = 0.0               # 1: park in the lot after the three laps (rounds with the lot)
     park_after: float = 24.0        # track units driven before parking (3 laps; 0 in parking-only tests)
     lot_laps: float = 1.0           # 1: with park, the laps keep off the lot's limits; 0: the laps as without the lot, the lot only for parking (8 nov 2026, car test)
@@ -25,7 +26,7 @@ class Params:
     park_fixed_roll: float = 0.012  # m the car rolls after a stop at first (then the measured roll)
     park_fixed_roll_arc: float = 0.0  # m of arc it rolls after a stop at full lock at first (0 = park_fixed_roll)
     park_fixed_sense: float = 0.0   # 1: the fixed manoeuvre places the lot from the outer wall and limits the LiDAR sees
-    park_lot_length: float = 0.3495  # m between the limits' inner faces (rules: 1.5 x 0.233 m car; fixed manoeuvre)
+    park_lot_length: float = 0.3675  # m between the limits' inner faces (rules: 1.5 x the real car's 0.245 m, 9 nov 2026; fixed manoeuvre, lot exit)
     park_lot_depth: float = 0.20    # m from the outer wall (rules; fixed manoeuvre)
     park_lot_end: float = 0.48      # m along the start straight to the far limit's inner face in CCW (mirrored in CW)
     scan_max_age: float = 0.35      # s; older LiDAR brakes

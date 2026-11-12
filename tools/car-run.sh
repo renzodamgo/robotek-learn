@@ -10,7 +10,7 @@
 #   VERBOSE=1 bash tools/car-run.sh open             # every log line (default: only the summary below)
 #
 # Shown by default: ready / running, Start and Stop, the strategy's state changes with the time since Start, each
-# corner (Obstacle), lap times, the final time, the parking verdict, where the round is recorded (both strategies write
+# section with its time, each sign seen and passed (side, OK / WRONG SIDE) and the ROUND line (Obstacle), lap times, the final time, the parking verdict, where the round is recorded (both strategies write
 # ~/runs/<date>-<time>-open-v5/ or -obstacle-v3/: telemetry.csv, events.jsonl, the scans), and anything that looks wrong (errors, a dead node, board reboots, low battery). The whole output is
 # still in ~/.ros/log/<date>/launch.log.
 #
@@ -32,4 +32,4 @@ if [ "${VERBOSE:-0}" = 1 ]; then
     exec ros2 launch robotek_course car.launch.py "$@"
 fi
 ros2 launch robotek_course car.launch.py "$@" 2>&1 | grep --line-buffered -E \
-    'READY|RUNNING|: Start\.|: Stop|state [A-Z_]+|corner [0-9]+ \(lap|LAP [0-9]|DONE:|park verdict|Telemetry:|CRASH|ERROR|Traceback|has died|rebooted|Board reset|Battery [0-9.]+ V <'
+    'READY|RUNNING|: Start\.|: Stop|state [A-Z_]+|(straight|corner) [0-9]+ \(lap|sign (seen|colour|passed)|ROUND |LAP [0-9]|DONE:|park verdict|STEER FAULT|Telemetry:|CRASH|ERROR|Traceback|has died|rebooted|Board reset|Battery [0-9.]+ V <'

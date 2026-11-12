@@ -40,6 +40,9 @@ from robotek_course.obstacle_vision import COLOR_RANGES, associate, color_blocks
 from .lot_exit import DEFAULT_STEPS, parse_steps
 from .perception import scan_clusters
 from .recording import Recording, default_folder, sector_min
+from . import scene
+from .field import SWAP
+from .mission import SEAT_HITS
 from .scene import UNITS_PER_LAP
 from .settings import Params
 from .strategy import Strategy
@@ -122,6 +125,12 @@ class Drive(Node):
         self.t_start = None          # node clock at Start (the button or /start)
         self.corners_logged = 0      # corners already announced (progress units: odd = corner)
         self.laps_logged, self.lap_start = 0, 0.0
+        self.laps = []               # lap times
+        self.section, self.section_start = None, 0.0   # current section (floor of the progress) and its start time
+        self.sections = []           # (section, kind, seconds)
+        self.signs_known = {}        # seat -> colour announced (None = seen, colour unknown)
+        self.signs_passed = set()    # (lap, seat) already reported as passed
+        self.round_logged = False
         self.create_timer(1.0 / CONTROL_RATE, self.control)
         p = self.strategy.mission.p
         self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s; camera %s)'
@@ -219,6 +228,13 @@ class Drive(Node):
         if mission.brake:                                # the front recover's hard brake
             self.estop.publish(Bool(data=True))
         for entry in mission.events[self.events_logged:]:
+            if isinstance(entry, dict) and entry.get('event') == 'steer_fault':
+                self.get_logger().warn('[%6.2f s] STEER FAULT: full lock %+.1f deg for %.2f s, gyro %+.2f rad/s of %+.2f '
+                                       'expected -> stop and centre (fault %d)' % (
+                                           self._t() or 0.0, entry['steer'], entry['lock_s'], entry['gyro'],
+                                           entry['expected'], entry['count']))
+                self.rec.event('steer_fault', self._t(), **entry)
+                continue
             self.get_logger().info('recover: %s' % entry)
             self.rec.event('recover', self._t(), detail=str(entry))
         self.events_logged = len(mission.events)
@@ -244,8 +260,10 @@ class Drive(Node):
             if self.state_sent == 'DONE' and self.t_start is not None:
                 self.get_logger().info('\033[1;32mDONE: %.2f s from Start\033[0m' % self._t())
                 self.rec.event('done', self._t(), progress=mission.phi)
+                self._log_round('DONE')
             elif self.state_sent == 'FAULT':
                 self.rec.event('fault', self._t(), progress=mission.phi)
+                self._log_round('FAULT')
             self.state.publish(String(data=self.state_sent))
         self._record(mission, speed, steer)
 
@@ -254,23 +272,81 @@ class Drive(Node):
         return None if self.t_start is None else self.now() - self.t_start
 
     def _log_progress(self, mission):
-        """One line per corner and per lap with the time since Start (progress units: 8 a lap, corners odd), as
-        the Open v5's terminal summary that tools/car-run.sh keeps."""
+        """The terminal summary (tools/car-run.sh keeps it), as the Open v5: every section (straight or corner) with
+        its time, each lap, each sign when it is first seen and when its colour is known, each sign passed (side and
+        whether it is the side its colour asks for). Progress units: 8 a lap, corner k = units 2k-1..2k."""
         if self.t_start is None or mission.state not in ('RUN', 'PARK', 'STOP'):
             return
         t, phi = self._t(), mission.phi
-        corners = max(0, int((math.floor(phi) + 1) // 2))           # corner k spans units 2k-1..2k
-        while self.corners_logged < min(corners, 12):
-            self.corners_logged += 1
-            self.get_logger().info('[%6.2f s] corner %d (lap %d)' % (t, self.corners_logged,
-                                                                   (self.corners_logged - 1) // 4 + 1))
-            self.rec.event('corner', t, corner=self.corners_logged, progress=phi)
+        unit = int(math.floor(phi))
+        if self.section is None:
+            self.section, self.section_start = unit, t
+        while self.section < unit and self.section < 24:
+            kind = 'corner %d' % ((self.section + 1) // 2) if self.section % 2 else 'straight %d' % (self.section // 2 % 4 + 1)
+            took = t - self.section_start
+            self.sections.append((self.section, kind, took))
+            self.section += 1
+            self.section_start = t
+            nxt = 'corner %d' % ((self.section + 1) // 2) if self.section % 2 else 'straight %d' % (self.section // 2 % 4 + 1)
+            self.get_logger().info('[%6.2f s] %s (lap %d); %s took %.2f s' % (
+                t, nxt, self.section // 8 + 1, kind, took))
+            self.rec.event('section', t, section=self.section, section_name=nxt, previous=kind, previous_s=took, progress=phi)
+            if self.section % 2 and self.corners_logged < 12:
+                self.corners_logged += 1
+                self.rec.event('corner', t, corner=self.corners_logged, progress=phi)
         laps = min(3, int(phi // UNITS_PER_LAP))
         while self.laps_logged < laps:
             self.laps_logged += 1
             lap_time, self.lap_start = t - self.lap_start, t
+            self.laps.append(lap_time)
             self.get_logger().info('\033[1;36mLAP %d: %.2f s (total %.2f s)\033[0m' % (self.laps_logged, lap_time, t))
             self.rec.event('lap', t, lap=self.laps_logged, lap_time=lap_time, progress=phi)
+        self._log_signs(mission, t, phi)
+
+    def _log_signs(self, mission, t, phi):
+        for seat, (lateral, votes, hits) in mission._seats.items():
+            if hits < SEAT_HITS:
+                continue
+            colour = max(votes, key=votes.get) if votes else None     # in the mission's frame (CCW)
+            shown = colour if mission.selected_direction == 'ccw' or colour is None else SWAP.get(colour, colour)
+            where = 'straight %d seat %.1f, %s row' % (seat // 4 % 4 + 1, seat / 2.0 % 2.0,
+                                                      'inner' if lateral > 0 else 'outer')
+            if seat not in self.signs_known or (colour is not None and self.signs_known[seat] != colour):
+                first = seat not in self.signs_known
+                self.signs_known[seat] = colour
+                self.get_logger().info('[%6.2f s] sign %s: %s, %s' % (
+                    t, 'seen' if first else 'colour', where, shown or 'colour unknown'))
+                self.rec.event('sign_seen' if first else 'sign_colour', t, seat=seat, lateral=lateral,
+                               colour=shown, votes=dict(votes), progress=phi)
+            lap = int(phi // UNITS_PER_LAP)
+            at = lap * UNITS_PER_LAP + seat / 2.0
+            if (lap, seat) in self.signs_passed or not at <= phi < at + 0.3:
+                continue
+            self.signs_passed.add((lap, seat))
+            x, y, _ = mission.pose
+            px, py, _ = scene.lane_pose(at)
+            nx, ny = scene.lane_normal(at)
+            car = (x - px) * nx + (y - py) * ny          # the car's lateral position on the lane at the sign
+            wanted = mission._side_offset(lateral, colour) if colour else None
+            side = 'inner' if car > lateral else 'outer'
+            ok = '' if wanted is None else (' OK' if (car - lateral) * (wanted - lateral) > 0 else ' WRONG SIDE')
+            self.get_logger().info('[%6.2f s] sign passed: %s, %s, car on its %s side (%.2f m off the sign)%s' % (
+                t, where, shown or 'colour unknown', side, abs(car - lateral), ok))
+            self.rec.event('sign_passed', t, seat=seat, lap=lap + 1, colour=shown, lateral=lateral,
+                           car_lateral=round(car, 3), side=side, ok=None if wanted is None else ok == ' OK')
+
+    def _log_round(self, how):
+        """One line with the whole round: total time from Start, the laps and the slowest section."""
+        if self.round_logged or self.t_start is None:
+            return
+        self.round_logged = True
+        t = self._t()
+        slow = max(self.sections, key=lambda s: s[2]) if self.sections else None
+        line = 'ROUND %s: %.2f s from Start, laps %s' % (how, t, ' / '.join('%.2f' % v for v in self.laps) or '-')
+        if slow:
+            line += ', slowest section %d (%s) %.2f s' % (slow[0] + 1, slow[1], slow[2])
+        self.get_logger().info('\033[1;32m%s\033[0m' % line if how == 'DONE' else line)
+        self.rec.event('round', t, end=how, laps=self.laps, sections=[list(s) for s in self.sections])
 
     def _record(self, mission, speed, steer):
         if not self.rec.on:
@@ -336,6 +412,7 @@ def main(args=None):
     except (KeyboardInterrupt, RuntimeError):
         pass
     finally:
+        node._log_round('STOPPED')
         node.rec.event('stop', node._t())
         node.rec.close()
         if rclpy.ok():

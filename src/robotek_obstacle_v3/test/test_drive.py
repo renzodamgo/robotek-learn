@@ -75,3 +75,45 @@ def test_the_round_is_recorded_like_the_open(monkeypatch, tmp_path):
     assert events[-1] == 'stop'
     assert len(gzip.open(folder / 'telemetry.csv.scans.jsonl.gz', 'rt').readlines()) == 1
     assert 'changed:' in (folder / 'params.yaml').read_text()
+
+
+def test_sections_signs_and_round_are_logged(monkeypatch, tmp_path):
+    """Each section with its time, a sign seen and passed (side and OK / WRONG SIDE), the laps and the ROUND event."""
+    import json
+
+    folder = tmp_path / 'run'
+    overrides = [Parameter('telemetry', value=str(folder))]
+    original = drive.Node.__init__
+
+    def init(self, name, **kwargs):
+        original(self, name, parameter_overrides=overrides, **kwargs)
+    monkeypatch.setattr(drive.Node, '__init__', init)
+    rclpy.init()
+    try:
+        node = drive.Drive()
+        mission = node.strategy.mission
+        mission.state, mission.selected_direction = 'RUN', 'ccw'
+        mission._seats = {1: [-0.1, {'red': 5}, 4]}        # seat 0.5 of straight 1, outer row, red
+        clock = [0.0]
+        monkeypatch.setattr(node, 'now', lambda: clock[0])
+        node.t_start = 0.0
+        from robotek_obstacle_v3 import scene
+        for k in range(0, 801):                              # 8 units = one lap, 0.01 units a tick
+            clock[0] = k * 0.05
+            mission.phi = k * 0.01
+            px, py, _ = scene.lane_pose(mission.phi)
+            nx, ny = scene.lane_normal(mission.phi)
+            lateral = -0.1 - 0.3 if 0.3 < mission.phi < 0.8 else 0.0   # right of the red sign
+            mission.pose = (px + lateral * nx, py + lateral * ny, 0.0)
+            node._log_progress(mission)
+        node._log_round('STOPPED')
+        node.rec.close()
+        node.destroy_node()
+    finally:
+        rclpy.shutdown()
+    events = [json.loads(line) for line in (folder / 'events.jsonl').open()]
+    names = [e['event'] for e in events]
+    assert names.count('section') == 8 and names.count('lap') == 1
+    passed = [e for e in events if e['event'] == 'sign_passed']
+    assert len(passed) == 1 and passed[0]['ok'] is True and passed[0]['side'] == 'outer'
+    assert 'sign_seen' in names and events[-1]['event'] == 'round' and events[-1]['end'] == 'STOPPED'

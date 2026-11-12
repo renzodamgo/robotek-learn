@@ -64,3 +64,26 @@ def test_lab_round_with_the_lot(tmp_path: Path):
     result = obstacle_lab.run_round(field, obstacle_lab.make_strategy('robotek_obstacle_v3.strategy:Strategy', True))
     assert result['valid'], result['faults']
     assert result['points'] == 55 and result['end'] == 'DONE'
+
+
+def test_steer_watch_stops_when_full_lock_gives_no_turn():
+    """11 nov 2026 23:59, corner 6: full left at 0.15 m/s, the gyro at -0.07 rad/s (0.4 expected). A fault after
+    LAG + WINDOW s, a stop with the wheels centred for HOLD s; a good arc never trips it."""
+    import math
+
+    from robotek_obstacle_v3.steer_watch import HOLD, LAG, WINDOW, SteerWatch
+
+    dt = 0.02
+    for gyro, faults in ((0.30, 0), (-0.07, 1)):
+        watch, first = SteerWatch(0.3054, 0.11883), None
+        for k in range(int(1.5 / dt)):
+            now = k * dt
+            if watch.holding(now):
+                continue
+            if watch.update(now, dt, 0.15, 0.3054, gyro, 0.15 * dt) and first is None:
+                first, hold_until = now, watch.hold_until
+        assert watch.faults == faults
+        if faults:
+            assert LAG + WINDOW <= first < LAG + WINDOW + 0.1
+            assert math.isclose(hold_until - first, HOLD)
+            assert watch.last['ratio'] < 0 and math.isclose(watch.last['steer'], 17.5, abs_tol=0.1)

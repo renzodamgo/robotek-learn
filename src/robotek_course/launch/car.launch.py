@@ -123,6 +123,10 @@ def _strategy_node(context):
         parameters.append(path)
     if _arg(context, 'strategy') == 'robotek_obstacle_v3':
         parameters.append({'recover_back': float(_arg(context, 'recover_back'))})
+        # Where the lot is on this field (12 nov 2026: the team's field has the far limit at ~0.31 m, the rules 0.48).
+        lot = {name: float(_arg(context, name)) for name in ('park_lot_end', 'park_lot_length') if _arg(context, name)}
+        if lot:
+            parameters.append(_node_params_file(lot))
     if _arg(context, 'strategy') == 'robotek_open':
         # Open v5 overrides from the command line. As a file keyed by the node name: a plain dict goes in as '/**',
         # which the params file's 'strategy:' entry overrides whatever the order (11 nov 2026: corner_lookahead:=0.55
@@ -363,6 +367,11 @@ def generate_launch_description():
         DeclareLaunchArgument('recover_back', default_value='0.5',
                               description='Obstacle v3: s of reverse at full lock in the front recover (right in CCW, '
                                           'left in CW)'),
+        DeclareLaunchArgument('park_lot_end', default_value='',
+                              description="Obstacle v3: m along the start straight to the lot's far limit (inner face, CCW; "
+                                          "the rules 0.48, the team's field ~0.31). Empty = the strategy's default"),
+        DeclareLaunchArgument('park_lot_length', default_value='',
+                              description="Obstacle v3: m between the lot limits' inner faces (empty = 0.3675, 1.5 x 0.245 m)"),
         DeclareLaunchArgument('lot_exit_speed', default_value='0.9',
                               description='m/s of the lot exit pulses (first full car round from the lot, 9 nov 2026: 0.9)'),
         DeclareLaunchArgument('lot_exit_steps', default_value='L+0.45 R-0.55 L+0.45 R-0.55 L+0.45 R-0.55 L+0.78 C-0.4',
