@@ -9,7 +9,7 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml', 'README.md']),
-        ('share/' + package_name + '/config', ['config/car_picam.yaml']),
+        ('share/' + package_name + '/config', ['config/car_picam.yaml', 'config/car_picam_park_round.yaml', 'config/car_picam_park_test.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -1,0 +1,24 @@
+# Obstacle v3 parking-only test (12 nov 2026): the car placed as if entering the start straight; it parks at once
+# (park_after 0). Same parking as car_picam_park_round.yaml. Run:
+#   bash tools/car-run.sh obstacle strategy_params:=~/robotek-learn/install/robotek_obstacle_v3/share/robotek_obstacle_v3/config/car_picam_park_test.yaml \
+#     motor_rps_per_mps:=8.0 motor_min_rps:=2   [direction:=ccw|cw]
+strategy:
+  ros__parameters:
+    camera_hfov: 1.78
+    camera_pitch: 0.14
+    camera_yaw: 0.054
+    red_hsv: "170,6,90,80"
+    green_hsv: "40,85,70,60"
+    steer_limit: 0.3054
+    parking: true
+    park_mode: 1.0
+    park_margin: 0.03
+    park_fixed_roll: 0.13
+    park_fixed_roll_arc: 0.04
+    park_fixed_ahead: 0.2
+    park_lot_end: 0.31
+    park_lot_length: 0.3675
+    park_fixed_partial: 1.0
+    park_after: 0.0
+    park_pulse_speed: 0.1        # below motor_min_rps 2 (0.25 m/s), which sets the real speed
+    park_finish_steps: "C+0.20 R-0.40 L-0.50 R+0.05 L-0.15 R+0.1 L-0.1"   # 12 nov 2026 02:39: parallel
