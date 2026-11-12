@@ -1,4 +1,4 @@
-"""Step 4: drive along the island wall at a fixed distance, and stop when the wall ahead is near."""
+"""Step 5: along the island wall (step 4), then ONE 90 degree corner to the left, and stop at the next wall."""
 import math
 
 from geometry_msgs.msg import Twist
@@ -11,14 +11,16 @@ from std_msgs.msg import Bool
 from robotek_common.vehicle import WHEELBASE
 from robotek_course.minisim import Scene, wrap
 
+from .arc import arc_steer, damped_steer
 from .heading import GyroHeading
-from .lane import GAP, lane_steer
+from .lane import GAP, lateral_bias
 from .perception import perceive
 
 CONTROL_RATE = 50.0       # Hz, on the simulation clock
 SPEED = 1.28              # m/s commanded (the real car reaches 0.6 m/s with this command)
+CORNER_SPEED = 1.0         # m/s commanded in the corner (0.53 m/s real)
 CALIBRATE_SECONDS = 0.6   # standing still after Start, measuring the gyroscope bias
-TURN_FRONT = 1.19         # m: where a corner will start (step 6); for now the car stops here
+TURN_FRONT = 1.19         # m: the corner starts when the wall ahead is this near
 
 
 class Drive(Node):
@@ -29,6 +31,9 @@ class Drive(Node):
         self.samples = []
         self.time = None
         self.stopped = False
+        self.goal = 0.0                      # the heading to hold: the corner adds 90 degrees
+        self.arc = False                     # True while the corner is in progress
+        self.corners = 0                     # corners finished
         self.scene = Scene()
         self.stamp = None
         self.cmd = self.create_publisher(Twist, '/cmd_vel_raw', 10)
@@ -41,7 +46,7 @@ class Drive(Node):
         stamp = (msg.header.stamp.sec, msg.header.stamp.nanosec)
         if stamp != self.stamp:              # each scan once
             self.stamp = stamp
-            self.scene = perceive(msg, forward_yaw=wrap(0.0 - self.heading.yaw), sign=1)
+            self.scene = perceive(msg, forward_yaw=wrap(self.goal - self.heading.yaw), sign=1)
 
     def on_imu(self, msg):
         self.gyro = msg.angular_velocity.z
@@ -63,10 +68,23 @@ class Drive(Node):
                     self.heading.calibrate(self.samples)
                     self.samples = []
                 yaw = self.heading.update(self.gyro, dt)
-                self.stopped = self.stopped or self.scene.front_axis <= TURN_FRONT
-                if not self.stopped:
-                    inner = self.scene.left if math.isfinite(self.scene.left) else GAP     # the island is on the left
-                    speed, steer = SPEED, lane_steer(0.0, yaw, inner, sign=1)
+                gyro = self.gyro - self.heading.bias
+                if not self.arc and self.scene.front_axis <= TURN_FRONT:
+                    if self.corners == 0:
+                        self.goal = wrap(self.goal + math.pi / 2)        # a left corner: the goal turns 90 degrees
+                        self.arc = True
+                        self.get_logger().info('Giro a la izquierda')
+                    else:
+                        self.stopped = True
+                if self.arc:
+                    steer, done = arc_steer(self.goal, yaw, gyro)      # full lock until 0.3 rad from the goal
+                    speed = CORNER_SPEED
+                    if done:                                           # the straight-line law finishes the turn
+                        self.arc = False
+                        self.corners += 1
+                elif not self.stopped:
+                    inner = self.scene.left if math.isfinite(self.scene.left) else GAP
+                    speed, steer = SPEED, damped_steer(self.goal + lateral_bias(inner), yaw, gyro)
         cmd = Twist()
         cmd.linear.x = float(speed)
         cmd.angular.z = float(speed * math.tan(steer) / WHEELBASE)
