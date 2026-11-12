@@ -241,6 +241,7 @@ def generate_launch_description():
         base = yaml.safe_load(stream)['base_adapter']['ros__parameters']
         default_max_pct = str(base['motor_max_pct'])
         default_max_rps = str(base.get('motor_max_rps', 0.0))
+        default_rps_per_mps = str(base.get('motor_rps_per_mps', 0.0))
         default_min_rps = str(base.get('motor_min_rps', 0.0))
         motor_backend = str(base.get('motor_backend', 'tb6612'))
         brake_defaults = {name: str(base.get(name, value)) for name, value in (
@@ -306,6 +307,10 @@ def generate_launch_description():
                               description='orange line (looks red: hue wraps through 0), same format'),
         DeclareLaunchArgument('camera_wall_mask', default_value='true',
                               description='line detector only looks inside the black walls'),
+        DeclareLaunchArgument('motor_rps_per_mps', default_value='auto',
+                              description='motor rps per m/s of the car (depends on the gears); auto = robot.yaml '
+                                          '(%s, 54:30 gears). 1:1 gears: ~6.8 (12 nov 2026: the 54:30 value made the '
+                                          'car ~35 %% slower)' % default_rps_per_mps),
         DeclareLaunchArgument('motor_max_rps', default_value='auto',
                               description='encoder motor cap in rps; auto = 4 for the Obstacle v3 (8 nov 2026: DONE 85.0 s), 6.7 for the '
                                           'Open (11 nov 2026: 3 laps in 23.4 s), '
@@ -389,6 +394,10 @@ def generate_launch_description():
         Node(package='robotek_hardware', executable='base_adapter', name='base_adapter', output='screen',
              parameters=[hardware_config, {'motor_max_pct': ParameterValue(LaunchConfiguration('motor_max_pct'),
                                                                            value_type=float),
+                                           'motor_rps_per_mps': ParameterValue(PythonExpression(
+                                               ["(", default_rps_per_mps, ") if '", LaunchConfiguration('motor_rps_per_mps'),
+                                                "' == 'auto' else ", LaunchConfiguration('motor_rps_per_mps')]),
+                                               value_type=float),
                                            'motor_max_rps': ParameterValue(PythonExpression(
                                                ["(4.0 if '", LaunchConfiguration('strategy'), "' == 'robotek_obstacle_v3' else 6.7 if '",
                                                 LaunchConfiguration('strategy'), "' == 'robotek_open' else ",
