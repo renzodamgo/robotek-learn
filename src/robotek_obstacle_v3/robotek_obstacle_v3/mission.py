@@ -30,6 +30,7 @@ PREVIEW = 0.10              # m ahead for the curvature feed-forward (servo and 
 STENCIL = 0.15              # m between the points the line's heading and curvature come from
 LATERAL_GAIN = 6.0          # rad of steer per metre off the planned line
 RECOVER_SPEED = 0.15
+RECOVER_INSIDE = math.radians(40.0)   # nose this far toward the inside of the lane -> back up on the other lock
 RECOVER_SECONDS = 0.8       # the contact guard's back-off (guard_gap)
 # Front recover (the coach, 9 nov 2026; plans/recover-propuesta.png in WRO-Strategies): something on the arc the car
 # drives, within RECOVER_LOOK of the nose -> brake dead RECOVER_BRAKE s, then reverse ``recover_back`` s at full lock, full
@@ -510,14 +511,13 @@ class Mission:
             self.events.append(dict(event='front_recover', along=round(hit[0], 3), side=round(hit[1], 3),
                                     steer=round(math.degrees(drive_steer), 1),
                                     heading=round(math.degrees(th), 1), pose=[round(v, 3) for v in self.pose]))
-            # The reverse side comes from the direction, not from the heading estimate (the coach, 9 nov 2026):
-            # full right in CCW, full left in CW (mirrored frame: always -steer_limit). Reversing, that swings the
-            # nose toward the inside of the track, where the corners turn.
+            # The reverse side: the coach's rule (9 nov 2026, full right in CCW, left in CW) unless the nose already
+            # points well to the inside (_recover_back_steer, 12 nov 2026).
             last, x, y = self._last_recover or (-math.inf, math.inf, math.inf)
             near = math.hypot(self.pose[0] - x, self.pose[1] - y) < RECOVER_REPEAT[0] and now - last < RECOVER_REPEAT[1]
             self._recover_repeats = min(3, self._recover_repeats + 1) if near else 0
             self._last_recover = (now, self.pose[0], self.pose[1])
-            self._front_recover = (now, -self.p.steer_limit, self._recover_repeats * RECOVER_STRAIGHT)
+            self._front_recover = (now, self._recover_back_steer(th), self._recover_repeats * RECOVER_STRAIGHT)
             self.events[-1]['repeat'] = self._recover_repeats
         start, steer, extra = self._front_recover
         if now - start < RECOVER_BRAKE:
@@ -528,6 +528,15 @@ class Mission:
             return None
         self.speed = -RECOVER_SPEED
         return -RECOVER_SPEED, sign * steer, 'RUN'
+
+    def _recover_back_steer(self, th):
+        """Steering while backing off (mirrored frame, + = toward the inside). The coach's rule (9 nov 2026): full right
+        in CCW / left in CW (-steer_limit), which swings the nose to the inside, where the corners turn. But with the
+        nose already more than RECOVER_INSIDE toward the inside of the lane, that undoes the turn: 12 nov 2026 00:26, the
+        lot exit left the car at 87 deg, it turned right toward the lane (105 -> 60 deg), met the wall and backed up
+        at full right to 105 deg again, four times. Then back up with the other lock (a three-point turn): parallel."""
+        error = wrap(th - scene.lane_pose(self.phi)[2])
+        return self.p.steer_limit if error > RECOVER_INSIDE else -self.p.steer_limit
 
     # ------------------------------------------------------------- helpers
     def _walls(self, sign):

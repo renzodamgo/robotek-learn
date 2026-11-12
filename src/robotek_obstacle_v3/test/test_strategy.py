@@ -87,3 +87,18 @@ def test_steer_watch_stops_when_full_lock_gives_no_turn():
             assert LAG + WINDOW <= first < LAG + WINDOW + 0.1
             assert math.isclose(hold_until - first, HOLD)
             assert watch.last['ratio'] < 0 and math.isclose(watch.last['steer'], 17.5, abs_tol=0.1)
+
+
+def test_front_recover_backs_up_on_the_side_that_makes_the_car_parallel():
+    """12 nov 2026 00:26: nose 60 deg to the inside on the start straight (RECOVER_INSIDE 40 deg) -> back up on the other lock (+, three-point
+    turn); a nose toward the outer wall (or straight) keeps the coach's rule (-steer_limit)."""
+    import math
+
+    from robotek_obstacle_v3.mission import Mission
+
+    m = Mission({})
+    m.phi = 0.5                                  # start straight: lane heading 0 in the mission frame
+    limit = m.p.steer_limit
+    assert m._recover_back_steer(math.radians(60.0)) == limit
+    assert m._recover_back_steer(math.radians(30.0)) == -limit
+    assert m._recover_back_steer(math.radians(-40.0)) == -limit
