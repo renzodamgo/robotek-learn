@@ -86,6 +86,9 @@ class Mission:
         self.loc = Localizer()
         self.state = 'SETUP'
         self.selected_direction = ''
+        # 'ccw' / 'cw' from the node's direction parameter skips the walls' vote (12 nov 2026: beside the lot it took
+        # 27.8 s to reach the margin); anything else = from the walls, as before.
+        self.forced_direction = ''
         self.gyro_bias = 0.0
         self.yaw_zero = 0.0
         self._calib = [0.0, 0.0, 0]
@@ -188,6 +191,8 @@ class Mission:
             return 0.0, 0.0, 'SETUP'
         if new_scan and scan is not None:
             sign, margin = direction_from_scan(scan)
+            if self.forced_direction in ('ccw', 'cw'):   # given by hand (parking tests): no wait for the walls
+                sign, margin = (1.0 if self.forced_direction == 'ccw' else -1.0), 1.0
             self._direction_margin = margin
             self._direction_wait += dt
             needed = DIRECTION_MARGIN[0] if self._direction_wait < DIRECTION_WAIT else DIRECTION_MARGIN[1]

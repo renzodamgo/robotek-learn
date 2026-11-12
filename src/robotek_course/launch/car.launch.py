@@ -131,6 +131,8 @@ def _strategy_node(context):
         lot = {name: float(_arg(context, name)) for name in ('park_lot_end', 'park_lot_length') if _arg(context, name)}
         if _arg(context, 'park_finish_steps'):     # pulses after the partial park (beats the params file)
             lot['park_finish_steps'] = _arg(context, 'park_finish_steps')
+        if _arg(context, 'direction') in ('ccw', 'cw'):   # skip the walls' vote at SETUP (parking tests)
+            lot['direction'] = _arg(context, 'direction')
         for name in ('park_pulse_speed', 'park_speed', 'park_align_speed'):   # m/s of the parking's parts
             if _arg(context, name):
                 lot[name] = float(_arg(context, name))
@@ -390,6 +392,9 @@ def generate_launch_description():
                               description='Obstacle v3: m/s of the park_finish_steps pulses (empty = 0.2). Below '
                                           'motor_min_rps it is the floor that counts: lower that too (0.1 m/s = 0.8 rps at 8.0 '
                                           'rps per m/s)'),
+        DeclareLaunchArgument('direction', default_value='',
+                              description="Obstacle v3: 'ccw' or 'cw' given by hand (no wait for the walls at SETUP; "
+                                          '12 nov 2026: beside the lot it took 27.8 s). Empty = from the walls'),
         DeclareLaunchArgument('park_speed', default_value='',
                               description='Obstacle v3: m/s of the parking moves (entry arc, straight, push; empty = 0.06, '
                                           'which motor_min_rps raises)'),

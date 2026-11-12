@@ -119,3 +119,18 @@ def test_a_lost_camera_holds_the_car_only_briefly():
     s.signs_stamp = 10.6
     s.stale(10.65)
     assert not s.camera_lost
+
+
+def test_a_given_direction_skips_the_walls_vote():
+    """direction 'cw' / 'ccw' (parking tests, 12 nov 2026): SETUP picks it at the first scan after the gyro calibration,
+    whatever the walls say; 'auto' keeps the vote."""
+    from robotek_obstacle_v3.mission import Mission
+
+    m = Mission({})
+    m.forced_direction = 'cw'
+    scan = _scan(0.0)
+    for k in range(40):
+        m.step(k * 0.02, scan, k * 0.02, k * 0.02, 0.0, 0.0, 0.0)
+        if m.state != 'SETUP':
+            break
+    assert m.selected_direction == 'cw' and m.state == 'RUN'

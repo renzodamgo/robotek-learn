@@ -34,6 +34,7 @@ class Strategy(ObstacleStrategyBase):
             values.setdefault('park', 1.0)
         self.direction = direction            # the mission reads it from the walls; kept for the record
         self.mission = Mission(values)
+        self.mission.forced_direction = direction if direction in ('ccw', 'cw') else ''
         self.round_start = None               # first tick after Start with every sensor fresh
         self._imu_stamp = -math.inf
         self.camera_lost = False              # True while the camera is older than CAMERA_LOST (the node logs it)
