@@ -15,7 +15,7 @@ OPERATION = {
     # Crash detector (crash_watch.py): on a crash the car stops (state CRASH; base_adapter resets the board) and the
     # last crash_window_s s go to crash-<time>.json next to the telemetry. A crash = crash_blind_s s of scans under
     # crash_min_rays valid rays (until one with crash_clear_rays), or a gyro jump of crash_gyro_jump rad/s in 0.1 s
-    # (0 = off), while driving. Off in the simulation; on in config/car_picam.yaml.
+    # (0 = off), while driving. Off by default, on the car too (detect_crash:=true at launch turns it on).
     'detect_crash': False, 'crash_window_s': 5.0, 'crash_min_rays': 120, 'crash_clear_rays': 180,
     'crash_blind_s': 0.4, 'crash_gyro_jump': 3.0,
 }
