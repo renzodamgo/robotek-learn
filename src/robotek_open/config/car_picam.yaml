@@ -13,7 +13,8 @@ strategy:
     lateral_kp: 1.0             # rad per m off inner_gap (was 0.3): line up with the island faster after a corner (coach, 11 nov 2026)
     scan_max_age: 1.0           # s: brake only if the LiDAR is really gone (its gaps last <= 0.5 s; the gyro and the
                                 # front-wall dead reckoning bridge them; 12 nov 2026 lab)
-    detect_crash: true          # stop + board reset + ~/runs/<round>/crash-<time>.json (last 5 s) on a crash (11 nov 2026)
+    detect_crash: false         # off by default (the coach, 11 nov 2026). detect_crash:=true at launch: on a crash it stops,
+                                # resets the board and saves the last 5 s to ~/runs/<round>/crash-<time>.json
     brake_margin: 0.35          # brake 0.2 m earlier than the 0.15 default (coach, 11 nov 2026)
     corner_lookahead: 0.35      # m (at most the island distance - 0.08 m)
     finish_speed: 0.32          # -20 % of 0.4

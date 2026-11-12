@@ -331,8 +331,8 @@ def generate_launch_description():
                               description='Open v5: rad of heading per m off inner_gap on the straights ("" = params file, '
                                           '1.0 on the car)'),
         DeclareLaunchArgument('detect_crash', default_value='',
-                              description='Open v5: stop, reset the board and save the last 5 s on a crash '
-                                          '("" = params file, true on the car)'),
+                              description='Open v5: true = stop, reset the board and save the last 5 s on a crash '
+                                          '("" = params file: off)'),
         DeclareLaunchArgument('inner_gap', default_value='',
                               description='Open v5: m kept from the island on the straights ("" = params file, 0.35 on the car)'),
         DeclareLaunchArgument('brake_margin', default_value='',
