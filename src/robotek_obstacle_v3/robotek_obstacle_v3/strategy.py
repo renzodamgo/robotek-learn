@@ -22,6 +22,8 @@ SENSOR_MAX_AGE = 0.35   # s; older data pauses the mission
 CAMERA_MAX_AGE = 0.8    # s for the camera: on the car it was 0.35-0.43 s late 48 times in one run (9 nov 2026), each a
                         # WAIT_SENSOR stop; the colours of the signs do not need every frame
 ROUND_LIMIT = 180.0     # s after Start (rules 9.2)
+CAMERA_LOST = 1.5       # s: an older camera no longer holds the car; it drives on with the colours it remembers
+                        # (12 nov 2026 01:05: the camera stopped at 14.5 s and never came back; the car waited 18 s)
 
 
 class Strategy(ObstacleStrategyBase):
@@ -34,6 +36,7 @@ class Strategy(ObstacleStrategyBase):
         self.mission = Mission(values)
         self.round_start = None               # first tick after Start with every sensor fresh
         self._imu_stamp = -math.inf
+        self.camera_lost = False              # True while the camera is older than CAMERA_LOST (the node logs it)
 
     def on_imu(self, now, gyro_z):
         super().on_imu(now, gyro_z)
@@ -44,7 +47,9 @@ class Strategy(ObstacleStrategyBase):
         parking: the parking uses only the LiDAR and the gyroscope, and on the car (8 nov 2026, 22:29) the camera's
         stamp stopped mid-park and held the car in WAIT_SENSOR for minutes with every sensor fresh outside the node."""
         stamps = {'scan': self.scan_stamp, 'imu': self._imu_stamp}
-        if self.mission.state != 'PARK':
+        # Lost = it worked and stopped; a camera that never sent a frame still holds the round at Start.
+        self.camera_lost = self.started and self.signs_stamp > -math.inf and now - self.signs_stamp > CAMERA_LOST
+        if self.mission.state != 'PARK' and not self.camera_lost:
             stamps['camera'] = self.signs_stamp
         return {name: now - t for name, t in stamps.items()
                 if not 0 <= now - t < (CAMERA_MAX_AGE if name == 'camera' else SENSOR_MAX_AGE)}

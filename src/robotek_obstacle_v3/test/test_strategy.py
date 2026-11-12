@@ -102,3 +102,20 @@ def test_front_recover_backs_up_on_the_side_that_makes_the_car_parallel():
     assert m._recover_back_steer(math.radians(60.0)) == limit
     assert m._recover_back_steer(math.radians(30.0)) == -limit
     assert m._recover_back_steer(math.radians(-40.0)) == -limit
+
+
+def test_a_lost_camera_holds_the_car_only_briefly():
+    """12 nov 2026 01:05: the camera stopped at 14.5 s and the car waited in WAIT_SENSOR for good. Now a camera older
+    than CAMERA_LOST no longer counts (scan and gyro still do); before Start it still does."""
+    from robotek_obstacle_v3.strategy import CAMERA_LOST, Strategy
+
+    s = Strategy()
+    s.scan_stamp, s._imu_stamp, s.signs_stamp = 10.0, 10.0, 9.0
+    assert 'camera' in s.stale(10.1)                  # before Start: the camera is needed
+    s.started = True
+    assert 'camera' in s.stale(10.1) and not s.camera_lost
+    s.scan_stamp = s._imu_stamp = 9.0 + CAMERA_LOST + 0.1
+    assert s.stale(9.0 + CAMERA_LOST + 0.2) == {} and s.camera_lost
+    s.signs_stamp = 10.6
+    s.stale(10.65)
+    assert not s.camera_lost

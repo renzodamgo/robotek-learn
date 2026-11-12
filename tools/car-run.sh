@@ -32,4 +32,4 @@ if [ "${VERBOSE:-0}" = 1 ]; then
     exec ros2 launch robotek_course car.launch.py "$@"
 fi
 ros2 launch robotek_course car.launch.py "$@" 2>&1 | grep --line-buffered -E \
-    'READY|RUNNING|: Start\.|: Stop|state [A-Z_]+|(straight|corner) [0-9]+ \(lap|sign (seen|colour|passed)|ROUND |LAP [0-9]|DONE:|park verdict|STEER FAULT|Telemetry:|CRASH|ERROR|Traceback|has died|rebooted|Board reset|Battery [0-9.]+ V <'
+    'READY|RUNNING|: Start\.|: Stop|state [A-Z_]+|(straight|corner) [0-9]+ \(lap|sign (seen|colour|passed)|ROUND |LAP [0-9]|DONE:|park verdict|STEER FAULT|CAMERA LOST|camera back|rpicam|Telemetry:|CRASH|ERROR|Traceback|has died|rebooted|Board reset|Battery [0-9.]+ V <'

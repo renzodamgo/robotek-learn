@@ -131,6 +131,7 @@ class Drive(Node):
         self.signs_known = {}        # seat -> colour announced (None = seen, colour unknown)
         self.signs_passed = set()    # (lap, seat) already reported as passed
         self.round_logged = False
+        self.camera_lost_logged = False
         self.create_timer(1.0 / CONTROL_RATE, self.control)
         p = self.strategy.mission.p
         self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s; camera %s)'
@@ -246,6 +247,14 @@ class Drive(Node):
                 self.rec.event('lot_exit', self._t(), detail=str(entry))
             self.lot_logged = len(mission.lot_exit.log)
         self._log_progress(mission)
+        if self.strategy.camera_lost != self.camera_lost_logged:
+            self.camera_lost_logged = self.strategy.camera_lost
+            if self.camera_lost_logged:
+                self.get_logger().warn('[%6.2f s] CAMERA LOST: no frame for %.1f s, driving on with the remembered colours'
+                                       % (self._t() or 0.0, self.now() - self.strategy.signs_stamp))
+            else:
+                self.get_logger().info('[%6.2f s] camera back' % (self._t() or 0.0))
+            self.rec.event('camera_lost' if self.camera_lost_logged else 'camera_back', self._t())
         if self.strategy.label != self.state_sent:
             self.state_sent = self.strategy.label
             stamp = '[%6.2f s] ' % self._t() if self.t_start is not None else ''
