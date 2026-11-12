@@ -33,6 +33,7 @@ import numpy as np
 from .car import LIDAR_OFFSET_X, OUTLINE_HALF_WIDTH
 
 from .field import wrap
+from .lot_exit import REAR_STOP_MM
 from .parking_search import LIMIT_THICKNESS, Lot, move
 from .park import GUARD_AHEAD, GYRO_ARC, LINE_UP, MAX_RESUME, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES, Parking
 
@@ -92,6 +93,12 @@ class FixedParking(Parking):
         # park_fixed_partial 1 (12 nov 2026): a basic partial park, only APPROACH, ENTRY and DOWN (the rear into the
         # lot at ~park_fixed_entry), no straightening or centring: the car ends partly in the lot and stays.
         self.partial = bool(p.park_fixed_partial)
+        # park_partial_back s (12 nov 2026, the coach: "half a second more"): after the straight into the lot, one more
+        # reverse straight for at most this long, with the guard but without its roll look-ahead (on the car the
+        # 0.13 m roll estimate ended the straight early); the rear sensor (REAR_STOP_MM) also ends it.
+        self.partial_back = p.park_partial_back if self.partial else 0.0
+        self.mission = mission
+        self.push_start = None
 
     # ------------------------------------------------------- the lot from the LiDAR
     def _applied(self):
@@ -187,8 +194,11 @@ class FixedParking(Parking):
                              fix=[round(v, 4) for v in self.fix], seen=list(self.seen)))
 
     def _finishing(self, pose):
-        if self.partial:
-            return None              # partial: end after the entry and the straight into the lot
+        if self.partial:             # partial: end after the entry and the straight into the lot (and the push)
+            if self.partial_back > 0.0 and self.push_start is None:
+                self.push_start = -1.0
+                return (0.0, -1.0, 1.0, ('time', self.partial_back))
+            return None
         return super()._finishing(pose)
 
     def _straighten(self, pose):
@@ -201,6 +211,8 @@ class FixedParking(Parking):
         return move_
 
     def _reached(self, x, y, th, early):
+        if self.current[3][0] == 'time':
+            return True              # done when it stops (it never resumes)
         if self.current[3][0] == 'guard':
             return False             # only the guard (or the length) ends it
         return super()._reached(x, y, th, early)
@@ -232,7 +244,19 @@ class FixedParking(Parking):
             self.coast = self.rolls[self._is_arc(self.current[0]) and self.split]
 
     def _drive(self, now, x, y, th):
-        steer, direction, length, _, (x0, y0, _) = self.current
+        steer, direction, length, target, (x0, y0, _) = self.current
+        if target[0] == 'time':      # the partial park's last push: by time, ended early by the rear sensor
+            if self.push_start is None or self.push_start < 0.0:
+                self.push_start = now
+            rear = self.mission._rear_mm(now) if hasattr(self.mission, '_rear_mm') else None
+            # The guard without the roll look-ahead (the 0.13 m roll estimate stopped the straight early on the car).
+            ahead = move(x, y, th, steer, direction * GUARD_AHEAD)
+            if (now - self.push_start < target[1] and (rear is None or rear > REAR_STOP_MM)
+                    and self.lot.free(*ahead, steer, self.guard_margin)):
+                return direction * self.speed, steer
+            self.resumes = 99
+            self.stop_pose, self.state, self.since = (x, y, th), 'PARK_SETTLE', now
+            return 0.0, steer
         overrun = math.hypot(x - x0, y - y0) >= length
         look = GUARD_AHEAD + GUARD_ROLL * self.coast
         ahead = move(x, y, th, steer, direction * look)

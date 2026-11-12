@@ -390,8 +390,18 @@ class Mission:
         if not self._lot_on_field() or not self._lot_in_laps():
             return False
         s = progress % scene.UNITS_PER_LAP
-        low, high = (0.43, 1.18) if self.selected_direction == 'ccw' else (-0.18, 0.57)
+        low, high = self._lot_span()
         return low <= s <= high or low <= s - scene.UNITS_PER_LAP <= high
+
+    def _lot_span(self):
+        """Progress range of the start straight beside the lot, from park_lot_end / park_lot_length (12 nov 2026: the
+        team's field has the lot 17 cm nearer corner 4 than the rules; the fixed range of the rules' lot began right at
+        its near limit there, and the car leaving corner 4 met that limit every lap). The rules' lot gives the old
+        range: (0.43, 1.18) in CCW, (-0.18, 0.57) in CW. Start straight: progress = x + 0.5."""
+        end, length = self.p.park_lot_end, self.p.park_lot_length
+        if self.selected_direction == 'ccw':
+            return end - length + 0.5 - 0.18, end + 0.5 + 0.20
+        return -end + 0.5 - 0.20, -end + length + 0.5 + 0.18
 
     def _update_pose(self, distance, yaw, gyro, sign, travelled=None):
         if travelled is None:
@@ -713,9 +723,11 @@ class Mission:
         keeps off its limits, before corner 1 in CCW and after corner 7 in CW."""
         if not self._lot_on_field() or not self._lot_in_laps():
             return -1.0, -1.0
-        ccw = self.selected_direction == 'ccw'
-        return (LOT_OFFSET if ccw and start % 8 == 1 else -1.0,
-                LOT_OFFSET if not ccw and start % 8 == 7 else -1.0)
+        low, high = self._lot_span()
+        # Before corner 1 when the lot reaches near its entry, after corner 4 (the corner starting at unit 7) when it
+        # starts near that corner's exit. The rules' lot: before corner 1 in CCW, after it in CW, as before.
+        return (LOT_OFFSET if start % 8 == 1 and high > 0.8 else -1.0,
+                LOT_OFFSET if start % 8 == 7 and low < 0.35 else -1.0)
 
     def _offset_at(self, progress):
         """Planned lateral offset at a progress value (0 without signs)."""
