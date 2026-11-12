@@ -21,6 +21,8 @@ as cylinders and the steering as an arrow, in base_link).
 """
 from dataclasses import asdict
 import math
+import os
+import time
 
 import cv2
 from cv_bridge import CvBridge
@@ -37,6 +39,8 @@ from robotek_course.obstacle_vision import COLOR_RANGES, associate, color_blocks
 
 from .lot_exit import DEFAULT_STEPS, parse_steps
 from .perception import scan_clusters
+from .recording import Recording, default_folder, sector_min
+from .scene import UNITS_PER_LAP
 from .settings import Params
 from .strategy import Strategy
 
@@ -108,16 +112,28 @@ class Drive(Node):
         self.create_subscription(Bool, '/robotek/gpio_button', self.on_start, 10)
         # Rear VL53L0X (rear_range node, mm, -1 = nothing in range): the lot exit backs up on it (start_lot).
         self.create_subscription(Int32, '/robotek/rear_range_mm', self.on_rear, 10)
+        # What the round leaves behind (recording.py), as the Open v5: 'auto' = ~/runs/<date>-<time>-obstacle-v3/,
+        # '' or 'off' = nothing; telemetry_every = control ticks per telemetry row (2 = 25 Hz).
+        folder = str(self.declare_parameter('telemetry', 'auto').value)
+        folder = default_folder() if folder == 'auto' else ('' if folder in ('', 'off') else os.path.expanduser(folder))
+        self.rec = Recording(folder, every=int(self.declare_parameter('telemetry_every', 2).value))
+        self.rec.params(params, values)
+        self.rear_mm = -1
+        self.t_start = None          # node clock at Start (the button or /start)
+        self.corners_logged = 0      # corners already announced (progress units: odd = corner)
+        self.laps_logged, self.lap_start = 0, 0.0
         self.create_timer(1.0 / CONTROL_RATE, self.control)
         p = self.strategy.mission.p
         self.get_logger().info('Obstacle v3 ready (park=%g, steer_limit=%.3f rad, changed: %s; camera %s)'
                                % (p.park, p.steer_limit, params, self.camera))
+        self.get_logger().info('Telemetry: %s' % (folder or 'off'))
 
     def now(self):
         return self.get_clock().now().nanoseconds * 1e-9
 
     def on_scan(self, msg):
         self.scan_msg = msg
+        self.rec.scan(msg)
         self.strategy.on_scan(msg)
 
     def on_imu(self, msg):
@@ -135,6 +151,8 @@ class Drive(Node):
                 self.debug_sent = stamp
                 self.publish_debug(msg, bgr, blocks, observations)
         self.strategy.on_signs(observations, stamp)
+        if observations:
+            self.rec.signs(stamp, observations)
         if self.signs_pub.get_subscription_count():
             self.publish_signs(msg, observations)
 
@@ -178,11 +196,14 @@ class Drive(Node):
         self.signs_pub.publish(markers)
 
     def on_rear(self, msg):
-        self.strategy.mission.rear(self.now(), int(msg.data))
+        self.rear_mm = int(msg.data)
+        self.strategy.mission.rear(self.now(), self.rear_mm)
 
     def on_start(self, msg):
         if msg.data and not self.strategy.started:
-            self.get_logger().info('Start')
+            self.get_logger().info('Start.')
+            self.t_start = self.now()
+            self.rec.event('start', 0.0)
             self.strategy.request_start()
 
     def control(self):
@@ -199,22 +220,78 @@ class Drive(Node):
             self.estop.publish(Bool(data=True))
         for entry in mission.events[self.events_logged:]:
             self.get_logger().info('recover: %s' % entry)
+            self.rec.event('recover', self._t(), detail=str(entry))
         self.events_logged = len(mission.events)
         if mission.lot_exit is not None:
             if mission.lot_exit.brake:
                 self.estop.publish(Bool(data=True))
             for entry in mission.lot_exit.log[self.lot_logged:]:
                 self.get_logger().info('lot exit: %s' % entry)
+                self.rec.event('lot_exit', self._t(), detail=str(entry))
             self.lot_logged = len(mission.lot_exit.log)
+        self._log_progress(mission)
         if self.strategy.label != self.state_sent:
             self.state_sent = self.strategy.label
+            stamp = '[%6.2f s] ' % self._t() if self.t_start is not None else ''
             if self.state_sent == 'WAIT_SENSOR':
                 ages = self.strategy.stale(self.now())
-                self.get_logger().warn('state WAIT_SENSOR: stale %s' % ', '.join(
-                    '%s %.2f s' % (name, age) for name, age in sorted(ages.items())))
+                self.get_logger().warn('%sstate WAIT_SENSOR: stale %s' % (stamp, ', '.join(
+                    '%s %.2f s' % (name, age) for name, age in sorted(ages.items()))))
+                self.rec.event('wait_sensor', self._t(), stale=ages)
             else:
-                self.get_logger().info('state %s' % self.state_sent)
+                self.get_logger().info('%sstate %s' % (stamp, self.state_sent))
+                self.rec.event('state', self._t(), state=self.state_sent)
+            if self.state_sent == 'DONE' and self.t_start is not None:
+                self.get_logger().info('\033[1;32mDONE: %.2f s from Start\033[0m' % self._t())
+                self.rec.event('done', self._t(), progress=mission.phi)
+            elif self.state_sent == 'FAULT':
+                self.rec.event('fault', self._t(), progress=mission.phi)
             self.state.publish(String(data=self.state_sent))
+        self._record(mission, speed, steer)
+
+    def _t(self):
+        """Seconds since Start on the node's clock (None before Start)."""
+        return None if self.t_start is None else self.now() - self.t_start
+
+    def _log_progress(self, mission):
+        """One line per corner and per lap with the time since Start (progress units: 8 a lap, corners odd), as
+        the Open v5's terminal summary that tools/car-run.sh keeps."""
+        if self.t_start is None or mission.state not in ('RUN', 'PARK', 'STOP'):
+            return
+        t, phi = self._t(), mission.phi
+        corners = max(0, int((math.floor(phi) + 1) // 2))           # corner k spans units 2k-1..2k
+        while self.corners_logged < min(corners, 12):
+            self.corners_logged += 1
+            self.get_logger().info('[%6.2f s] corner %d (lap %d)' % (t, self.corners_logged,
+                                                                   (self.corners_logged - 1) // 4 + 1))
+            self.rec.event('corner', t, corner=self.corners_logged, progress=phi)
+        laps = min(3, int(phi // UNITS_PER_LAP))
+        while self.laps_logged < laps:
+            self.laps_logged += 1
+            lap_time, self.lap_start = t - self.lap_start, t
+            self.get_logger().info('\033[1;36mLAP %d: %.2f s (total %.2f s)\033[0m' % (self.laps_logged, lap_time, t))
+            self.rec.event('lap', t, lap=self.laps_logged, lap_time=lap_time, progress=phi)
+
+    def _record(self, mission, speed, steer):
+        if not self.rec.on:
+            return
+        now, scan = self.now(), self.scan_msg
+        x, y, th = mission.pose
+        pillar = mission.pillar or (None, None, None)
+        parking = mission.parking
+        self.rec.row(
+            wall_time=time.time(), t=self._t(), state=self.strategy.label, progress=round(mission.phi, 4),
+            lap=int(mission.phi // UNITS_PER_LAP) + 1, corner=self.corners_logged,
+            x=round(x, 4), y=round(y, 4), th=round(th, 4), yaw=round(self.strategy.yaw, 4),
+            gyro=round(self.strategy.gyro, 4), gyro_bias=round(mission.gyro_bias, 5),
+            travelled=round(self.strategy.travelled, 5), v_cmd=round(speed, 4), steer_cmd=round(steer, 4),
+            front=round(sector_min(scan, 0.0), 3), left=round(sector_min(scan, math.pi / 2), 3),
+            right=round(sector_min(scan, -math.pi / 2), 3), rear_mm=self.rear_mm,
+            pillar_lateral=pillar[0], pillar_ahead=None if pillar[1] is None else round(pillar[1] - mission.phi, 3),
+            pillar_colour=pillar[2], offset=round(mission._offset_at(mission.phi), 4),
+            park_state=None if parking is None else parking.state,
+            scan_age=round(now - self.strategy.scan_stamp, 3), imu_age=round(now - self.strategy._imu_stamp, 3),
+            camera_age=round(now - self.strategy.signs_stamp, 3), signs_seen=len(self.strategy.signs))
 
 
     def _log_parking(self, mission):
@@ -232,6 +309,7 @@ class Drive(Node):
             move = getattr(parking, 'current', None)
             what = '' if move is None else ' move steer %.3f dir %+.0f target %s' % (move[0], move[1], move[3][0])
             self.get_logger().info('park %s at %s%s' % (parking.state, pose, what))
+            self.rec.event('park_state', self._t(), state=parking.state, pose=list(own))
         for event in parking.log:
             self.get_logger().info('park event %s' % {k: ([round(float(x), 4) for x in v] if isinstance(v, (list, tuple))
                                                           else v) for k, v in event.items()})
@@ -242,6 +320,11 @@ class Drive(Node):
                     else 'not inside the lot (own pose)')
                 self.get_logger().info('park verdict %s: %s, %d moves' % (
                     'PARKED' if event.get('parked') else 'PARK_FAIL', why, event.get('moves', 0)))
+                self.rec.event('park_verdict', self._t(), parked=bool(event.get('parked')), why=why,
+                               moves=event.get('moves', 0), pose=list(own))
+            else:
+                self.rec.event('park', self._t(), detail={k: (list(v) if isinstance(v, tuple) else v)
+                                                          for k, v in event.items()})
         parking.log.clear()
 
 
@@ -253,6 +336,8 @@ def main(args=None):
     except (KeyboardInterrupt, RuntimeError):
         pass
     finally:
+        node.rec.event('stop', node._t())
+        node.rec.close()
         if rclpy.ok():
             node.cmd.publish(Twist())
             rclpy.shutdown()
