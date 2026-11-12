@@ -131,8 +131,9 @@ def _strategy_node(context):
         lot = {name: float(_arg(context, name)) for name in ('park_lot_end', 'park_lot_length') if _arg(context, name)}
         if _arg(context, 'park_finish_steps'):     # pulses after the partial park (beats the params file)
             lot['park_finish_steps'] = _arg(context, 'park_finish_steps')
-        if _arg(context, 'park_pulse_speed'):      # their speed in m/s (0.2 by default)
-            lot['park_pulse_speed'] = float(_arg(context, 'park_pulse_speed'))
+        for name in ('park_pulse_speed', 'park_speed', 'park_align_speed'):   # m/s of the parking's parts
+            if _arg(context, name):
+                lot[name] = float(_arg(context, name))
         if lot:
             parameters.append(_node_params_file(lot))
     if _arg(context, 'strategy') == 'robotek_open':
@@ -389,6 +390,12 @@ def generate_launch_description():
                               description='Obstacle v3: m/s of the park_finish_steps pulses (empty = 0.2). Below '
                                           'motor_min_rps it is the floor that counts: lower that too (0.1 m/s = 0.8 rps at 8.0 '
                                           'rps per m/s)'),
+        DeclareLaunchArgument('park_speed', default_value='',
+                              description='Obstacle v3: m/s of the parking moves (entry arc, straight, push; empty = 0.06, '
+                                          'which motor_min_rps raises)'),
+        DeclareLaunchArgument('park_align_speed', default_value='',
+                              description='Obstacle v3: m/s of the line-up beside the lot before the moves (last 0.30 m '
+                                          'of the approach and its reverse; empty = park_speed)'),
         DeclareLaunchArgument('park_lot_length', default_value='',
                               description="Obstacle v3: m between the lot limits' inner faces (empty = 0.3675, 1.5 x 0.245 m)"),
         DeclareLaunchArgument('lot_exit_speed', default_value='0.9',

@@ -38,6 +38,7 @@ from .parking_search import LIMIT_THICKNESS, Lot, move
 from .park import (GUARD_AHEAD, GYRO_ARC, INSIDE, LINE_UP, MAX_RESUME, PARALLEL, REACH_SLACK, RUN_PAST, STRAIGHTEN_MOVES,
                    Parking)
 
+APPROACH_MAX = 0.30          # m/s at most on the approach's far part (2 x park_speed)
 GAP = 0.04                  # m between the car side and the lot line while approaching
 ENTRY_MAX = 0.60            # m: the entry arc runs at most this far
 DOWN_MAX = 0.30             # m: the straight into the lot runs at most this far
@@ -94,6 +95,9 @@ class FixedParking(Parking):
         # park_fixed_partial 1 (12 nov 2026): a basic partial park, only APPROACH, ENTRY and DOWN (the rear into the
         # lot at ~park_fixed_entry), no straightening or centring: the car ends partly in the lot and stays.
         self.partial = bool(p.park_fixed_partial)
+        # park_align_speed (12 nov 2026, the coach): the last 0.30 m of the approach and the line-up's reverse slower
+        # than the moves, so the car stops at the same place before the hard-coded pulses (0 = park_speed, as before).
+        self.align_speed = p.park_align_speed
         # park_partial_back s (12 nov 2026, the coach: "half a second more"): after the straight into the lot, one more
         # reverse straight for at most this long, with the guard but without its roll look-ahead (on the car the
         # 0.13 m roll estimate ended the straight early); the rear sensor (REAR_STOP_MM) also ends it.
@@ -196,8 +200,17 @@ class FixedParking(Parking):
         if self.state == 'PARK_BACK':
             return self._back(now, x, y, th, line, target)
         steer = 2.0 * wrap(math.atan2(line - y, 0.30) - th)
-        speed = 2.0 * self.speed if target - x > 0.30 else self.speed
+        far = min(2.0 * self.speed, APPROACH_MAX)
+        speed = far if target - x > 0.30 else (self.align_speed or self.speed)
         return speed, max(-self.steer_limit, min(self.steer_limit, steer))
+
+    def _back(self, now, x, y, th, line, target):
+        """The line-up's reverse at park_align_speed (park._back at self.speed otherwise)."""
+        speed, self.speed = self.speed, self.align_speed or self.speed
+        try:
+            return super()._back(now, x, y, th, line, target)
+        finally:
+            self.speed = speed
 
     def _plan(self, now, pose):
         if self.plans == 0:          # the approach line of this lot, not park.py's

@@ -28,6 +28,7 @@ class Params:
     park_fixed_partial: float = 0.0  # 1: the fixed park stops after the entry arc and the straight into the lot (a basic partial park, 12 nov 2026)
     park_partial_back: float = 0.5  # s of one more reverse straight at the end of the partial park (rear sensor stops it; 12 nov 2026)
     park_pulse_speed: float = 0.2   # m/s of the park_finish_steps pulses after the partial park (the lot exit's 0.2 worked on the car with 1:1, 12 nov 2026)
+    park_align_speed: float = 0.0   # m/s of the fixed park's line-up (last 0.30 m of the approach, its reverse); 0 = park_speed
     park_fixed_sense: float = 0.0   # 1: the fixed manoeuvre places the lot from the outer wall and limits the LiDAR sees
     park_lot_length: float = 0.3675  # m between the limits' inner faces (rules: 1.5 x the real car's 0.245 m, 9 nov 2026; fixed manoeuvre, lot exit)
     park_lot_depth: float = 0.20    # m from the outer wall (rules; fixed manoeuvre)
