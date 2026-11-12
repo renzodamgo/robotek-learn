@@ -131,6 +131,8 @@ def _strategy_node(context):
         lot = {name: float(_arg(context, name)) for name in ('park_lot_end', 'park_lot_length') if _arg(context, name)}
         if _arg(context, 'park_finish_steps'):     # pulses after the partial park (beats the params file)
             lot['park_finish_steps'] = _arg(context, 'park_finish_steps')
+        if _arg(context, 'park_pulse_speed'):      # their speed in m/s (0.2 by default)
+            lot['park_pulse_speed'] = float(_arg(context, 'park_pulse_speed'))
         if lot:
             parameters.append(_node_params_file(lot))
     if _arg(context, 'strategy') == 'robotek_open':
@@ -383,6 +385,10 @@ def generate_launch_description():
                               description="Obstacle v3: pulses after the partial park, e.g. 'L-0.2' or 'R+0.15 L-0.15' "
                                           '(R toward the wall, L away, C straight; + forward, - reverse; seconds). '
                                           'Empty = the params file'),
+        DeclareLaunchArgument('park_pulse_speed', default_value='',
+                              description='Obstacle v3: m/s of the park_finish_steps pulses (empty = 0.2). Below '
+                                          'motor_min_rps it is the floor that counts: lower that too (e.g. motor_min_rps:=0; '
+                                          'the parking then gets the kick and 1.8 rps pulses)'),
         DeclareLaunchArgument('park_lot_length', default_value='',
                               description="Obstacle v3: m between the lot limits' inner faces (empty = 0.3675, 1.5 x 0.245 m)"),
         DeclareLaunchArgument('lot_exit_speed', default_value='0.9',
@@ -442,12 +448,12 @@ def generate_launch_description():
                                                 LaunchConfiguration('motor_min_rps'), ")"]), value_type=float),
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
                                               for name in ('brake_rps', 'brake_hz', 'brake_s', 'brake_min_rps')},
-                                           # start_lot: kick and pulses of 1.8 rps (with kick 0.15 s and period 0.4 s
-                                           # the car crept 5-6 cm/s for 0.06 m/s asked, 9 nov 2026), only in LOT_EXIT,
-                                           # unless set by hand.
+                                           # Obstacle v3: kick and pulses of 1.8 rps (with kick 0.15 s and period 0.4 s
+                                           # the car crept 5-6 cm/s for 0.06 m/s asked, 9 nov 2026), only in LOT_EXIT
+                                           # and PARK (low_speed_states), unless set by hand.
                                            **{name: ParameterValue(PythonExpression(
-                                               ["(", lot_value, " if '", LaunchConfiguration('start_lot'),
-                                                "'.lower() == 'true' and float('", LaunchConfiguration(name),
+                                               ["(", lot_value, " if '", LaunchConfiguration('strategy'),
+                                                "' == 'robotek_obstacle_v3' and float('", LaunchConfiguration(name),
                                                 "') == 0.0 else ", LaunchConfiguration(name), ")"]), value_type=float)
                                               for name, lot_value in (('motor_kick_rps', '1.8'), ('motor_pulse_rps', '1.8'))},
                                            **{name: ParameterValue(LaunchConfiguration(name), value_type=float)
@@ -467,9 +473,11 @@ def generate_launch_description():
                                                 "'.lower() == 'true' else ('FINISH,DONE,CRASH,OPERATOR_STOP' if '",
                                                 LaunchConfiguration('strategy'), "' == 'robotek_open' else '')"]),
                                                value_type=str),
+                                           # The kick and the pulses: the lot exit and the parking (12 nov 2026: the
+                                           # parking's slow pulses, park_pulse_speed, need them with motor_min_rps low).
                                            'low_speed_states': ParameterValue(PythonExpression(
-                                               ["'LOT_EXIT' if '", LaunchConfiguration('start_lot'),
-                                                "'.lower() == 'true' else ''"]), value_type=str)}],
+                                               ["'LOT_EXIT,PARK' if '", LaunchConfiguration('strategy'),
+                                                "' == 'robotek_obstacle_v3' else ''"]), value_type=str)}],
              remappings=[('cmd_vel', '/cmd_vel_raw')]),
         Node(package='robotek_hardware', executable='start_button', name='start_button', output='screen',
              remappings=[('start', '/start')],
