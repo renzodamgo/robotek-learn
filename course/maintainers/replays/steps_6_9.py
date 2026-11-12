@@ -35,17 +35,17 @@ import numpy as np
 
 from robotek_common import vehicle
 from robotek_course.base import StrategyBase
-from robotek_course.minisim import STEER_LIMIT, WHEELBASE, Scene, real_speed, wrap
+from robotek_course.minisim import Scene, wrap
 from robotek_evaluation import open_lab as L
 from robotek_evaluation.footprint import collision_polygons
 from robotek_evaluation.rule_judge import footprint_section, judge_open
 
-from my_open.arc import arc_steer
+from my_open.arc import arc_steer, damped_steer
 from my_open.heading import GyroHeading
-from my_open.lane import GAP, lane_steer
+from my_open.lane import GAP, lateral_bias
 from my_open.perception import perceive
 from my_open.strategy import Strategy
-from my_open.turn_gate import ISLAND_OPEN, TurnGate
+from my_open.turn_gate import ISLAND_OPEN, StraightDistance, TurnGate
 
 OUT = Path('replays-out')              # the guide's site copies these files to public/learn/assets/replays/
 FRAME_DT = 0.05
@@ -58,18 +58,19 @@ class Step6Strategy(StrategyBase):
     """drive_step6.py as a lab strategy: lane + corner + TurnGate, direction fixed ccw, it never stops."""
 
     CRUISE = 1.28
+    CORNER = 1.0
     CALIBRATE_SECONDS = 0.6
-    TURN_TOLERANCE = 0.12
 
     def __init__(self):
         super().__init__()
         self.heading = GyroHeading()
         self.samples = []
         self.time = 0.0
-        self.goal = self.ref = 0.0
+        self.goal = 0.0
         self.arc = False
         self.corners = 0
         self.gate = TurnGate()
+        self.straight = StraightDistance()
         self.scene = Scene()
         self.in_setup = True
 
@@ -89,23 +90,22 @@ class Step6Strategy(StrategyBase):
         yaw = self.heading.update(self.gyro, dt)
         self.yaw = yaw
         gyro = self.gyro - self.heading.bias
-        self.travelled = max(0.0, self.travelled)
-        self.since_corner = getattr(self, 'since_corner', 0.0) + self.travelled
+        if not self.arc:
+            self.straight.update(self.scene.front_axis)
         inner = self.scene.left
-        if self.gate.update(self.scene, inner, self.since_corner, self.arc):
+        if self.gate.update(self.scene, inner, self.straight.travelled, self.arc):
             self.goal = wrap(self.goal + math.pi / 2)
             self.arc = True
-            self.gate.corner_started()
         if self.arc:
-            rate = real_speed(self.CRUISE) * math.tan(STEER_LIMIT) / WHEELBASE
-            steer, self.ref = arc_steer(self.goal, self.ref, yaw, gyro, rate, dt, sign=1)
-            if abs(wrap(self.goal - yaw)) <= self.TURN_TOLERANCE:
-                self.arc, self.ref, self.since_corner = False, self.goal, 0.0
+            steer, done = arc_steer(self.goal, yaw, gyro)
+            if done:
+                self.arc = False
+                self.straight.reset()
                 self.corners += 1
-            return self.CRUISE, steer
+            return self.CORNER, steer
         island_open = math.isfinite(inner) and inner > ISLAND_OPEN
         keep = GAP if (not math.isfinite(inner) or island_open) else inner
-        return self.CRUISE, lane_steer(self.goal, yaw, keep, sign=1)
+        return self.CRUISE, damped_steer(self.goal + lateral_bias(keep), yaw, gyro)
 
     @property
     def label(self):
@@ -338,7 +338,7 @@ def stop_time(run):
 
 
 def brake_time(run):
-    """When the last corner's slow-down begins: the first commanded speed below cruise after 11 corners."""
+    """When the slow-down for the last corner begins: the first commanded speed below cruise after 11 corners."""
     t_last = next(t for t, s, c in run['labels'] if c == 11)
     for t, v in run['speeds']:
         if t >= t_last and v < 1.28 - 1e-6:
@@ -363,10 +363,10 @@ def step6():
     until = run['t_end']
     events = [{'t': 0.0, 'text': 'Start: el coche calibra el giroscopio, quieto'}]
     for t, n in corners:
-        events.append({'t': t, 'text': 'Esquina %d. La puerta de giro dispara: pared cerca e isla terminada' % n})
+        events.append({'t': t, 'text': 'Esquina %d. La puerta de giro dispara: tramo recorrido, pared cerca e isla terminada' % n})
     windows = [(t - 1.2, t + 1.5) for t, n in corners[:2]]
     doc = {'version': 1, 'step': 6, 'title': 'Cuándo girar: la puerta de giro',
-           'caption': 'El coche gira esquina tras esquina sin parar: la puerta dispara solo cuando la pared está cerca y la isla terminó.',
+           'caption': 'El coche gira esquina tras esquina sin parar: la puerta dispara solo cuando ya avanzó, la pared está cerca y la isla terminó.',
            'field': 'square100', 'direction': 'ccw', 'duration': until,
            'tracks': [track(run, 'main', 'Tu estrategia', COLOR_MAIN)], 'trail': True,
            'scans': scan_list(run, until, 0.3, windows), 'scene': scene_list(run, until, 0.1),
@@ -383,13 +383,13 @@ def step7():
     events = [{'t': 0.0, 'text': 'Start: calibra el giroscopio, quieto 0,3 s'}]
     for i, t in enumerate(cum, 1):
         events.append({'t': round(t, 2), 'text': 'Vuelta %d/3 completada (%s s desde Start)' % (i, fmt(t))})
-    events.append({'t': t_brake, 'text': 'Frena en la última esquina para poder parar en la sección de salida'})
+    events.append({'t': t_brake, 'text': 'Frena antes de la última esquina, como antes de todas: llega a 1,0 m/s pedidos'})
     if t_stop is not None:
         events.append({'t': t_stop, 'text': 'Parada en la sección de salida'})
     events.append({'t': round(run['stopped_at'], 2), 'text': 'DONE: 12 esquinas, ronda de %s s' % fmt(res['time'])})
     events.sort(key=lambda e: e['t'])
     doc = {'version': 1, 'step': 7, 'title': 'La misión: tres vueltas y parada',
-           'caption': 'Tres vueltas (12 esquinas), frenada en la última y parada en la sección de salida: %d de 30 puntos en %s s.'
+           'caption': 'Tres vueltas (12 esquinas), frenando antes de cada una, y parada en la sección de salida: %d de 30 puntos en %s s.'
                       % (res['points'], fmt(res['time'])),
            'field': 'square100', 'direction': 'ccw', 'duration': until,
            'tracks': [track(run, 'main', 'Tu estrategia', COLOR_MAIN)], 'trail': True,

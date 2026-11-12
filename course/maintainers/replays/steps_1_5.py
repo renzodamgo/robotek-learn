@@ -286,8 +286,8 @@ def step3():
         events.append({'t': round(jump[0], 2), 'text': 'left salta a %s m: ya no hay isla al lado' % es(jump[1].left)})
     events.append({'t': round(stop_scene[0], 2), 'text': 'front llega a %s m, por debajo de 0,5: el coche frena' % es(stop_scene[1].front_axis)})
     return {
-        'version': 1, 'step': 3, 'title': 'Paso 3: de un barrido LiDAR a cuatro números',
-        'caption': 'El coche recto por el pasillo sur: en cada barrido (rayos azules) perceive() saca left, right, front e island_end. %s' % HONEST,
+        'version': 1, 'step': 3, 'title': 'Paso 3: de un barrido LiDAR a cinco números',
+        'caption': 'El coche recto por el pasillo sur: en cada barrido (rayos azules) perceive() saca left, right, front, island_end y wall_heading. %s' % HONEST,
         'field': 'square100', 'direction': 'ccw', 'duration': duration,
         'tracks': [{'id': 'main', 'label': 'Tu estrategia', 'color': MAIN_COLOR, 'frames': log.frames(duration)}],
         'trail': True, 'scans': scans_json(log, 0.2), 'scene': scene_json(log), 'labels': [], 'sections': False,
@@ -365,82 +365,86 @@ def step4():
 # ---------------------------------------------------------------------------------------------- step 5
 CORNER_START = (0.5, -1.0)         # where the bench's corner begins in the square100 field (heading 0, in the south corridor)
 CORNER_SECONDS = 3.0               # of the bench's 4 s that the replay shows after the corner starts
-SLOW_SERVO = dict(servo_delay=0.15, servo_tau=0.10)
+CORNER_SPEED = 1.0                 # m/s commanded, as in course/tests/helpers.py
+LATE = 0.05                        # rad: the ghost keeps full lock until this close to the goal heading
 
 
-def run_bench_corner(feed, damping, seconds=4.0, dt=0.02):
-    """EXACTLY course/tests/helpers.py run_arc(arc_steer ...) with the slow servo: same car (seed 0), same warm-up on the
-    straight to cruising speed, gyroscope bias calibrated away, rate = full-lock yaw rate, first corner to the left.
+def run_bench_corner(tolerance, seconds=4.0, dt=0.02):
+    """EXACTLY course/tests/helpers.py run_arc(arc_steer ...): same car (seed 0, the real servo), same warm-up on the
+    straight to the corner speed, gyroscope bias calibrated away, first corner to the left.
 
     The poses are translated so that the corner starts at CORNER_START; the warm-up before it is part of the replay.
-    Returns (log, overshoot rad, t_close s, time the corner starts).
+    Returns (log, overshoot rad, s at full lock, time the corner starts).
     """
-    car = MiniCar(realistic=True, **SLOW_SERVO)
+    car = MiniCar(realistic=True)
     car._bias = 0.0
     warm = Log()
     warm.pose(car)
-    for _ in range(100):                                   # reach cruising speed on the straight
-        car.step(1.28, 0.0, dt)
+    for _ in range(100):                                   # reach the corner speed on the straight
+        car.step(CORNER_SPEED, 0.0, dt)
         warm.pose(car)
     start_time = car.time
     shift_x, shift_y = CORNER_START[0] - car.x, CORNER_START[1] - car.y
     car.x = car.y = car.yaw = 0.0                          # the bench restarts the pose here (time too; we keep ours)
-    goal, ref = math.pi / 2, 0.0
-    rate = real_speed(1.28) * math.tan(STEER_LIMIT) / WHEELBASE
+    goal = math.pi / 2
     log = Log()
     for row in warm.ticks:
         log.ticks.append((row[0], row[1] + shift_x, row[2] + shift_y) + tuple(row[3:]))
-    overshoot, t_close = 0.0, None
+    overshoot, t_lock = 0.0, None
     t0 = car.time
     for _ in range(int(seconds / dt)):
-        steer, ref = arc_steer(goal, ref, car.yaw, car.gyro(), rate, dt, feed=feed, damping=damping)
-        car.step(1.28, steer, dt)
+        if t_lock is None:
+            steer, done = arc_steer(goal, car.yaw, car.gyro(), turn_tolerance=tolerance)
+            if done:
+                t_lock = car.time - t0
+        else:                                              # the corner is over: only the damped heading law
+            steer, _ = arc_steer(goal, car.yaw, car.gyro(), turn_tolerance=math.pi)
+        car.step(CORNER_SPEED, steer, dt)
         overshoot = max(overshoot, car.yaw - goal)
-        if t_close is None and abs(goal - car.yaw) <= 0.12:
-            t_close = car.time - t0
         log.ticks.append((car.time, car.x + CORNER_START[0], car.y + CORNER_START[1], car.yaw, car.steer, car.speed))
-    return log, overshoot, t_close, start_time
+    return log, overshoot, t_lock, start_time
 
 
 def step5():
-    main, over_main, close_main, t_turn = run_bench_corner(True, 0.1)
-    ghost, over_ghost, close_ghost, _ = run_bench_corner(False, 0.0)
+    from my_open.arc import TURN_TOLERANCE
+    main, over_main, lock_main, t_turn = run_bench_corner(TURN_TOLERANCE)
+    ghost, over_ghost, lock_ghost, _ = run_bench_corner(LATE)
     # the same numbers the tests (course/tests/test_step_5.py, helpers.run_arc) get
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'tests'))
     try:
         from functools import partial
         from helpers import run_arc
-        ref_main = run_arc(arc_steer, **SLOW_SERVO)['overshoot']
-        ref_ghost = run_arc(partial(arc_steer, feed=False, damping=0.0), **SLOW_SERVO)['overshoot']
+        ref_main = run_arc(arc_steer)['overshoot']
+        ref_ghost = run_arc(partial(arc_steer, turn_tolerance=LATE))['overshoot']
         assert abs(ref_main - over_main) < 1e-12 and abs(ref_ghost - over_ghost) < 1e-12, (ref_main, over_main, ref_ghost, over_ghost)
         bench = 'igual que helpers.run_arc'
     except ImportError:
         bench = 'no comprobado contra helpers.run_arc'
     duration = round(t_turn + CORNER_SECONDS, 2)
-    peak_ghost = max((row for row in ghost.ticks if row[0] >= t_turn), key=lambda row: row[3])[0]
+    peak_ghost = max((row for row in ghost.ticks if t_turn <= row[0] <= t_turn + 2.0), key=lambda row: row[3])[0]   # the first swing
     deg_main, deg_ghost = math.degrees(over_main), math.degrees(over_ghost)
     events = [
-        {'t': 0.0, 'text': 'Parte del reposo y alcanza la velocidad de crucero (0,6 m/s) en el tramo recto'},
-        {'t': round(t_turn, 2), 'text': 'Empieza la esquina: el objetivo gira 90° a la izquierda'},
-        {'t': round(t_turn + 0.3, 2), 'text': 'Experimento con servo lento (retardo 0,15 s, lag 0,10 s), no el coche real'},
-        {'t': round(peak_ghost, 2), 'text': 'Solo rampa: se pasa %s° del rumbo' % es(deg_ghost, 1)},
-        {'t': round(t_turn + close_main, 2), 'text': 'Con anticipación y amortiguamiento: se pasa solo %s°' % es(deg_main, 1)},
+        {'t': 0.0, 'text': 'Parte del reposo y alcanza la velocidad de esquina (0,53 m/s) en el tramo recto'},
+        {'t': round(t_turn, 2), 'text': 'Empieza la esquina: el objetivo gira 90° a la izquierda y las ruedas van a tope'},
+        {'t': round(t_turn + lock_main, 2), 'text': 'A 17° del rumbo nuevo el coche ámbar suelta el tope: la ley de rumbo termina el giro'},
+        {'t': round(t_turn + lock_ghost, 2), 'text': 'El fantasma suelta a 3° del rumbo: el servo ya no llega a tiempo'},
+        {'t': round(peak_ghost, 2), 'text': 'Soltando tarde se pasa %s° del rumbo' % es(deg_ghost, 1)},
     ]
     return {
         'version': 1, 'step': 5, 'title': 'Paso 5: la esquina',
-        'caption': 'Experimento con servo lento: la esquina solo con rampa se pasa %s° del rumbo de 90° y con anticipación y amortiguamiento, %s°. %s'
+        'caption': 'La misma esquina a tope de dirección: soltando a 3° del rumbo nuevo el coche se pasa %s°; soltando a 17°, %s°. %s'
                    % (es(deg_ghost, 1), es(deg_main, 1), HONEST),
         'field': 'square100', 'direction': 'ccw', 'duration': duration,
         'tracks': [
-            {'id': 'main', 'label': 'Con anticipación y amortiguamiento', 'color': MAIN_COLOR, 'frames': main.frames(duration)},
-            {'id': 'ghost', 'label': 'Solo rampa', 'color': GHOST_COLOR, 'frames': ghost.frames(duration)},
+            {'id': 'main', 'label': 'Suelta a 17° del rumbo', 'color': MAIN_COLOR, 'frames': main.frames(duration)},
+            {'id': 'ghost', 'label': 'Suelta a 3° del rumbo', 'color': GHOST_COLOR, 'frames': ghost.frames(duration)},
         ],
         'trail': True, 'scans': [], 'scene': [],
         'labels': [{'t': 0.0, 'state': 'FOLLOW', 'corners': 0}, {'t': round(t_turn, 2), 'state': 'TURN', 'corners': 0},
-                   {'t': round(t_turn + close_main, 2), 'state': 'FOLLOW', 'corners': 1}],
+                   {'t': round(t_turn + lock_main, 2), 'state': 'FOLLOW', 'corners': 1}],
         'sections': False, 'events': sorted(events, key=lambda e: e['t']),
-    }, {'overshoot_main_deg': deg_main, 'overshoot_ramp_only_deg': deg_ghost, 't_close_main': close_main,
-        't_close_ramp_only': close_ghost, 'bench': bench,
+    }, {'overshoot_main_deg': deg_main, 'overshoot_late_deg': deg_ghost, 't_lock_main': lock_main,
+        't_lock_late': lock_ghost, 'bench': bench,
         'touch_main': any(Field(WALLS).touches(*row[1:4]) for row in main.ticks),
         'touch_ghost': any(Field(WALLS).touches(*row[1:4]) for row in ghost.ticks),
         'start_x': main.ticks[0][1]}

@@ -1,7 +1,7 @@
 import math
 
 from robotek_course.minisim import Scene
-from my_open.turn_gate import TurnGate
+from my_open.turn_gate import StraightDistance, TurnGate
 
 
 def scans(gate, count, front=1.1, island_end=0.2, inner=0.3, travelled=0.5, arc=False):
@@ -47,20 +47,12 @@ def test_a_lost_sighting_restarts_the_count():
 
 def test_the_car_must_have_driven_since_the_last_corner():
     assert scans(TurnGate(), 3, travelled=0.1) is False
+    # right after a corner the side is still open and the wall of the NEXT corner may already be near
+    assert scans(TurnGate(), 3, travelled=0.1, inner=1.6, island_end=math.inf) is False
 
 
 def test_no_new_corner_while_one_is_in_progress():
     assert scans(TurnGate(), 3, arc=True) is False
-
-
-def test_after_a_corner_the_gate_stays_shut_until_the_island_is_seen_again():
-    gate = TurnGate()
-    assert scans(gate, 2) is True
-    gate.corner_started()
-    assert scans(gate, 3, travelled=0.1, inner=1.6, island_end=math.inf) is False        # still at the corner
-    assert scans(gate, 3, travelled=0.5, inner=1.6, island_end=math.inf) is False        # open side, not yet re-armed
-    assert scans(gate, 1, travelled=0.5, inner=0.3, island_end=math.inf, front=1.5) is False     # island seen: armed
-    assert scans(gate, 2) is True
 
 
 def test_in_a_narrow_lane_the_lookahead_shrinks():
@@ -68,3 +60,35 @@ def test_in_a_narrow_lane_the_lookahead_shrinks():
     # the island wall is 0.3 m away: the end must be within 0.22 m, not 0.35 m
     assert scans(gate, 3, island_end=0.30, inner=0.30) is False
     assert scans(gate, 2, island_end=0.20, inner=0.30) is True
+
+
+def test_the_distance_driven_is_how_much_nearer_the_wall_ahead_is():
+    straight = StraightDistance()
+    assert straight.update(2.40) == 0.0                              # the straight begins here
+    assert math.isclose(straight.update(2.10), 0.30)
+    assert math.isclose(straight.update(1.19), 1.21)
+
+
+def test_a_lost_or_noisy_reading_does_not_take_distance_back():
+    straight = StraightDistance()
+    straight.update(2.40)
+    straight.update(2.00)
+    assert math.isclose(straight.update(math.inf), 0.40)             # no wall seen in this scan
+    assert math.isclose(straight.update(2.03), 0.40)                 # range noise: the car did not reverse
+
+
+def test_a_straight_that_begins_without_a_reading_waits_for_one():
+    straight = StraightDistance()
+    assert straight.update(math.inf) == 0.0
+    assert straight.update(2.0) == 0.0
+    assert math.isclose(straight.update(1.5), 0.5)
+
+
+def test_after_a_corner_the_distance_starts_again():
+    straight = StraightDistance()
+    straight.update(2.40)
+    straight.update(1.10)
+    straight.reset()
+    assert straight.travelled == 0.0
+    assert straight.update(2.30) == 0.0                              # the next corridor's wall
+    assert math.isclose(straight.update(2.00), 0.30)

@@ -10,7 +10,7 @@ the Gazebo runs use so that its results can be checked against them:
   that model really uses in Gazebo);
 * the LD19 scan of ``real_car:=true`` (10 Hz, 306 rays over +-110 deg, 8 mm noise, 4.3 %
   dropouts), a 50 Hz gyroscope with bias and noise, a 6 fps camera that knows the direction
-  after ``camera_delay`` seconds (the strategy brings its own ``LidarOdometry`` for the distance driven);
+  after ``camera_delay`` seconds (no odometry: the strategy measures the distance driven itself);
 * the rule judge of the Gazebo rounds (``judge_open`` and ``standard_validation``) applied to
   the lab trajectory, so points, stop and validity mean the same thing.
 

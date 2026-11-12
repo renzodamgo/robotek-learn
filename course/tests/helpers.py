@@ -1,36 +1,20 @@
 """Test benches for the exercises: small drives in the mini simulator (pure Python, no ROS, no Gazebo)."""
 import math
 
-from robotek_course.minisim import Field, MiniCar, WHEELBASE, STEER_LIMIT, clamp, real_speed, wrap
+from robotek_course.minisim import Field, MiniCar
 
-KP = 0.8                     # the heading law's gain (step 2)
-
-CORNER_SPEED = 1.28          # m/s commanded, as in the strategy (the car really reaches 0.6)
+CORNER_SPEED = 1.0           # m/s commanded in a corner, as in the strategy (the car really reaches 0.53)
 
 
-def full_lock_rate(speed_command=CORNER_SPEED):
-    """Yaw rate (rad/s) the car reaches with the wheels at full lock at this commanded speed."""
-    return real_speed(speed_command) * math.tan(STEER_LIMIT) / WHEELBASE
+def run_arc(arc_fn, sign=1, realistic=True, servo_delay=None, servo_tau=None, seconds=4.0, dt=0.02):
+    """One 90 degree corner (left for sign=+1, right for -1) starting straight at the corner speed.
 
+    ``arc_fn(goal, yaw, gyro)`` returns (steering angle, done), like ``my_open.arc.arc_steer``. Once it says done the
+    corner does not start again: the bench keeps only its damped heading law (``turn_tolerance=pi``), as the mission does.
 
-def jump_with_damping(goal, ref, yaw, gyro, rate, dt, damping=0.1):
-    """For comparison (step 5): NO ramp, the goal heading is the reference at once, and damping against a yaw rate of 0.
-
-    Same signature as an arc controller. Damping with no ramp has no idea how fast the corner should turn, so it also
-    brakes the turn the corner needs.
-    """
-    steer = KP * wrap(goal - yaw) - damping * gyro
-    return clamp(steer, -STEER_LIMIT, STEER_LIMIT), goal
-
-
-def run_arc(arc_fn, sign=1, realistic=True, servo_delay=None, servo_tau=None, rate_factor=1.0, seconds=4.0, dt=0.02):
-    """One 90 degree corner (left for sign=+1, right for -1) starting straight at cruising speed.
-
-    ``rate_factor`` is what the strategy BELIEVES about the car: it is told a full-lock yaw rate ``rate_factor`` times
-    the true one (0.7: the car actually turns faster than the speed table says).
-
-    Returns a dict: ``overshoot`` (rad past the goal heading), ``t_close`` (s until within 0.12 rad of it),
-    ``yaw`` (the heading every tick) and ``steer`` (the wheel angle every tick).
+    Returns a dict: ``overshoot`` (rad past the goal heading), ``t_close`` (s until within 0.05 rad of it and
+    staying there), ``t_lock`` (s at full lock), ``yaw`` (the heading every tick) and ``steer`` (the wheel angle
+    every tick).
     """
     options = {}
     if servo_delay is not None:
@@ -39,21 +23,26 @@ def run_arc(arc_fn, sign=1, realistic=True, servo_delay=None, servo_tau=None, ra
         options['servo_tau'] = servo_tau
     car = MiniCar(realistic=realistic, **options)
     car._bias = 0.0                                   # the gyroscope bias is calibrated away by now
-    for _ in range(100):                              # reach cruising speed on the straight
+    for _ in range(100):                              # reach the corner speed on the straight
         car.step(CORNER_SPEED, 0.0, dt)
     car.x = car.y = car.yaw = car.time = 0.0
-    goal, ref = sign * math.pi / 2, 0.0
-    rate = (full_lock_rate() if realistic else CORNER_SPEED * math.tan(STEER_LIMIT) / WHEELBASE) * rate_factor
-    overshoot, t_close, yaws, steers = 0.0, None, [], []
+    goal = sign * math.pi / 2
+    overshoot, t_lock, yaws, steers, times = 0.0, None, [], [], []
     for _ in range(int(seconds / dt)):
-        steer, ref = arc_fn(goal, ref, car.yaw, car.gyro(), rate, dt)
+        if t_lock is None:
+            steer, done = arc_fn(goal, car.yaw, car.gyro())
+            if done:
+                t_lock = car.time
+        else:                                         # the corner is over: only the damped law from here on, as in the mission
+            steer, _ = arc_fn(goal, car.yaw, car.gyro(), turn_tolerance=math.pi)
         car.step(CORNER_SPEED, steer, dt)
         overshoot = max(overshoot, sign * (car.yaw - goal))
-        if t_close is None and abs(goal - car.yaw) <= 0.12:
-            t_close = car.time
         yaws.append(car.yaw)
         steers.append(car.steer)
-    return dict(overshoot=overshoot, t_close=t_close, yaw=yaws, steer=steers)
+        times.append(car.time)
+    outside = [t for t, yaw in zip(times, yaws) if abs(goal - yaw) > 0.05]
+    t_close = outside[-1] + dt if outside and outside[-1] < times[-1] else None
+    return dict(overshoot=overshoot, t_close=t_close, t_lock=t_lock, yaw=yaws, steer=steers)
 
 
 def drive_straight(calibrated, seconds=10.0, dt=0.02, speed=0.6):

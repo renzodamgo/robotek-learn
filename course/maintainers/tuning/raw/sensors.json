@@ -22,9 +22,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.500503833790397,
+    "t": 41.84666666666667,
+    "sq100": 33.68,
+    "clr": 10.15307913444239,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -34,18 +34,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1419713639732546,
+     "min_clearance": 0.13014459367485154,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -53,208 +53,208 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14054725392416256,
+     "min_clearance": 0.12844133636909394,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "ccw",
-     "points": 30,
-     "time": 50.18,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09500503833790397,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
-     ],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "cw",
-     "points": 30,
-     "time": 50.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.0951874619088533,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.1471494433311773,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "cw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.14626471063162372,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09797176759406812,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.11051180597055277,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09500503833790397,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
-     "points": 30,
-     "time": 42.08,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.11892680247745213,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 36.78,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.15262252287101397,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 38.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.1366778206754089,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
       11.1,
-      12.8
+      10.6,
+      10.599999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 51.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11275896752272652,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.4,
+      16.300000000000004,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 51.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10175562041364317,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.5,
+      16.200000000000003,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10153079134442389,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11604179902486167,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1369475173891901,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.599999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14394898956581348,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11275896752272652,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1494370251055308,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14848718303933917,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      12.0,
+      11.899999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 39.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12047958439625672,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      12.000000000000002,
+      12.100000000000001
      ],
      "seed": 0
     }
@@ -277,9 +277,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -289,18 +289,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -308,18 +308,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -327,18 +327,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -346,18 +346,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -365,18 +365,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -384,18 +384,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -403,18 +403,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -422,56 +422,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1509862223317484,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -479,18 +479,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -498,18 +498,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -532,9 +532,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.73,
-    "sq100": 32.58,
-    "clr": 9.088932835758069,
+    "t": 41.77166666666666,
+    "sq100": 33.78,
+    "clr": 10.103645183078847,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -544,18 +544,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14170399957655622,
+     "min_clearance": 0.12971234367114748,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -563,208 +563,208 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13998832780923065,
+     "min_clearance": 0.1270661299493544,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "ccw",
-     "points": 30,
-     "time": 50.18,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09463565836236043,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
-     ],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "cw",
-     "points": 30,
-     "time": 50.08,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09088932835758068,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      15.4,
-      15.1,
-      16.9
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.14703751479438987,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "cw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.14608242186306297,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09814182950987305,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09721064623092901,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09463565836236043,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
-     "points": 30,
-     "time": 42.08,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.11890410900215476,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 36.78,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.1526937012341424,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 38.18,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.13998832780923065,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
       11.1,
-      12.7
+      10.6,
+      10.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 51.480000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11083333859393196,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.6,
+      16.1,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 51.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10103645183078847,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.5,
+      16.200000000000003,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10542234198228706,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11397475677395907,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13638981712691978,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.400000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14310985247046415,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11083333859393196,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15395948269049864,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.500000000000002,
+      13.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1340424348264857,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.4,
+      12.000000000000002,
+      11.900000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 38.68,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1270661299493544,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      11.800000000000002,
+      12.099999999999998
      ],
      "seed": 0
     }
@@ -787,9 +787,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.67166666666667,
-    "sq100": 32.58,
-    "clr": 9.087044269641709,
+    "t": 41.763333333333335,
+    "sq100": 33.78,
+    "clr": 10.049710659352318,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -799,18 +799,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14168506663464764,
+     "min_clearance": 0.12975838491133573,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -818,18 +818,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13983809092494015,
+     "min_clearance": 0.12718667491101265,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -837,18 +837,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0946434870602848,
+     "min_clearance": 0.11075216272093202,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -856,94 +856,94 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 49.88,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09087044269641709,
+     "min_clearance": 0.10049710659352318,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.1,
-      16.700000000000003
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.10168909023680595,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.700000000000001,
-      12.499999999999998,
-      13.000000000000004
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "cw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.14606744101289126,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09801635430318778,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "cw",
      "points": 30,
      "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1294641408537025,
+     "min_clearance": 0.14232066339414318,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.3,
-      14.000000000000004
+      13.6,
+      13.4,
+      13.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11946921251015596,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.300000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13675211085113004,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.400000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15443599248648435,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.599999999999998
      ],
      "seed": 0
     },
@@ -951,18 +951,18 @@
      "field": "shift140",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0946434870602848,
+     "min_clearance": 0.11075216272093202,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
+      13.6,
+      13.4,
+      13.5
      ],
      "seed": 0
     },
@@ -970,18 +970,18 @@
      "field": "shift140",
      "direction": "cw",
      "points": 30,
-     "time": 42.08,
+     "time": 42.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11892510485892949,
+     "min_clearance": 0.1241931864494128,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.5
      ],
      "seed": 0
     },
@@ -989,18 +989,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.88,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.152759075189714,
+     "min_clearance": 0.14785877432482095,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -1008,18 +1008,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.18,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13983809092494015,
+     "min_clearance": 0.12718667491101265,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.7
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -1042,9 +1042,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.71333333333333,
-    "sq100": 32.58,
-    "clr": 7.819637896560949,
+    "t": 41.805,
+    "sq100": 33.68,
+    "clr": 9.873921649642426,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -1054,18 +1054,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14139782938192458,
+     "min_clearance": 0.12988855094039697,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -1073,18 +1073,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13937659354814513,
+     "min_clearance": 0.127240311046542,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -1092,18 +1092,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09463536289375796,
+     "min_clearance": 0.10776456406948642,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -1111,94 +1111,94 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 49.980000000000004,
+     "time": 51.480000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09546875133913457,
+     "min_clearance": 0.09873921649642425,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.200000000000001,
-      15.200000000000001,
-      16.900000000000002
+      16.6,
+      16.199999999999996,
+      16.500000000000007
      ],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.10175101837278677,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.700000000000001,
-      12.499999999999998,
-      13.000000000000004
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "cw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.1461488417634933,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 42.480000000000004,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.07819637896560949,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "cw",
      "points": 30,
      "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1294814265742008,
+     "min_clearance": 0.11744530775941264,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.3,
-      14.000000000000004
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11051367587191674,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1370211926137439,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.400000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15586479360358954,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -1206,18 +1206,18 @@
      "field": "shift140",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09463536289375796,
+     "min_clearance": 0.10776456406948642,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.8,
+      13.3,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -1225,18 +1225,18 @@
      "field": "shift140",
      "direction": "cw",
      "points": 30,
-     "time": 42.08,
+     "time": 42.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11890936468761915,
+     "min_clearance": 0.11993144180856108,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.6,
+      13.500000000000002,
+      13.5
      ],
      "seed": 0
     },
@@ -1244,18 +1244,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.88,
+     "time": 37.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269975870825758,
+     "min_clearance": 0.14030648830369352,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      12.1,
+      11.899999999999999
      ],
      "seed": 0
     },
@@ -1263,18 +1263,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.38,
+     "time": 39.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13328420800025365,
+     "min_clearance": 0.1201866278764705,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.900000000000002
+      12.6,
+      12.000000000000002,
+      12.100000000000001
      ],
      "seed": 0
     }
@@ -1294,40 +1294,33 @@
    },
    "summary": {
     "label": "LiDAR dropout 25%",
-    "ok": 2,
+    "ok": 12,
     "n": 12,
-    "pts": 13.25,
-    "t": 32.230000000000004,
-    "sq100": 32.38,
-    "clr": 0.0,
-    "walls": {
-     "TURN": 10
-    },
+    "pts": 30.0,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 9.938446319740324,
+    "walls": {},
     "stuck": {},
-    "why": {
-     "rule_maximum": 10,
-     "stop_observed": 10,
-     "no_contacts": 10,
-     "min_inner_wall_clearance_m": 10
-    }
+    "why": {}
    },
    "rounds": [
     {
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.38,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13280520153906764,
+     "min_clearance": 0.13482814949898095,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.3,
-      9.8,
-      10.2
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -1335,232 +1328,209 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.08,
+     "time": 33.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.06728473205634544,
+     "min_clearance": 0.12476015438432064,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.0,
-      9.600000000000001,
-      10.2
+      11.1,
+      10.4,
+      10.700000000000003
      ],
      "seed": 0
     },
     {
      "field": "square180",
      "direction": "ccw",
-     "points": 3,
-     "time": 6.1000000000000005,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 51.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11505794537834468,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.5,
+      16.200000000000003,
+      16.299999999999997
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 6.12,
-     "end": "TURN",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "square180",
      "direction": "cw",
-     "points": 3,
-     "time": 6.0,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 51.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09938446319740324,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.5,
+      16.200000000000003,
+      16.4
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 6.0200000000000005,
-     "end": "TURN",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "ccw",
-     "points": 16,
-     "time": 23.2,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 23.22,
-     "end": "TURN",
-     "turns": 7,
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10336557358272525,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
      "laps": [
-      12.700000000000001
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "cw",
-     "points": 3,
-     "time": 5.2,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11697400892301779,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.300000000000004
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 5.2,
-     "end": "TURN",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "rect180x100",
      "direction": "ccw",
-     "points": 10,
-     "time": 14.8,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 14.88,
-     "end": "TURN",
-     "turns": 4,
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11792951436046661,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
      "laps": [
-      12.6
+      13.9,
+      13.299999999999999,
+      13.600000000000005
      ],
      "seed": 0
     },
     {
      "field": "rect180x100",
      "direction": "cw",
-     "points": 19,
-     "time": 26.900000000000002,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 43.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15593939439187893,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.599999999999998
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 26.96,
-     "end": "TURN",
-     "turns": 8,
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11505794537834468,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12018160074534445,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.500000000000002,
+      13.5
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14257053264647818,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.4,
+      11.9,
+      12.000000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 39.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10465049234020674,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
      "laps": [
       12.6,
-      12.300000000000002
+      11.9,
+      12.200000000000003
      ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "ccw",
-     "points": 16,
-     "time": 23.900000000000002,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 23.96,
-     "end": "TURN",
-     "turns": 7,
-     "laps": [
-      12.9
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
-     "points": 14,
-     "time": 19.7,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 19.76,
-     "end": "TURN",
-     "turns": 6,
-     "laps": [
-      12.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "ccw",
-     "points": 10,
-     "time": 13.4,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 13.42,
-     "end": "TURN",
-     "turns": 4,
-     "laps": [
-      11.4
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "cw",
-     "points": 5,
-     "time": 7.1000000000000005,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 7.18,
-     "end": "TURN",
-     "turns": 2,
-     "laps": [],
      "seed": 0
     }
    ]
@@ -1579,41 +1549,33 @@
    },
    "summary": {
     "label": "LiDAR dropout 40%",
-    "ok": 2,
+    "ok": 12,
     "n": 12,
-    "pts": 7.0,
-    "t": 31.53,
-    "sq100": 31.98,
-    "clr": 0.0,
-    "walls": {
-     "TURN": 7,
-     "FOLLOW": 3
-    },
+    "pts": 30.0,
+    "t": 41.78833333333334,
+    "sq100": 33.68,
+    "clr": 9.61236244474658,
+    "walls": {},
     "stuck": {},
-    "why": {
-     "rule_maximum": 10,
-     "stop_observed": 10,
-     "no_contacts": 10,
-     "min_inner_wall_clearance_m": 10
-    }
+    "why": {}
    },
    "rounds": [
     {
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 31.98,
+     "time": 33.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.07734041272945316,
+     "min_clearance": 0.13488251925356695,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.200000000000001,
-      9.299999999999999,
-      10.0
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -1621,221 +1583,209 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 31.080000000000002,
+     "time": 33.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.06615479029491955,
+     "min_clearance": 0.12556461070928304,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.0,
-      9.400000000000002,
-      9.799999999999997
+      11.1,
+      10.6,
+      10.7
      ],
      "seed": 0
     },
     {
      "field": "square180",
      "direction": "ccw",
-     "points": 0,
-     "time": 1.9000000000000001,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 1.96,
-     "end": "TURN",
-     "turns": 0,
-     "laps": [],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "cw",
-     "points": 1,
-     "time": 2.1,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 2.14,
-     "end": "TURN",
-     "turns": 0,
-     "laps": [],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "ccw",
-     "points": 11,
-     "time": 16.8,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 16.88,
-     "end": "TURN",
-     "turns": 5,
+     "points": 30,
+     "time": 51.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11498542216663443,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
      "laps": [
-      12.200000000000001
+      16.5,
+      16.200000000000003,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 51.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10097955537962089,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.6,
+      16.199999999999996,
+      16.400000000000006
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14133771277964158,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.500000000000002,
+      13.399999999999999
      ],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "cw",
-     "points": 2,
-     "time": 5.0,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 41.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13724198359770967,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.300000000000002,
+      13.400000000000002
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 5.0200000000000005,
-     "end": "TURN",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "rect180x100",
      "direction": "ccw",
-     "points": 1,
-     "time": 2.5,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 42.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0961236244474658,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.8,
+      13.399999999999999,
+      13.500000000000004
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 2.54,
-     "end": "FOLLOW",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "rect180x100",
      "direction": "cw",
-     "points": 1,
-     "time": 2.5,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 43.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1530102886969176,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 2.54,
-     "end": "FOLLOW",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 0,
-     "time": 1.9000000000000001,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11498542216663443,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 1.96,
-     "end": "TURN",
-     "turns": 0,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "cw",
-     "points": 2,
-     "time": 10.6,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14763860171942467,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.300000000000002,
+      13.599999999999998
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 10.66,
-     "end": "TURN",
-     "turns": 3,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "east140x100",
      "direction": "ccw",
-     "points": 1,
-     "time": 2.5,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 37.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.0961236244474658,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.3,
+      12.100000000000001,
+      11.999999999999996
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 2.54,
-     "end": "FOLLOW",
-     "turns": 1,
-     "laps": [],
      "seed": 0
     },
     {
      "field": "east140x100",
      "direction": "cw",
-     "points": 5,
-     "time": 7.1000000000000005,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
+     "points": 30,
+     "time": 38.68,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.09643727957312764,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.5,
+      11.900000000000002,
+      11.999999999999996
      ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 7.18,
-     "end": "TURN",
-     "turns": 2,
-     "laps": [],
      "seed": 0
     }
    ]
@@ -1857,9 +1807,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.78,
-    "sq100": 32.58,
-    "clr": 9.44047085459987,
+    "t": 41.84666666666667,
+    "sq100": 33.78,
+    "clr": 10.632258962701169,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -1869,18 +1819,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14203949542942806,
+     "min_clearance": 0.12998398253931354,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -1888,18 +1838,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14007260484507833,
+     "min_clearance": 0.1282121966945955,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -1907,18 +1857,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.480000000000004,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0944047085459987,
+     "min_clearance": 0.10632258962701169,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.200000000000003
+      16.6,
+      16.199999999999996,
+      16.300000000000004
      ],
      "seed": 0
     },
@@ -1926,18 +1876,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.08,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09500013026940635,
+     "min_clearance": 0.10643715126748465,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.199999999999996,
+      16.300000000000004
      ],
      "seed": 0
     },
@@ -1945,113 +1895,113 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14780102183515775,
+     "min_clearance": 0.15097824279846805,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.8,
+      13.3,
+      13.399999999999999
      ],
      "seed": 0
     },
     {
      "field": "rect100x180",
-     "direction": "cw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.1459291344052538,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.0985225221863435,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.10885939689535618,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.68,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.0944047085459987,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
      "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11858683288460514,
+     "min_clearance": 0.14971289585518943,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.8,
+      13.3,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15034166508424635,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15061859661366014,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 42.08,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11317022616044126,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.8,
+      13.399999999999999,
+      13.400000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12527283172343728,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.700000000000001,
+      13.4,
+      13.5
      ],
      "seed": 0
     },
@@ -2059,18 +2009,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15287518271928147,
+     "min_clearance": 0.15034166508424635,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.5,
+      12.0,
+      11.899999999999999
      ],
      "seed": 0
     },
@@ -2078,18 +2028,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.38,
+     "time": 38.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13776168843466752,
+     "min_clearance": 0.1282121966945955,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.900000000000002
+      12.6,
+      12.000000000000002,
+      12.100000000000001
      ],
      "seed": 0
     }
@@ -2112,9 +2062,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -2124,18 +2074,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -2143,18 +2093,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -2162,18 +2112,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -2181,18 +2131,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -2200,18 +2150,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -2219,18 +2169,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -2238,18 +2188,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -2257,56 +2207,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1509862223317484,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -2314,18 +2264,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -2333,18 +2283,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -2366,19 +2316,21 @@
     "label": "LiDAR range noise 20 mm",
     "ok": 10,
     "n": 12,
-    "pts": 25.833333333333332,
-    "t": 40.72,
-    "sq100": 32.58,
+    "pts": 27.666666666666668,
+    "t": 41.95,
+    "sq100": 33.38,
     "clr": 0.0,
     "walls": {
-     "TURN": 2
+     "TURN": 1
     },
-    "stuck": {},
+    "stuck": {
+     "DONE": 1
+    },
     "why": {
      "rule_maximum": 2,
-     "stop_observed": 2,
-     "no_contacts": 2,
-     "min_inner_wall_clearance_m": 2
+     "stop_observed": 1,
+     "no_contacts": 1,
+     "min_inner_wall_clearance_m": 1
     }
    },
    "rounds": [
@@ -2386,18 +2338,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1407928927124975,
+     "min_clearance": 0.10332823458379348,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.3,
-      9.8,
-      10.3
+      11.200000000000001,
+      10.1,
+      10.5
      ],
      "seed": 0
     },
@@ -2405,18 +2357,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.38,
+     "time": 33.58,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.07474752015419683,
+     "min_clearance": 0.11488851803452756,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.200000000000001,
-      9.700000000000001,
-      10.299999999999997
+      10.9,
+      10.6,
+      10.600000000000001
      ],
      "seed": 0
     },
@@ -2424,18 +2376,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09602500200450104,
+     "min_clearance": 0.10695196375719673,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.3,
-      15.2,
-      16.9
+      16.4,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -2443,37 +2395,39 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 49.78,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09069015691614668,
+     "min_clearance": 0.08090477413505393,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      14.9,
-      16.8
+      16.5,
+      16.200000000000003,
+      16.5
      ],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
+     "points": 27,
+     "time": 41.68,
+     "valid": false,
+     "failed": [
+      "rule_maximum"
+     ],
      "margin": "comfortable",
-     "min_clearance": 0.16580979124096312,
+     "min_clearance": 0.08089779635053929,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.700000000000001,
-      12.4,
-      13.200000000000003
+      13.6,
+      13.300000000000002,
+      13.3
      ],
      "seed": 0
     },
@@ -2481,18 +2435,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.18,
+     "time": 41.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1016995415395534,
+     "min_clearance": 0.14374624561139648,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.700000000000001,
-      12.4,
-      12.899999999999999
+      13.6,
+      13.300000000000002,
+      13.499999999999996
      ],
      "seed": 0
     },
@@ -2500,18 +2454,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.18,
+     "time": 42.58,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13311554035557016,
+     "min_clearance": 0.10306860119212204,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.099999999999998
+      13.8,
+      13.100000000000001,
+      13.400000000000002
      ],
      "seed": 0
     },
@@ -2519,18 +2473,18 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.08,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11095247308593774,
+     "min_clearance": 0.1511011131667801,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      13.999999999999996
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -2538,26 +2492,64 @@
      "field": "shift140",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09602500200450104,
+     "min_clearance": 0.10695196375719673,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.5,
+      13.400000000000002,
+      13.3
      ],
      "seed": 0
     },
     {
      "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15234986363873548,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.300000000000002,
+      13.599999999999998
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14509741075858693,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.4,
+      12.000000000000002,
+      11.900000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
      "direction": "cw",
      "points": 5,
-     "time": 7.7,
+     "time": 7.9,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2567,46 +2559,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 7.74,
-     "end": "TURN",
-     "turns": 2,
-     "laps": [],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 36.68,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.11211021330685744,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.6,
-      11.1,
-      11.7
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "cw",
-     "points": 5,
-     "time": 7.3,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 7.36,
+     "contact_time": 7.96,
      "end": "TURN",
      "turns": 2,
      "laps": [],
@@ -2628,10 +2581,10 @@
    },
    "summary": {
     "label": "LiDAR range noise 40 mm",
-    "ok": 1,
+    "ok": 0,
     "n": 12,
-    "pts": 6.166666666666667,
-    "t": 30.68,
+    "pts": 5.333333333333333,
+    "t": null,
     "sq100": null,
     "clr": 0.0,
     "walls": {
@@ -2639,10 +2592,10 @@
      "FOLLOW": 3
     },
     "stuck": {
-     "DONE": 1
+     "DONE": 2
     },
     "why": {
-     "rule_maximum": 11,
+     "rule_maximum": 12,
      "stop_observed": 11,
      "no_contacts": 10,
      "min_inner_wall_clearance_m": 10
@@ -2652,40 +2605,41 @@
     {
      "field": "square100",
      "direction": "ccw",
-     "points": 18,
-     "time": 62.900000000000006,
+     "points": 9,
+     "time": 63.5,
      "valid": false,
      "failed": [
       "rule_maximum",
       "stop_observed"
      ],
-     "margin": "tight",
-     "min_clearance": 0.04993648913736343,
+     "margin": "risky",
+     "min_clearance": 0.01422744619661111,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      9.9,
-      18.9
+      30.1
      ],
      "seed": 0
     },
     {
      "field": "square100",
      "direction": "cw",
-     "points": 30,
-     "time": 30.68,
-     "valid": true,
-     "failed": [],
+     "points": 27,
+     "time": 32.58,
+     "valid": false,
+     "failed": [
+      "rule_maximum"
+     ],
      "margin": "comfortable",
-     "min_clearance": 0.06404828216983074,
+     "min_clearance": 0.07049493327408962,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.0,
-      9.2,
-      9.700000000000003
+      10.9,
+      10.200000000000001,
+      10.0
      ],
      "seed": 0
     },
@@ -2693,7 +2647,7 @@
      "field": "square180",
      "direction": "ccw",
      "points": 0,
-     "time": 1.9000000000000001,
+     "time": 2.0,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2703,7 +2657,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 1.96,
+     "contact_time": 2.0,
      "end": "TURN",
      "turns": 0,
      "laps": [],
@@ -2712,8 +2666,8 @@
     {
      "field": "square180",
      "direction": "cw",
-     "points": 0,
-     "time": 1.9000000000000001,
+     "points": 1,
+     "time": 2.2,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2723,7 +2677,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 1.96,
+     "contact_time": 2.2800000000000002,
      "end": "TURN",
      "turns": 0,
      "laps": [],
@@ -2732,8 +2686,8 @@
     {
      "field": "rect100x180",
      "direction": "ccw",
-     "points": 7,
-     "time": 11.0,
+     "points": 11,
+     "time": 17.900000000000002,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2743,17 +2697,19 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 11.0,
+     "contact_time": 17.94,
      "end": "TURN",
-     "turns": 3,
-     "laps": [],
+     "turns": 5,
+     "laps": [
+      12.9
+     ],
      "seed": 0
     },
     {
      "field": "rect100x180",
      "direction": "cw",
-     "points": 7,
-     "time": 10.6,
+     "points": 2,
+     "time": 5.4,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2763,9 +2719,9 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 10.620000000000001,
+     "contact_time": 5.44,
      "end": "TURN",
-     "turns": 3,
+     "turns": 1,
      "laps": [],
      "seed": 0
     },
@@ -2773,7 +2729,7 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 1,
-     "time": 2.5,
+     "time": 2.7,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2783,7 +2739,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 2.54,
+     "contact_time": 2.7800000000000002,
      "end": "FOLLOW",
      "turns": 1,
      "laps": [],
@@ -2793,7 +2749,7 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 1,
-     "time": 2.5,
+     "time": 2.6,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2803,7 +2759,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 2.54,
+     "contact_time": 2.68,
      "end": "FOLLOW",
      "turns": 1,
      "laps": [],
@@ -2813,7 +2769,7 @@
      "field": "shift140",
      "direction": "ccw",
      "points": 0,
-     "time": 1.9000000000000001,
+     "time": 2.0,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2823,7 +2779,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 1.96,
+     "contact_time": 2.0,
      "end": "TURN",
      "turns": 0,
      "laps": [],
@@ -2832,8 +2788,8 @@
     {
      "field": "shift140",
      "direction": "cw",
-     "points": 4,
-     "time": 7.2,
+     "points": 6,
+     "time": 11.200000000000001,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2843,9 +2799,9 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 7.26,
+     "contact_time": 11.24,
      "end": "TURN",
-     "turns": 2,
+     "turns": 3,
      "laps": [],
      "seed": 0
     },
@@ -2853,7 +2809,7 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 1,
-     "time": 2.5,
+     "time": 2.7,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2863,7 +2819,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 2.54,
+     "contact_time": 2.7800000000000002,
      "end": "FOLLOW",
      "turns": 1,
      "laps": [],
@@ -2873,7 +2829,7 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 5,
-     "time": 7.1000000000000005,
+     "time": 7.8,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -2883,7 +2839,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 7.16,
+     "contact_time": 7.84,
      "end": "TURN",
      "turns": 2,
      "laps": [],
@@ -2907,13 +2863,13 @@
     "label": "LiDAR range noise 80 mm",
     "ok": 0,
     "n": 12,
-    "pts": 3.5,
+    "pts": 2.25,
     "t": null,
     "sq100": null,
     "clr": 0.0,
     "walls": {
-     "TURN": 8,
-     "FOLLOW": 3
+     "FOLLOW": 7,
+     "TURN": 4
     },
     "stuck": {
      "DONE": 1
@@ -2929,89 +2885,28 @@
     {
      "field": "square100",
      "direction": "ccw",
-     "points": 22,
-     "time": 62.3,
+     "points": 9,
+     "time": 62.8,
      "valid": false,
      "failed": [
       "rule_maximum",
       "stop_observed"
      ],
      "margin": "risky",
-     "min_clearance": 0.018063437162431417,
+     "min_clearance": 0.014997306225005252,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      9.8,
-      9.399999999999999
+      29.400000000000002
      ],
      "seed": 0
     },
     {
      "field": "square100",
      "direction": "cw",
-     "points": 4,
-     "time": 6.9,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 6.96,
-     "end": "TURN",
-     "turns": 2,
-     "laps": [],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "ccw",
-     "points": 0,
-     "time": 1.9000000000000001,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 1.94,
-     "end": "TURN",
-     "turns": 0,
-     "laps": [],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "cw",
-     "points": 0,
-     "time": 1.9000000000000001,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 1.96,
-     "end": "TURN",
-     "turns": 0,
-     "laps": [],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "ccw",
      "points": 2,
-     "time": 4.5,
+     "time": 4.1,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3021,8 +2916,68 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 4.58,
+     "contact_time": 4.18,
+     "end": "FOLLOW",
+     "turns": 1,
+     "laps": [],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 0,
+     "time": 2.0,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_inner_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 2.0,
      "end": "TURN",
+     "turns": 0,
+     "laps": [],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 0,
+     "time": 2.0,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_inner_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 2.0,
+     "end": "TURN",
+     "turns": 0,
+     "laps": [],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 3,
+     "time": 5.1000000000000005,
+     "valid": false,
+     "failed": [
+      "rule_maximum",
+      "stop_observed",
+      "no_contacts",
+      "min_inner_wall_clearance_m"
+     ],
+     "margin": "risky",
+     "min_clearance": 0.0,
+     "contact_time": 5.18,
+     "end": "FOLLOW",
      "turns": 1,
      "laps": [],
      "seed": 0
@@ -3030,8 +2985,8 @@
     {
      "field": "rect100x180",
      "direction": "cw",
-     "points": 3,
-     "time": 4.8,
+     "points": 6,
+     "time": 10.1,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3041,9 +2996,9 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 4.88,
-     "end": "TURN",
-     "turns": 1,
+     "contact_time": 10.120000000000001,
+     "end": "FOLLOW",
+     "turns": 3,
      "laps": [],
      "seed": 0
     },
@@ -3051,7 +3006,7 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 1,
-     "time": 2.4,
+     "time": 2.6,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3061,7 +3016,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 2.46,
+     "contact_time": 2.68,
      "end": "FOLLOW",
      "turns": 1,
      "laps": [],
@@ -3071,7 +3026,7 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 1,
-     "time": 2.5,
+     "time": 2.6,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3081,7 +3036,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 2.54,
+     "contact_time": 2.68,
      "end": "FOLLOW",
      "turns": 1,
      "laps": [],
@@ -3091,7 +3046,7 @@
      "field": "shift140",
      "direction": "ccw",
      "points": 0,
-     "time": 1.9000000000000001,
+     "time": 2.0,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3101,7 +3056,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 1.94,
+     "contact_time": 2.0,
      "end": "TURN",
      "turns": 0,
      "laps": [],
@@ -3110,8 +3065,8 @@
     {
      "field": "shift140",
      "direction": "cw",
-     "points": 4,
-     "time": 7.2,
+     "points": 2,
+     "time": 7.3,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3121,7 +3076,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 7.24,
+     "contact_time": 7.34,
      "end": "TURN",
      "turns": 2,
      "laps": [],
@@ -3131,7 +3086,7 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 1,
-     "time": 2.4,
+     "time": 2.6,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3141,7 +3096,7 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 2.46,
+     "contact_time": 2.68,
      "end": "FOLLOW",
      "turns": 1,
      "laps": [],
@@ -3150,8 +3105,8 @@
     {
      "field": "east140x100",
      "direction": "cw",
-     "points": 4,
-     "time": 6.7,
+     "points": 2,
+     "time": 4.1,
      "valid": false,
      "failed": [
       "rule_maximum",
@@ -3161,9 +3116,9 @@
      ],
      "margin": "risky",
      "min_clearance": 0.0,
-     "contact_time": 6.78,
-     "end": "TURN",
-     "turns": 2,
+     "contact_time": 4.18,
+     "end": "FOLLOW",
+     "turns": 1,
      "laps": [],
      "seed": 0
     }
@@ -3186,9 +3141,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -3198,18 +3153,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -3217,18 +3172,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -3236,18 +3191,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398192,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -3255,18 +3210,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -3274,18 +3229,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -3293,18 +3248,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -3312,18 +3267,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -3331,56 +3286,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398192,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15098622233174908,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -3388,18 +3343,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -3407,18 +3362,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -3441,9 +3396,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -3453,18 +3408,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -3472,18 +3427,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -3491,18 +3446,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -3510,18 +3465,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -3529,18 +3484,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -3548,18 +3503,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -3567,18 +3522,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -3586,56 +3541,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1509862223317484,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -3643,18 +3598,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -3662,18 +3617,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -3696,9 +3651,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -3708,18 +3663,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -3727,18 +3682,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -3746,18 +3701,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398192,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -3765,18 +3720,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -3784,18 +3739,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -3803,18 +3758,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -3822,18 +3777,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -3841,56 +3796,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398192,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15098622233174908,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -3898,18 +3853,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -3917,18 +3872,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -3951,9 +3906,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -3963,18 +3918,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -3982,18 +3937,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -4001,18 +3956,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -4020,18 +3975,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -4039,18 +3994,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4058,18 +4013,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4077,18 +4032,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -4096,56 +4051,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1509862223317484,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -4153,18 +4108,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -4172,18 +4127,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -4206,9 +4161,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -4218,18 +4173,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -4237,18 +4192,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798793,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -4256,18 +4211,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -4275,18 +4230,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -4294,18 +4249,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656388,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4313,18 +4268,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414318,
+     "min_clearance": 0.1474014160271353,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4332,18 +4287,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09803486762328029,
+     "min_clearance": 0.13644994172168357,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -4351,56 +4306,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200675,
+     "min_clearance": 0.1444328014150098,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670240857,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15098622233174908,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -4408,18 +4363,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614116,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -4427,18 +4382,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.136492104251156,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -4461,9 +4416,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.72999999999999,
-    "sq100": 32.480000000000004,
-    "clr": 9.329344650380044,
+    "t": 41.855,
+    "sq100": 33.78,
+    "clr": 10.138988464071929,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -4473,18 +4428,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.480000000000004,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14100897366684195,
+     "min_clearance": 0.12934748435625976,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -4492,18 +4447,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1401437558369213,
+     "min_clearance": 0.12822825222367318,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -4511,18 +4466,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.08,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0948908856305366,
+     "min_clearance": 0.11131637608337441,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -4530,18 +4485,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09329344650380045,
+     "min_clearance": 0.1013898846407193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.1,
-      16.9
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -4549,18 +4504,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14661519851032812,
+     "min_clearance": 0.10252360953015982,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4568,18 +4523,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14721620107608757,
+     "min_clearance": 0.14719633053660974,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4587,18 +4542,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13085244951411523,
+     "min_clearance": 0.13653191753088412,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -4606,56 +4561,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11104512734159089,
+     "min_clearance": 0.1432035348518852,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.0948908856305366,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11983058339842745,
+     "min_clearance": 0.11131637608337441,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15076101936752662,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -4663,18 +4618,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15205012352607505,
+     "min_clearance": 0.14772978149931132,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -4682,18 +4637,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 39.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1384314959897175,
+     "min_clearance": 0.12103755660712423,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      12.000000000000002,
+      12.100000000000001
      ],
      "seed": 0
     }
@@ -4716,9 +4671,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.754999999999995,
-    "sq100": 32.58,
-    "clr": 9.468294136629218,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 10.131361479375279,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -4728,18 +4683,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14163111433576447,
+     "min_clearance": 0.1299110260448434,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -4747,18 +4702,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13952028864798782,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.700000000000001,
-      10.3
+      11.1,
+      10.6,
+      10.500000000000004
      ],
      "seed": 0
     },
@@ -4766,18 +4721,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.18,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      16.799999999999997
+      16.6,
+      16.1,
+      16.4
      ],
      "seed": 0
     },
@@ -4785,18 +4740,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 50.28,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0953218760852046,
+     "min_clearance": 0.10131361479375278,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.4,
-      15.200000000000001,
-      17.0
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -4804,18 +4759,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14714496976656521,
+     "min_clearance": 0.10218497717818842,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4823,18 +4778,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.58,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14605472902414407,
+     "min_clearance": 0.14740141602713508,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -4842,18 +4797,18 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0980348676232945,
+     "min_clearance": 0.13644994172168223,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
@@ -4861,56 +4816,56 @@
      "field": "rect180x100",
      "direction": "cw",
      "points": 30,
-     "time": 42.28,
+     "time": 43.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11029033978200364,
+     "min_clearance": 0.14443280141500625,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      14.100000000000001
+      13.9,
+      13.4,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "shift140",
      "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09468294136629218,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11887988670241212,
+     "min_clearance": 0.11138113470398214,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.8,
-      12.399999999999999,
-      14.2
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1509862223317484,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -4918,18 +4873,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 36.78,
+     "time": 37.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.15269901125614138,
+     "min_clearance": 0.14768345267012076,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -4937,18 +4892,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.28,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13649210425115577,
+     "min_clearance": 0.12769727823077193,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.8
+      12.6,
+      11.9,
+      12.0
      ],
      "seed": 0
     }
@@ -4971,9 +4926,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.76333333333334,
-    "sq100": 32.68,
-    "clr": 9.016003564787,
+    "t": 41.805,
+    "sq100": 33.78,
+    "clr": 10.079536207234185,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -4983,18 +4938,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 32.68,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1442721875766929,
+     "min_clearance": 0.13223348988974237,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.200000000000003
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -5002,208 +4957,208 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.58,
+     "time": 33.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13686265914531892,
+     "min_clearance": 0.1254545895851542,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "ccw",
-     "points": 30,
-     "time": 50.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09383439203843325,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      15.5,
-      15.2,
-      17.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "square180",
-     "direction": "cw",
-     "points": 30,
-     "time": 50.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09620842451322775,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      15.5,
-      15.100000000000001,
-      17.0
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.58,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.15074021948916116,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.700000000000001,
-      12.4,
-      13.200000000000003
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect100x180",
-     "direction": "cw",
-     "points": 30,
-     "time": 40.38,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09016003564787001,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      13.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 41.980000000000004,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.15552707152134604,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      13.900000000000002
-     ],
-     "seed": 0
-    },
-    {
-     "field": "rect180x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 42.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.10559922114456244,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      13.0,
-      12.400000000000002,
-      14.2
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "ccw",
-     "points": 30,
-     "time": 40.68,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.09173333805682682,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.700000000000001,
-      12.499999999999998,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
-     "points": 30,
-     "time": 41.980000000000004,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.11490721730579612,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      14.100000000000005
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 36.88,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.15552707152134604,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.599999999999998
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "cw",
-     "points": 30,
-     "time": 38.28,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.1285496653938869,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
       11.1,
-      12.8
+      10.6,
+      10.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 51.38,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11165875612747622,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.6,
+      16.1,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "square180",
+     "direction": "cw",
+     "points": 30,
+     "time": 51.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10079536207234185,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      16.5,
+      16.200000000000003,
+      16.4
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10331986265982351,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect100x180",
+     "direction": "cw",
+     "points": 30,
+     "time": 41.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11375245727890282,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 43.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.10797754894845135,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.299999999999999,
+      13.600000000000005
+     ],
+     "seed": 0
+    },
+    {
+     "field": "rect180x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14419131252859252,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
+     "points": 30,
+     "time": 41.980000000000004,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.11165875612747622,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.700000000000001,
+      13.4,
+      13.399999999999999
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "cw",
+     "points": 30,
+     "time": 42.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.15209701685191024,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.6,
+      13.4,
+      13.600000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.78,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.13769863005740457,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.4,
+      12.000000000000002,
+      11.900000000000002
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "cw",
+     "points": 30,
+     "time": 38.68,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.1254545895851542,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      12.6,
+      11.800000000000002,
+      12.099999999999998
      ],
      "seed": 0
     }
@@ -5226,9 +5181,9 @@
     "ok": 12,
     "n": 12,
     "pts": 30.0,
-    "t": 40.78,
-    "sq100": 33.08,
-    "clr": 8.714108701273249,
+    "t": 41.821666666666665,
+    "sq100": 33.78,
+    "clr": 9.999931755645797,
     "walls": {},
     "stuck": {},
     "why": {}
@@ -5238,18 +5193,18 @@
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 33.08,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14289530476269388,
+     "min_clearance": 0.13755219281635755,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.5,
-      9.900000000000002,
-      10.299999999999997
+      11.1,
+      10.6,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -5257,18 +5212,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.38,
+     "time": 33.58,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1289144277521836,
+     "min_clearance": 0.1258583440872234,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.4,
-      9.799999999999999,
-      10.200000000000003
+      10.9,
+      10.6,
+      10.600000000000001
      ],
      "seed": 0
     },
@@ -5276,18 +5231,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 50.58,
+     "time": 51.38,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0917383923769437,
+     "min_clearance": 0.11277224571338573,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.5,
-      15.2,
-      17.100000000000005
+      16.4,
+      16.300000000000004,
+      16.4
      ],
      "seed": 0
     },
@@ -5295,18 +5250,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 49.68,
+     "time": 51.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.08804973689458162,
+     "min_clearance": 0.09999931755645797,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.5,
-      15.0,
-      16.5
+      16.5,
+      16.200000000000003,
+      16.4
      ],
      "seed": 0
     },
@@ -5314,18 +5269,18 @@
      "field": "rect100x180",
      "direction": "ccw",
      "points": 30,
-     "time": 40.980000000000004,
+     "time": 41.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.162498479032589,
+     "min_clearance": 0.10090525264254957,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.9,
-      12.4,
-      13.3
+      13.700000000000001,
+      13.4,
+      13.299999999999997
      ],
      "seed": 0
     },
@@ -5333,18 +5288,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 40.18,
+     "time": 41.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.08714108701273249,
+     "min_clearance": 0.14680201834698914,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.700000000000001,
-      12.4,
-      13.200000000000003
+      13.6,
+      13.300000000000002,
+      13.400000000000002
      ],
      "seed": 0
     },
@@ -5352,94 +5307,94 @@
      "field": "rect180x100",
      "direction": "ccw",
      "points": 30,
-     "time": 42.38,
+     "time": 43.28,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1557662519625702,
+     "min_clearance": 0.10741598561466015,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.400000000000002,
-      14.3
+      13.9,
+      13.299999999999999,
+      13.600000000000005
      ],
      "seed": 0
     },
     {
      "field": "rect180x100",
      "direction": "cw",
+     "points": 30,
+     "time": 43.18,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14650890873774225,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
+      13.9,
+      13.4,
+      13.500000000000004
+     ],
+     "seed": 0
+    },
+    {
+     "field": "shift140",
+     "direction": "ccw",
      "points": 30,
      "time": 42.08,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09479783183386159,
+     "min_clearance": 0.11271619538018451,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.9,
-      12.500000000000002,
-      13.999999999999996
+      13.700000000000001,
+      13.4,
+      13.5
      ],
      "seed": 0
     },
     {
      "field": "shift140",
-     "direction": "ccw",
+     "direction": "cw",
      "points": 30,
-     "time": 41.08,
+     "time": 42.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.0917383923769437,
+     "min_clearance": 0.1544156105100456,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.9,
+      13.6,
+      13.4,
+      13.600000000000001
+     ],
+     "seed": 0
+    },
+    {
+     "field": "east140x100",
+     "direction": "ccw",
+     "points": 30,
+     "time": 37.88,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.14035298028221055,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
+     "laps": [
       12.4,
-      13.3
-     ],
-     "seed": 0
-    },
-    {
-     "field": "shift140",
-     "direction": "cw",
-     "points": 30,
-     "time": 41.980000000000004,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.10573761836598039,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      12.8,
-      12.399999999999999,
-      14.000000000000004
-     ],
-     "seed": 0
-    },
-    {
-     "field": "east140x100",
-     "direction": "ccw",
-     "points": 30,
-     "time": 36.88,
-     "valid": true,
-     "failed": [],
-     "margin": "comfortable",
-     "min_clearance": 0.15738970180925366,
-     "contact_time": null,
-     "end": "DONE",
-     "turns": 12,
-     "laps": [
-      11.700000000000001,
-      11.200000000000001,
-      11.7
+      12.000000000000002,
+      11.900000000000002
      ],
      "seed": 0
     },
@@ -5447,18 +5402,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 38.08,
+     "time": 38.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.11090126642879095,
+     "min_clearance": 0.1254191503328086,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.700000000000001,
-      11.1,
-      12.599999999999998
+      12.4,
+      12.000000000000002,
+      12.099999999999998
      ],
      "seed": 0
     }
@@ -5478,40 +5433,33 @@
    },
    "summary": {
     "label": "gyro noise 0.1 rad/s",
-    "ok": 11,
+    "ok": 12,
     "n": 12,
-    "pts": 29.083333333333332,
-    "t": 40.64363636363636,
-    "sq100": 33.980000000000004,
-    "clr": 0.0,
-    "walls": {
-     "TURN": 1
-    },
+    "pts": 30.0,
+    "t": 41.82166666666667,
+    "sq100": 33.78,
+    "clr": 9.20010551604542,
+    "walls": {},
     "stuck": {},
-    "why": {
-     "rule_maximum": 1,
-     "stop_observed": 1,
-     "no_contacts": 1,
-     "min_inner_wall_clearance_m": 1
-    }
+    "why": {}
    },
    "rounds": [
     {
      "field": "square100",
      "direction": "ccw",
      "points": 30,
-     "time": 33.980000000000004,
+     "time": 33.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.1704047529426576,
+     "min_clearance": 0.1545811639437802,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.6,
-      9.9,
-      10.8
+      11.200000000000001,
+      10.499999999999998,
+      10.599999999999998
      ],
      "seed": 0
     },
@@ -5519,18 +5467,18 @@
      "field": "square100",
      "direction": "cw",
      "points": 30,
-     "time": 32.08,
+     "time": 33.58,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.08168563612851658,
+     "min_clearance": 0.09886391467648296,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      10.1,
-      9.800000000000002,
-      10.399999999999999
+      10.9,
+      10.6,
+      10.600000000000001
      ],
      "seed": 0
     },
@@ -5538,18 +5486,18 @@
      "field": "square180",
      "direction": "ccw",
      "points": 30,
-     "time": 51.18,
+     "time": 51.28,
      "valid": true,
      "failed": [],
-     "margin": "tight",
-     "min_clearance": 0.041211022534660025,
+     "margin": "comfortable",
+     "min_clearance": 0.0920010551604542,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.5,
-      15.400000000000002,
-      17.7
+      16.4,
+      16.300000000000004,
+      16.299999999999997
      ],
      "seed": 0
     },
@@ -5557,18 +5505,18 @@
      "field": "square180",
      "direction": "cw",
      "points": 30,
-     "time": 47.88,
+     "time": 51.480000000000004,
      "valid": true,
      "failed": [],
-     "margin": "tight",
-     "min_clearance": 0.041728312480593846,
+     "margin": "comfortable",
+     "min_clearance": 0.0980321636035053,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      15.200000000000001,
-      14.4,
-      15.600000000000001
+      16.6,
+      16.199999999999996,
+      16.400000000000006
      ],
      "seed": 0
     },
@@ -5580,14 +5528,14 @@
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09546128570269737,
+     "min_clearance": 0.10407739384301684,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.9,
-      12.6,
-      13.600000000000001
+      13.700000000000001,
+      13.4,
+      13.299999999999997
      ],
      "seed": 0
     },
@@ -5595,18 +5543,18 @@
      "field": "rect100x180",
      "direction": "cw",
      "points": 30,
-     "time": 39.480000000000004,
+     "time": 41.980000000000004,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.05141512279902963,
+     "min_clearance": 0.147249372385152,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.6,
-      12.300000000000002,
-      12.900000000000002
+      13.6,
+      13.4,
+      13.399999999999999
      ],
      "seed": 0
     },
@@ -5618,37 +5566,33 @@
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.14253129406421539,
+     "min_clearance": 0.1317878007794906,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.200000000000001,
-      12.700000000000001,
-      14.400000000000002
+      13.9,
+      13.299999999999999,
+      13.500000000000004
      ],
      "seed": 0
     },
     {
      "field": "rect180x100",
      "direction": "cw",
-     "points": 19,
-     "time": 27.1,
-     "valid": false,
-     "failed": [
-      "rule_maximum",
-      "stop_observed",
-      "no_contacts",
-      "min_inner_wall_clearance_m"
-     ],
-     "margin": "risky",
-     "min_clearance": 0.0,
-     "contact_time": 27.1,
-     "end": "TURN",
-     "turns": 8,
+     "points": 30,
+     "time": 43.28,
+     "valid": true,
+     "failed": [],
+     "margin": "comfortable",
+     "min_clearance": 0.12415569204932275,
+     "contact_time": null,
+     "end": "DONE",
+     "turns": 12,
      "laps": [
-      12.9,
-      12.200000000000001
+      13.9,
+      13.4,
+      13.7
      ],
      "seed": 0
     },
@@ -5656,18 +5600,18 @@
      "field": "shift140",
      "direction": "ccw",
      "points": 30,
-     "time": 41.58,
+     "time": 42.18,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.07026968830652769,
+     "min_clearance": 0.11294127951453659,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      13.0,
-      12.5,
-      13.399999999999999
+      13.700000000000001,
+      13.4,
+      13.5
      ],
      "seed": 0
     },
@@ -5675,18 +5619,18 @@
      "field": "shift140",
      "direction": "cw",
      "points": 30,
-     "time": 41.08,
+     "time": 42.78,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.09173408559474572,
+     "min_clearance": 0.15265917383798058,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      12.5,
-      12.2,
-      13.600000000000005
+      13.6,
+      13.4,
+      13.600000000000001
      ],
      "seed": 0
     },
@@ -5694,18 +5638,18 @@
      "field": "east140x100",
      "direction": "ccw",
      "points": 30,
-     "time": 37.480000000000004,
+     "time": 37.88,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.13581994176118728,
+     "min_clearance": 0.14515653090313851,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.8,
-      11.399999999999999,
-      11.8
+      12.4,
+      11.9,
+      12.000000000000004
      ],
      "seed": 0
     },
@@ -5713,18 +5657,18 @@
      "field": "east140x100",
      "direction": "cw",
      "points": 30,
-     "time": 37.38,
+     "time": 38.68,
      "valid": true,
      "failed": [],
      "margin": "comfortable",
-     "min_clearance": 0.08168563612851658,
+     "min_clearance": 0.09886391467648296,
      "contact_time": null,
      "end": "DONE",
      "turns": 12,
      "laps": [
-      11.5,
-      11.100000000000001,
-      12.100000000000001
+      12.5,
+      11.900000000000002,
+      11.999999999999996
      ],
      "seed": 0
     }

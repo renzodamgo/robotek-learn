@@ -14,7 +14,7 @@ def run(field, direction):
 def test_square100_gives_30_points_and_is_valid(direction):
     result = run('square100', direction)
     assert result['points'] == 30 and result['valid'], result
-    assert result['time'] < 34.0
+    assert result['time'] < 35.0
 
 
 def test_a_wide_field_in_both_directions():

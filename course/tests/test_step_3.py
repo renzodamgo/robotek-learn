@@ -62,6 +62,7 @@ def test_an_empty_scan_gives_infinite_distances():
         angle_min, angle_increment, range_min, range_max = -1.91986, 2 * 1.91986 / 305, 0.12, 12.0
     scene = perceive(Empty())
     assert math.isinf(scene.left) and math.isinf(scene.right) and math.isinf(scene.front_axis) and math.isinf(scene.island_end)
+    assert math.isinf(scene.wall_heading)
 
 
 def test_a_median_ignores_a_beam_that_goes_through_a_gap():
@@ -71,3 +72,56 @@ def test_a_median_ignores_a_beam_that_goes_through_a_gap():
     ranges[side] = 9.0                                       # one wild reading right at the side bearing
     scan.ranges = list(ranges)
     assert math.isclose(perceive(scan).left, 0.25, abs_tol=0.01)
+
+
+def test_the_heading_relative_to_the_island_wall():
+    assert abs(scene_at(0.0, -0.75, noise=False, dropouts=False).wall_heading) < 0.01           # parallel to it
+    for yaw in (0.15, -0.15):
+        scene = scene_at(0.0, -0.75, yaw=yaw, noise=False, dropouts=False)
+        assert math.isclose(scene.wall_heading, yaw, abs_tol=0.02), yaw
+
+
+def test_the_wall_heading_on_a_clockwise_lap_keeps_its_sign():
+    # the north corridor driven east: the island is on the right; turned left is still positive
+    scene = scene_at(0.0, 0.75, yaw=0.15, sign=-1, noise=False, dropouts=False)
+    assert math.isclose(scene.wall_heading, 0.15, abs_tol=0.02)
+
+
+def test_no_wall_heading_without_an_island_wall_beside_the_car():
+    assert math.isinf(scene_at(0.9, -0.75, noise=False, dropouts=False).wall_heading)          # beside the open side
+
+
+def test_noise_does_not_move_the_wall_heading_much():
+    for seed in range(5):
+        noisy = perceive(Field(seed=seed).scan(0.1, -0.75, 0.1))
+        assert abs(noisy.wall_heading - 0.1) < 0.03
+
+
+def test_a_hole_in_the_data_is_not_the_end_of_the_island():
+    scan = Field().scan(-0.3, -0.75, 0.0, noise=False, dropouts=False)       # the wall ends 0.8 m ahead: not in view
+    ranges = np.array(scan.ranges)
+    angles = scan.angle_min + np.arange(ranges.size) * scan.angle_increment
+    ranges[(angles > math.radians(40)) & (angles < math.radians(60))] = math.inf       # 20 degrees of lost beams
+    scan.ranges = list(ranges)
+    assert math.isinf(perceive(scan).island_end)
+
+
+def test_a_lidar_that_counts_from_0_to_2_pi_gives_the_same_scene():
+    scan = Field().scan(0.0, 0.75, 0.0, noise=False, dropouts=False)        # clockwise lap, island on the right
+    usual = perceive(scan, sign=-1)
+    ranges = np.array(scan.ranges)
+    angles = (scan.angle_min + np.arange(ranges.size) * scan.angle_increment) % (2 * math.pi)
+    order = np.argsort(angles)
+    # the same beams listed by growing angle from 0 to 2 pi (the missing ones behind the car have no return)
+    count = 500
+    grid = np.full(count, math.inf)
+    step = 2 * math.pi / count
+    grid[np.round(angles[order] / step).astype(int) % count] = ranges[order]
+
+    class Turned:
+        angle_min, angle_increment, range_min, range_max = 0.0, step, scan.range_min, scan.range_max
+    Turned.ranges = list(grid)
+    turned = perceive(Turned(), sign=-1)
+    assert math.isclose(turned.right, usual.right, abs_tol=0.02)
+    assert math.isclose(turned.island_end, usual.island_end, abs_tol=0.06)
+    assert math.isclose(turned.wall_heading, usual.wall_heading, abs_tol=0.03)

@@ -85,7 +85,9 @@ def _():
     slow = servo(delay=DELAY0 * 3)
     rows = [exp('delay x3, no change', act=slow)]
     rows += [exp(f'delay x3, DAMPING {d:g}', sets=[S('DAMPING', d)], act=slow) for d in (0.0, 0.05, 0.2, 0.3)]
-    rows += [exp(f'delay x3, EXIT_ANGLE {e:g}', sets=[S('EXIT_ANGLE', e)], act=slow) for e in (0.1, 0.4, 0.6)]
+    rows += [exp(f'delay x3, TURN_TOLERANCE {e:g}', sets=[S('TURN_TOLERANCE', e)], act=slow) for e in (0.2, 0.4, 0.5)]
+    rows += [exp(f'delay x3, corner speed {c:g}', sets=[S('CORNER_SPEED', c, 'my_open.mission')], act=slow)
+             for c in (0.8, 0.6)]
     rows += [exp(f'delay x3, TURN_FRONT {t:g}', sets=[S('TURN_FRONT', t)], act=slow) for t in (1.25, 1.3, 1.4)]
     rows += [exp(f'delay x3, cruise {c:g}', sets=[S('CRUISE_SPEED', c, 'my_open.mission')], act=slow)
              for c in (0.9, 0.7)]
@@ -120,27 +122,19 @@ def _():
             for c in (0.4, 0.6, 0.8, 1.0, 1.1, 1.28)]
 
 
-@group('last_corner', 'Speed of the last corner and of the finish')
+@group('corner_speed', 'Speed in the corners (and the slow-down before them) and of the finish')
 def _():
-    rows = [exp(f'last corner {c:g}', sets=[S('LAST_CORNER_SPEED', c, 'my_open.mission')]) for c in (0.3, 0.6, 0.9, 1.28)]
-    rows += [exp(f'finish {c:g}', sets=[S('FINISH_SPEED', c, 'my_open.mission')]) for c in (0.08, 0.3, 0.6)]
+    rows = [exp(f'corner speed {c:g}', sets=[S('CORNER_SPEED', c, 'my_open.mission')]) for c in (0.6, 0.8, 1.0, 1.15, 1.28)]
+    rows += [exp(f'BRAKE_MARGIN {m:g} m', sets=[S('BRAKE_MARGIN', m, 'my_open.mission')]) for m in (0.0, 0.35, 0.6)]
+    rows += [exp(f'BRAKE_GAIN {g:g}', sets=[S('BRAKE_GAIN', g, 'my_open.mission')]) for g in (1.0, 4.0)]
+    rows += [exp(f'finish {c:g}', sets=[S('FINISH_SPEED', c, 'my_open.mission')]) for c in (0.08, 0.3, 0.45, 0.6, 0.8)]
+    rows += [exp(f'FINISH_LEAD {c:g} m', sets=[S('FINISH_LEAD', c, 'my_open.mission')]) for c in (0.0, 0.15, 0.3)]
     return rows
 
 
 @group('motor', 'Motor: the speed the car really reaches (table scale; strategy keeps its table)')
 def _():
     return [exp(f'real speed x{k:g}', act=scaled_table(k)) for k in (0.5, 0.7, 0.85, 1.0, 1.15, 1.3, 1.5)]
-
-
-@group('motor_aware', 'Motor: same, but the strategy table is also updated')
-def _():
-    base = [(0.0, 0.0), (0.15, 0.18), (0.30, 0.27), (0.40, 0.30), (0.60, 0.42), (1.28, 0.60)]
-    rows = []
-    for k in (0.7, 0.85, 1.15, 1.3):
-        table = [[c, round(r * k, 4)] for c, r in base]
-        rows.append(exp(f'real speed x{k:g}, table updated', act=scaled_table(k),
-                        sets=[f'robotek_course.minisim.SPEED_TABLE={json.dumps(table)}']))
-    return rows
 
 
 @group('motor_slow', 'Motor: slower response (drive_tau, drive_delay)')
@@ -165,20 +159,19 @@ def _():
     return [exp(f'KP {k:g}', sets=[S('KP', k)]) for k in (0.2, 0.4, 0.8, 1.2, 2.0, 3.0, 5.0)]
 
 
-@group('damping', 'Corner: DAMPING and EXIT_ANGLE')
+@group('damping', 'Corner: DAMPING and TURN_TOLERANCE')
 def _():
     rows = [exp(f'DAMPING {d:g}', sets=[S('DAMPING', d)]) for d in (0.0, 0.05, 0.1, 0.2, 0.4, 0.8)]
-    rows += [exp(f'EXIT_ANGLE {e:g} rad', sets=[S('EXIT_ANGLE', e)]) for e in (0.02, 0.1, 0.25, 0.4, 0.6, 0.9)]
+    rows += [exp(f'TURN_TOLERANCE {e:g} rad', sets=[S('TURN_TOLERANCE', e)]) for e in (0.05, 0.12, 0.2, 0.3, 0.4, 0.5, 0.8)]
     return rows
 
 
-@group('fade', 'Corner when the car turns FASTER than the strategy believes (car wheelbase 25 % shorter): DAMPING, EXIT_ANGLE')
+@group('fade', 'Corner when the car turns FASTER than the strategy believes (car wheelbase 25 % shorter): DAMPING, TURN_TOLERANCE')
 def _():
     car = dict(wheelbase=lab.actuator_parameters()['wheelbase'] * 0.75)
     rows = [exp('car turns 33 % faster, defaults', act=car)]
     rows += [exp(f'faster, DAMPING {d:g}', sets=[S('DAMPING', d)], act=car) for d in (0.0, 0.3)]
-    rows += [exp(f'faster, EXIT_ANGLE {e:g}', sets=[S('EXIT_ANGLE', e)], act=car) for e in (0.02, 0.6, 0.9)]
-    rows += [exp('faster, DAMPING 0 + EXIT_ANGLE 0.02', sets=[S('DAMPING', 0.0), S('EXIT_ANGLE', 0.02)], act=car)]
+    rows += [exp(f'faster, TURN_TOLERANCE {e:g}', sets=[S('TURN_TOLERANCE', e)], act=car) for e in (0.12, 0.5, 0.8)]
     return rows
 
 
@@ -205,6 +198,18 @@ def _():
     L = 'robotek_evaluation.open_lab'
     rows = [exp(f'gyro drift {d:g} rad/s per s', sets=[S('GYRO_DRIFT', d, L)]) for d in (0.00002, 0.00005, 0.0001, 0.0002, 0.0005)]
     rows += [exp(f'gyro scale {s:g}', sets=[S('GYRO_SCALE', s, L)]) for s in (0.9, 0.95, 0.97, 0.98, 0.99, 1.01, 1.02, 1.03, 1.05)]
+    return rows
+
+
+@group('wall_heading', 'Gyroscope scale error with and without the island-wall heading correction (WALL_HEADING_GAIN)')
+def _():
+    L = 'robotek_evaluation.open_lab'
+    rows = [exp(f'WALL_HEADING_GAIN {g:g}', sets=[S('WALL_HEADING_GAIN', g, 'my_open.mission')]) for g in (0.0, 0.1, 0.3, 0.6, 1.0)]
+    for scale in (0.90, 0.94, 0.97, 1.03, 1.06, 1.10):
+        rows.append(exp(f'gyro scale {scale:g}, gain 0 (off)', sets=[S('GYRO_SCALE', scale, L), S('WALL_HEADING_GAIN', 0.0, 'my_open.mission')]))
+        rows.append(exp(f'gyro scale {scale:g}, gain 0.3', sets=[S('GYRO_SCALE', scale, L)]))
+    rows += [exp(f'gyro drift {d:g} rad/s per s, gain 0 (off)', sets=[S('GYRO_DRIFT', d, L), S('WALL_HEADING_GAIN', 0.0, 'my_open.mission')])
+             for d in (0.0002, 0.0005)]
     return rows
 
 
@@ -255,33 +260,33 @@ def _():
 
 
 MISSION = 'my_open.mission'
-FAST = [S('LAST_CORNER_SPEED', 1.1, MISSION), S('FINISH_SPEED', 0.6, MISSION)]       # found by search_speed.py
-SAFER = [S('LAST_CORNER_SPEED', 0.9, MISSION), S('FINISH_SPEED', 0.45, MISSION)]
+FAST = [S('CORNER_SPEED', 1.28, MISSION), S('FINISH_SPEED', 0.6, MISSION)]
+SAFER = [S('CORNER_SPEED', 1.15, MISSION), S('FINISH_SPEED', 0.45, MISSION)]
 STEER25 = [S('STEER_LIMIT', 0.4363), S('STEER_LIMIT', 0.4363, 'robotek_course.minisim')]
 
 
 @group('candidates', 'Faster candidates, 3 seeds (use --seeds 0,1,2)')
 def _():
     return [exp('baseline'),
-            exp('last corner 1.1 + finish 0.6 (search result)', sets=FAST),
-            exp('last corner 0.9 + finish 0.45 (safer)', sets=SAFER),
-            exp('search result + GAIN 0.6', sets=FAST + [S('GAIN', 0.6)]),
-            exp('search result + steering 25 deg (car and strategy)', sets=FAST + STEER25, act=dict(steer_limit=0.4363)),
-            exp('last corner 1.28 (as cruise) + finish 0.6', sets=[S('LAST_CORNER_SPEED', 1.28, MISSION), S('FINISH_SPEED', 0.6, MISSION)])]
+            exp('corner 1.28 + finish 0.6 (fast)', sets=FAST),
+            exp('corner 1.15 + finish 0.45 (safer)', sets=SAFER),
+            exp('finish 0.45 only', sets=[S('FINISH_SPEED', 0.45, MISSION)]),
+            exp('fast + GAIN 0.6', sets=FAST + [S('GAIN', 0.6)]),
+            exp('fast + steering 25 deg (car and strategy)', sets=FAST + STEER25, act=dict(steer_limit=0.4363))]
 
 
-@group('candidates_robust', 'Baseline vs search result when something else is off')
+@group('candidates_robust', 'Baseline vs the faster candidates when something else is off')
 def _():
     rows = []
     cases = [('motor x0.85', scaled_table(0.85)), ('motor x1.15', scaled_table(1.15)),
              ('servo delay x2', servo(delay=DELAY0 * 2)), ('servo rate 0.6', servo(rate=0.6))]
     for name, act in cases:
         rows.append(exp(f'baseline, {name}', act=act))
-        rows.append(exp(f'search result, {name}', sets=FAST, act=act))
+        rows.append(exp(f'fast, {name}', sets=FAST, act=act))
         rows.append(exp(f'safer, {name}', sets=SAFER, act=act))
     L = 'robotek_evaluation.open_lab'
     rows.append(exp('baseline, LiDAR dropout 12%', sets=[S('SCAN_DROPOUT', 0.12, L)]))
-    rows.append(exp('search result, LiDAR dropout 12%', sets=FAST + [S('SCAN_DROPOUT', 0.12, L)]))
+    rows.append(exp('fast, LiDAR dropout 12%', sets=FAST + [S('SCAN_DROPOUT', 0.12, L)]))
     return rows
 
 

@@ -4,9 +4,9 @@ Seeds 0,1,2, 36 rounds per row.
 
 | Configuration | ok | pts | t (s) | sq100 (s) | clr (cm) | failures |
 |---|---:|---:|---:|---:|---:|---|
-| baseline | 36/36 | 30.0 | 40.77 | 32.58 | 8.2 |  |
-| last corner 1.1 + finish 0.6 (search result) | 36/36 | 30.0 | 38.93 | 31.58 | 8.2 |  |
-| last corner 0.9 + finish 0.45 (safer) | 36/36 | 30.0 | 39.34 | 31.78 | 8.2 |  |
-| search result + GAIN 0.6 | 35/36 | 29.9 | 38.87 | 31.48 | 9.1 | stopped short in DONE x1 |
-| search result + steering 25 deg (car and strategy) | 36/36 | 30.0 | 38.03 | 30.88 | 6.7 |  |
-| last corner 1.28 (as cruise) + finish 0.6 | 18/36 | 28.5 | 41.49 | - | 8.2 | stopped short in DONE x18 |
+| baseline | 36/36 | 30.0 | 41.85 | 33.78 | 9.9 |  |
+| corner 1.28 + finish 0.6 (fast) | 18/36 | 28.5 | 41.47 | - | 8.0 | stopped short in DONE x18 |
+| corner 1.15 + finish 0.45 (safer) | 20/36 | 28.7 | 42.23 | - | 8.8 | stopped short in DONE x16 |
+| finish 0.45 only | 36/36 | 30.0 | 41.64 | 33.78 | 9.9 |  |
+| fast + GAIN 0.6 | 18/36 | 28.5 | 41.39 | - | 8.1 | stopped short in DONE x18 |
+| fast + steering 25 deg (car and strategy) | 9/36 | 14.8 | 42.68 | - | 0.0 | wall in FOLLOW x18; stopped short in DONE x9 |

@@ -55,11 +55,12 @@ def real_speed(command):
 
 @dataclass(frozen=True)
 class Scene:
-    """What the LiDAR tells the strategy: four numbers per scan (as in robotek_open/v5/scene.py)."""
+    """What the LiDAR tells the strategy: five numbers per scan (as in robotek_open/v5/scene.py)."""
     left: float = math.inf          # distance to the wall on the left (m)
     right: float = math.inf
     front_axis: float = math.inf    # distance to the wall ahead along the track
     island_end: float = math.inf    # x of the end of the island wall, in the car's frame (m)
+    wall_heading: float = math.inf  # the car's heading relative to the island wall (rad, + = turned left)
 
 
 # --------------------------------------------------------------------------- car

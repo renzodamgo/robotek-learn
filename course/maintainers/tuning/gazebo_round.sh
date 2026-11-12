@@ -5,7 +5,7 @@
 #
 #   bash course/maintainers/tuning/gazebo_round.sh NAME ccw|cw [launch arguments...]
 #   bash course/maintainers/tuning/gazebo_round.sh slow-servo ccw actuator_params:=steer_delay=0.18
-#   bash course/maintainers/tuning/gazebo_round.sh fast-last ccw 'set:=my_open.mission.LAST_CORNER_SPEED=1.1;my_open.mission.FINISH_SPEED=0.6'
+#   bash course/maintainers/tuning/gazebo_round.sh slow-corner ccw 'set:=my_open.mission.CORNER_SPEED=0.9;my_open.mission.FINISH_SPEED=0.45'
 #
 # One round at a time: two Gazebo instances on one machine invalidate each other.
 set -u

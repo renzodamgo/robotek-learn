@@ -4,10 +4,10 @@ Seeds 0, 12 rounds per row.
 
 | Configuration | ok | pts | t (s) | sq100 (s) | clr (cm) | failures |
 |---|---:|---:|---:|---:|---:|---|
-| both 0.2 rad (11.5 deg) | 7/12 | 22.0 | 40.68 | 34.98 | 0.0 | wall in TURN x4 |
-| both 0.25 rad (14.3 deg) | 12/12 | 30.0 | 41.60 | 33.48 | 1.6 |  |
-| both 0.28 rad (16.0 deg) | 12/12 | 30.0 | 41.13 | 32.88 | 5.4 |  |
-| both 0.307 rad (17.6 deg) | 12/12 | 30.0 | 40.76 | 32.58 | 9.4 |  |
-| both 0.35 rad (20.1 deg) | 12/12 | 30.0 | 40.35 | 31.98 | 9.2 |  |
-| both 0.4 rad (22.9 deg) | 12/12 | 30.0 | 40.14 | 31.98 | 7.1 |  |
-| both 0.4363 rad (25.0 deg) | 12/12 | 30.0 | 39.93 | 31.98 | 6.8 |  |
+| both 0.2 rad (11.5 deg) | 6/12 | 19.2 | 41.00 | 36.38 | 0.0 | wall in TURN x5; stopped short in DONE x1 |
+| both 0.25 rad (14.3 deg) | 11/12 | 29.8 | 43.64 | 34.88 | 1.9 | stopped short in DONE x1 |
+| both 0.28 rad (16.0 deg) | 12/12 | 30.0 | 42.31 | 34.18 | 6.8 |  |
+| both 0.307 rad (17.6 deg) | 12/12 | 30.0 | 41.85 | 33.78 | 10.1 |  |
+| both 0.35 rad (20.1 deg) | 12/12 | 30.0 | 41.25 | 33.08 | 5.8 |  |
+| both 0.4 rad (22.9 deg) | 9/12 | 27.0 | 42.58 | - | 0.5 | stopped short in DONE x3 |
+| both 0.4363 rad (25.0 deg) | 6/12 | 15.5 | 43.19 | - | 0.0 | wall in FOLLOW x6 |

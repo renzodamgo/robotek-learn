@@ -1,18 +1,19 @@
-### Corner: DAMPING and EXIT_ANGLE
+### Corner: DAMPING and TURN_TOLERANCE
 
 Seeds 0, 12 rounds per row.
 
 | Configuration | ok | pts | t (s) | sq100 (s) | clr (cm) | failures |
 |---|---:|---:|---:|---:|---:|---|
-| DAMPING 0 | 12/12 | 30.0 | 40.62 | 32.48 | 8.1 |  |
-| DAMPING 0.05 | 12/12 | 30.0 | 40.73 | 32.48 | 9.0 |  |
-| DAMPING 0.1 | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
-| DAMPING 0.2 | 12/12 | 30.0 | 40.82 | 32.68 | 8.6 |  |
-| DAMPING 0.4 | 12/12 | 30.0 | 40.84 | 32.58 | 7.9 |  |
-| DAMPING 0.8 | 12/12 | 30.0 | 40.63 | 31.68 | 4.9 |  |
-| EXIT_ANGLE 0.02 rad | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
-| EXIT_ANGLE 0.1 rad | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
-| EXIT_ANGLE 0.25 rad | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
-| EXIT_ANGLE 0.4 rad | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
-| EXIT_ANGLE 0.6 rad | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
-| EXIT_ANGLE 0.9 rad | 12/12 | 30.0 | 40.75 | 32.58 | 9.5 |  |
+| DAMPING 0 | 12/12 | 30.0 | 41.79 | 33.78 | 9.6 |  |
+| DAMPING 0.05 | 12/12 | 30.0 | 41.79 | 33.78 | 10.0 |  |
+| DAMPING 0.1 | 12/12 | 30.0 | 41.82 | 33.78 | 10.1 |  |
+| DAMPING 0.2 | 12/12 | 30.0 | 41.81 | 33.48 | 10.3 |  |
+| DAMPING 0.4 | 12/12 | 30.0 | 41.70 | 33.48 | 5.7 |  |
+| DAMPING 0.8 | 12/12 | 30.0 | 41.96 | 34.08 | 8.3 |  |
+| TURN_TOLERANCE 0.05 rad | 12/12 | 30.0 | 42.11 | 34.28 | 4.2 |  |
+| TURN_TOLERANCE 0.12 rad | 11/12 | 29.8 | 42.66 | - | 6.8 | stopped short in DONE x1 |
+| TURN_TOLERANCE 0.2 rad | 10/12 | 29.5 | 42.64 | - | 10.1 | stopped short in DONE x2 |
+| TURN_TOLERANCE 0.3 rad | 12/12 | 30.0 | 41.82 | 33.78 | 10.1 |  |
+| TURN_TOLERANCE 0.4 rad | 12/12 | 30.0 | 41.83 | 33.78 | 10.1 |  |
+| TURN_TOLERANCE 0.5 rad | 12/12 | 30.0 | 41.83 | 33.68 | 10.1 |  |
+| TURN_TOLERANCE 0.8 rad | 12/12 | 30.0 | 41.75 | 33.38 | 10.1 |  |

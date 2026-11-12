@@ -8,11 +8,8 @@ A strategy is plain Python: no ROS inside. It receives what the sensors say thro
   * in your tests (``pytest``).
 
 You extend it and write ``update``. The base class takes care of the parts that are not the point of the course:
-the LiDAR odometry (how far the car has driven), the scans that arrive several times with the same time stamp, and
-waiting for Start.
+the scans that arrive several times with the same time stamp, and waiting for Start.
 """
-from robotek_common.lidar_odometry import LidarOdometry
-from robotek_common.vehicle import DISTANCE_MODEL_ACCEL
 
 
 class StrategyBase:
@@ -26,14 +23,12 @@ class StrategyBase:
     auto_start = True
 
     def __init__(self):
-        self.odometry = LidarOdometry(accel=DISTANCE_MODEL_ACCEL)
         self.scan = None            # the latest scan (each time stamp once)
         self.new_scan = False       # True for the first tick after a scan arrived
         self.gyro = 0.0             # the latest gyroscope reading, rad/s (z), bias included
         self.camera = 0             # +1 blue lines (counter-clockwise), -1 orange (clockwise), 0 unknown
-        self.travelled = 0.0        # metres driven since the previous tick, from the LiDAR odometry
         self.started = False
-        self.yaw = 0.0              # YOUR heading estimate (rad): set it from step 2 on; the odometry needs it
+        self.yaw = 0.0              # YOUR heading estimate (rad): set it from step 2 on (telemetry reads it)
         self._stamp = None
         self._seen_first = False
 
@@ -43,7 +38,6 @@ class StrategyBase:
 
     def on_scan(self, scan):
         """A LiDAR scan. Returns True for the very first one (the lab uses it as Start)."""
-        self.odometry.scan(scan, self.yaw)
         stamp = (scan.header.stamp.sec, scan.header.stamp.nanosec)
         if stamp != self._stamp:             # the same scan can arrive more than once: use each time stamp once
             self._stamp = stamp
@@ -62,15 +56,13 @@ class StrategyBase:
 
     def control(self, dt, camera_age=0.0):
         """One control tick. Returns (speed command in m/s, steering angle in rad)."""
-        self.travelled = self.odometry.read()
         if camera_age > 0.5:
             self.camera = 0                  # an old vote is no vote
         speed, steer = self.update(dt)
-        self.odometry.command(speed, dt)
         self.new_scan = False
         return speed, steer
 
     # ---------------------------------------------------------------------------------- what you write
     def update(self, dt):
-        """Decide (speed, steer) for this tick from ``self.scan``, ``self.gyro``, ``self.travelled``, ``self.camera``."""
+        """Decide (speed, steer) for this tick from ``self.scan``, ``self.gyro`` and ``self.camera``."""
         raise NotImplementedError('write update(self, dt) in your Strategy')
