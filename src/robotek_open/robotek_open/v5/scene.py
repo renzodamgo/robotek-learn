@@ -72,7 +72,10 @@ def island_wall(angles, ranges, ok, sign):
     towards the front: the end is the last beam on the line before the range jumps. end is inf when the wall does not
     end inside the view (it continues to the front bearing limit); offset is inf when there is no wall beside the car.
     """
-    bearing = sign * angles                                  # positive towards the island side
+    # Positive towards the island side, wrapped to +-pi: the car's LD19 gives 0..2 pi, and clockwise (sign -1) that
+    # is -2 pi..0, where no beam fell in the window around +90 deg: no island wall, no end and no wall heading in any
+    # clockwise round on the car until 11 nov 2026 (the lab's scan is +-110 deg and hid it).
+    bearing = np.arctan2(np.sin(sign * angles), np.cos(sign * angles))
     side = ok & (np.abs(bearing - math.pi / 2) <= FIT_HALF)
     side &= ranges <= 1.5 * np.median(ranges[side]) if side.any() else side     # not beams past the wall's end
     if side.sum() < 10:

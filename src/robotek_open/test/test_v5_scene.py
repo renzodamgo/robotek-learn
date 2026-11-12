@@ -50,6 +50,32 @@ def test_clockwise_looks_at_the_right_hand_wall():
     assert right_scene.right == pytest.approx(0.665, abs=0.01)         # the island is now on the right
 
 
+def full_circle(scan, rays=504):
+    """The same scan as the car's LD19 gives it: angles 0..2 pi (the lab and Gazebo give -110..+110 deg)."""
+    src = np.array(scan.ranges)
+    angles = scan.angle_min + np.arange(src.size) * scan.angle_increment
+    out = np.full(rays, math.inf)
+    for i in range(rays):
+        a = math.atan2(math.sin(i * 2 * math.pi / rays), math.cos(i * 2 * math.pi / rays))
+        k = int(round((a - scan.angle_min) / scan.angle_increment))
+        if 0 <= k < src.size and abs(angles[k] - a) < scan.angle_increment:
+            out[i] = src[k]
+    return square_scan.make_scan(list(out), 0.0, 2 * math.pi / rays, 0)
+
+
+@pytest.mark.parametrize('direction, yaw', [('ccw', 0.0), ('cw', math.pi)])
+def test_a_full_circle_scan_gives_the_same_scene_in_both_directions(direction, yaw):
+    """11 nov 2026: clockwise on the car (angles 0..2 pi) the island wall was never found: no island end and no wall
+    heading in any clockwise round (late turns into the outer wall in narrow corridors)."""
+    scan = scan_at(0.0, yaw=yaw)
+    expected = scene_from_scan(scan, direction=direction)
+    scene = scene_from_scan(full_circle(scan), direction=direction)
+    assert math.isfinite(expected.island_end) and math.isfinite(expected.wall_heading)
+    assert scene.island_end == pytest.approx(expected.island_end, abs=0.03)
+    assert scene.wall_heading == pytest.approx(expected.wall_heading, abs=0.02)
+    assert scene.left == pytest.approx(expected.left, abs=0.02) and scene.right == pytest.approx(expected.right, abs=0.02)
+
+
 def test_a_few_lost_beams_do_not_move_the_island_end():
     scan = scan_at(0.2)
     clean = scene_from_scan(scan).island_end
