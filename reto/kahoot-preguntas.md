@@ -177,16 +177,16 @@ Repasar: paso 2, 'Volver al rumbo: una ley proporcional'
 
 ## Paso 3. Ver el campo
 
-### 3.1. Con más ruido o más rayos perdidos, island_end falla mucho antes que left. ¿Por qué?
+### 3.1. El LiDAR pierde un tramo de rayos seguidos sobre la pared de la isla. ¿Qué hace island_wall con ellos?
 
-- A. island_end usa el promedio y left la mediana
-- **B. Depende de una recta ajustada a pocos rayos** ✅
-- C. island_end se mide con el giroscopio
-- D. left solo se calcula una vez por vuelta
+- A. Termina la pared en el primer rayo perdido
+- **B. No los cuenta: un rayo perdido no vio nada** ✅
+- C. Los cambia por la mediana de sus rayos vecinos
+- D. Devuelve inf en los dos números de la pared
 
-Por qué: island_end ajusta una recta a la pared y busca su último rayo. Tres rayos perdidos seguidos o 3 cm de ruido ya lo engañan.
+Por qué: Solo acaban la pared más de 2 rayos seguidos con retorno que ven más allá. Con 15 % de rayos perdidos, 0 de 500 escaneos fallan.
 
-Repasar: paso 3, 'El final de la isla' y 'Explora el escaneo'
+Repasar: paso 3, 'El final de la isla y el rumbo respecto a su pared' y 'Explora el escaneo'
 
 ### 3.2. En un escaneo, algunos rayos llegan como inf. ¿Qué significa inf?
 
@@ -302,49 +302,49 @@ Por qué: Girar a la izquierda 90 grados es sumar π/2 a goal. yaw se mide con e
 
 Repasar: paso 5, 'Girar es mover la meta'
 
-### 5.2. En la esquina, el feed-forward suma sign * STEER_LIMIT al volante. ¿Qué consigue?
+### 5.2. TURN_TOLERANCE = 0,3 rad. Al coche le faltan 0,5 rad para la meta de la esquina. ¿Qué volante pide arc_steer?
 
-- **A. Pide el volante al tope desde el inicio** ✅
-- B. Frena el giro si el coche gira más de lo esperado
-- C. Suelta el volante al acercarse a la meta
-- D. Mide cuántos grados faltan para la meta
+- **A. El tope, hacia el lado de la meta** ✅
+- B. 0,40 rad: KP por el error, sin recortar
+- C. Cero: la esquina ya terminó y va recto
+- D. El tope, hacia el lado contrario a la meta
 
-Por qué: Mientras la referencia sube, ya sabes que hace falta el tope. Anticipas en vez de esperar a que crezca el error.
+Por qué: Lejos de la meta el volante va a tope hacia ella. El tope se suelta cuando faltan 0,3 rad (17°) o menos.
 
-Repasar: paso 5, 'Dos términos más: anticipar y amortiguar'
+Repasar: paso 5, 'Girar es mover la meta' y 'Lo difícil es soltar a tiempo'
 
-### 5.3. EXIT_ANGLE = 0,25 rad. Faltan 0,10 rad para la meta. ¿Por cuánto se multiplica el feed-forward con el aflojado?
+### 5.3. KP = 0,8 y DAMPING = 0,1. Faltan 0,2 rad para la meta y el coche gira hacia ella a 1,0 rad/s. ¿Qué volante pide damped_steer?
 
-- A. 0,1
-- B. 2,5
-- C. 0,25
-- **D. 0,4** ✅
+- A. 0,16 rad
+- B. 0,26 rad
+- C. 0,307 rad
+- **D. 0,06 rad** ✅
 
-Por qué: Escala = lo que falta / EXIT_ANGLE = 0,10 / 0,25 = 0,4. Llega a 0 en la meta y vale 1 con 0,25 rad o más.
+Por qué: Volante = KP * error - DAMPING * gyro = 0,8 * 0,2 - 0,1 * 1,0 = 0,06 rad. Cuanto más rápido gira el coche, menos volante pide.
 
-Repasar: paso 5, 'Dos términos más' y paso 5.4
+Repasar: paso 5, 'Un freno para terminar: el amortiguamiento' y paso 5.1
 
-### 5.4. Cada término de la esquina arregla un problema distinto. ¿Cuál arregla el amortiguamiento (DAMPING)?
+### 5.4. Con un servo lento, soltar el tope a 17° de la meta se pasa 6,0° aun con amortiguamiento. ¿Qué lo deja en 0°?
 
-- A. Un coche que gira más de lo que se cree
-- **B. Un servo lento que obedece tarde** ✅
-- C. Un rayo suelto que dispara la esquina
-- D. El sesgo del giroscopio sin calibrar
+- A. Soltar más tarde, a 7° de la meta
+- **B. Soltar antes, a 29° de la meta** ✅
+- C. Quitar el amortiguamiento de la ley
+- D. Subir la velocidad de esquina a 1,28 m/s
 
-Por qué: Con un servo lento, quitar el amortiguamiento sube el sobrepaso de 0,2° a 10,6°. Si el coche gira más de lo que se cree, lo arregla el aflojado.
+Por qué: Un servo lento tarda más en enderezar las ruedas. Soltando a 29° (0,50 rad) con amortiguamiento el sobrepaso es 0,0°.
 
-Repasar: paso 5, 'Qué enseña cada término'
+Repasar: paso 5, 'Cuándo soltar (medido en el laboratorio de Python)'
 
-### 5.5. Con un servo lento usas solo la rampa, sin feed-forward ni amortiguamiento. ¿Qué pasa en la esquina de 90°?
+### 5.5. Con el servo real sueltas el tope a 3° de la meta en vez de a 17°. ¿Qué pasa en la esquina de 90°?
 
-- **A. Se pasa unos 10,7°: la rampa sola no basta** ✅
-- B. Llega justo: la rampa evita el sobrepaso
+- **A. Se pasa 12°: el servo tarda en enderezar** ✅
+- B. Llega justo: el tope lleva hasta la meta
 - C. Se queda corto y nunca llega a los 90°
 - D. Gira hacia el lado contrario de la esquina
 
-Por qué: La rampa no evita sola el sobrepaso. Sirve para que esquina y recta usen la misma ley y para saber qué giro esperar en cada instante.
+Por qué: El servo tarda unas tres décimas en enderezar y el coche sigue girando. Soltando a 3° llega a 102°; a 17° no se pasa.
 
-Repasar: paso 5, 'Una rampa en vez de un salto' y 'Qué enseña cada término'
+Repasar: paso 5, 'Lo difícil es soltar a tiempo' y 'Cuándo soltar'
 
 ## Paso 6. Cuándo girar
 
@@ -361,7 +361,7 @@ Repasar: paso 6, 'Girar a destiempo es el error más caro'
 
 ### 6.2. Al acabar la isla, left salta a unos 2,5 m. ¿Por qué el nodo usa entonces GAP como distancia a la isla?
 
-- A. Para rearmar la puerta de giro al instante
+- A. Para poder girar otra vez al instante
 - B. Para frenar antes de entrar en la esquina
 - C. Para que el LiDAR no cuente rayos perdidos
 - **D. Para no girar hacia donde ya no hay isla** ✅
@@ -379,7 +379,7 @@ Repasar: paso 6, 'Sin offset en la esquina'
 
 Por qué: El límite es min(0,35; 0,40 - 0,08) = min(0,35; 0,32) = 0,32 m. Con la isla a 0,30 m bajaría a 0,22 m.
 
-Repasar: paso 6, 'Dos detalles de la condición 4' y paso 6.5
+Repasar: paso 6, 'Dos detalles de la condición 3' y paso 6.5
 
 ### 6.4. Cuentas el final de la isla en cada tick (50 por segundo) y no por escaneo (10 por segundo). ¿Qué pasa?
 
@@ -392,16 +392,16 @@ Por qué: El mismo escaneo llega 5 ticks seguidos. Contado cada vez, 'dos escane
 
 Repasar: paso 6, 'Un escaneo cuenta una vez' y 'Rómpelo'
 
-### 6.5. El coche gira una vez y no vuelve a girar en las demás esquinas. ¿Qué sospechas primero?
+### 6.5. Al empezar la recta la pared de enfrente está a 2,40 m. Luego mide 2,10 m y después, con ruido, 2,13 m. ¿Qué guarda StraightDistance?
 
-- A. Que el volante llega al tope durante la esquina
-- **B. Que la puerta no se vuelve a armar tras la esquina** ✅
-- C. Que TURN_FRONT es demasiado grande para la pista
-- D. Que el LiDAR entrega demasiados escaneos por segundo
+- A. 0,27 m
+- **B. 0,30 m** ✅
+- C. 2,13 m
+- D. 0,03 m
 
-Por qué: Tras girar, la puerta se cierra. Se rearma al ver la isla otra vez (inner menor que 1 m) y avanzar 0,25 m.
+Por qué: La distancia recorrida es lo que se acercó la pared: 2,40 - 2,10 = 0,30 m. Nunca baja: el coche no fue marcha atrás.
 
-Repasar: paso 6, 'Si algo falla' y 'Armar y desarmar la puerta'
+Repasar: paso 6, 'La distancia recorrida: la pared de enfrente, no un encoder' y paso 6.6
 
 ## Paso 7. La misión
 
@@ -416,16 +416,16 @@ Por qué: completed cuenta las esquinas hechas y arc dice si hay una en curso. F
 
 Repasar: paso 7, 'Tres estados y dos datos'
 
-### 7.2. Tras la esquina 12, el coche avanza despacio a 0,15 m/s. ¿Hasta dónde, antes de frenar?
+### 7.2. TURN_FRONT = 1,19 m, BRAKE_MARGIN = 0,15 m y BRAKE_GAIN = 2,0. La pared de enfrente está a 1,44 m. ¿Qué velocidad pide la recta?
 
-- **A. Hasta que la pared de enfrente está como en Start** ✅
-- B. Hasta cumplir 10 segundos de marcha lenta
-- C. Hasta que el giroscopio marca rumbo cero otra vez
-- D. Hasta que el LiDAR deja de ver la isla
+- **A. 1,20 m/s** ✅
+- B. 1,28 m/s
+- C. 1,00 m/s
+- D. 0,20 m/s
 
-Por qué: En SETUP mide la pared de enfrente. Al final avanza hasta quedar casi tan cerca como al salir y frena.
+Por qué: gap = 1,44 - 1,19 - 0,15 = 0,10 m. Velocidad = min(1,28; 1,0 + 2,0 * 0,10) = 1,20 m/s. Así frena antes de cada esquina.
 
-Repasar: paso 7, 'El final de la vuelta' y paso 7.5
+Repasar: paso 7, 'Frenar antes de cada esquina' y paso 7.5
 
 ### 7.3. ¿Por qué toda la lógica de la misión está en mission.py, sin ROS, y drive.py solo reenvía?
 
@@ -438,16 +438,16 @@ Por qué: La misma misión corre en el nodo, en el Open lab y en las pruebas. Si
 
 Repasar: paso 7, 'La lógica es Python puro; el nodo es una envoltura'
 
-### 7.4. Pones LAST_CORNER_SPEED = 1,28 y las 12 pruebas pasan. ¿Qué ves en el laboratorio (36 rondas)?
+### 7.4. Pones WALL_HEADING_GAIN = 0 y el giroscopio lee un 6 % de menos. ¿Qué ves en el laboratorio (36 rondas)?
 
 - A. Las 36 rondas siguen válidas con 30 puntos
-- **B. 18 válidas; las otras sacan 27 puntos** ✅
-- C. Todas fallan: el coche choca en la primera esquina
-- D. 18 válidas; las otras 18 chocan con un muro
+- **B. 0 de 36 válidas: 33 chocan en una recta** ✅
+- C. 34 válidas; las otras dos paran fuera de la salida
+- D. 18 válidas; las otras 18 sacan 27 puntos
 
-Por qué: No logra parar dentro de la sección de salida y pierde los 3 puntos de la parada. Las pruebas no lo detectan.
+Por qué: Con cada escaneo la pared de la isla corrige 0,3 de la diferencia con el giroscopio. Sin eso, los 5° por esquina se acumulan.
 
-Repasar: paso 7, 'Rómpelo'
+Repasar: paso 7, 'El giroscopio se queda corto: la pared de la isla lo corrige' y 'Rómpelo'
 
 ### 7.5. ¿Por qué _braking se queda en True para siempre una vez que empieza a frenar?
 
@@ -458,7 +458,7 @@ Repasar: paso 7, 'Rómpelo'
 
 Por qué: Si un rayo con ruido hace que la pared parezca más lejos, sin el enclavamiento el motor arrancaría otra vez.
 
-Repasar: paso 7, 'El final de la vuelta' y paso 7.5
+Repasar: paso 7, 'El final de la vuelta' y paso 7.7
 
 ## Paso 8. La dirección
 
@@ -530,9 +530,9 @@ Por qué: El DONE de la estrategia no da puntos. El juez mira la pose real: todo
 
 Repasar: paso 9, 'Qué puntúa el juez'
 
-### 9.2. En square100 ccw, el Open lab da 32,58 s y Gazebo 34,80 s. ¿Qué conclusión es correcta?
+### 9.2. En square100 ccw, el Open lab da 33,78 s y Gazebo 35,56 s. ¿Qué conclusión es correcta?
 
-- A. Tu estrategia es 2,22 s más lenta en Gazebo que en el lab
+- A. Tu estrategia es 1,78 s más lenta en Gazebo que en el lab
 - B. El lab es más fiable porque corre mucho más rápido
 - C. Gazebo mide mal, así que hay que fiarse del lab
 - **D. No se comparan: son dos modelos distintos** ✅
