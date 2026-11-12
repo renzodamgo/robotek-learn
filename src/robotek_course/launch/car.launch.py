@@ -123,6 +123,10 @@ def _strategy_node(context):
         parameters.append(path)
     if _arg(context, 'strategy') == 'robotek_obstacle_v3':
         parameters.append({'recover_back': float(_arg(context, 'recover_back'))})
+        # The picam's JPEG, not the raw frame: the raw 691 KB frames mostly did not reach the strategy with the Pi
+        # busy (12 nov 2026: 0.2 of 27.6 frames/s; the JPEG at quality 90 all of them).
+        if _arg(context, 'camera_driver') == 'picam':
+            parameters.append({'camera_compressed': True})
         # Where the lot is on this field (12 nov 2026: the team's field has the far limit at ~0.31 m, the rules 0.48).
         lot = {name: float(_arg(context, name)) for name in ('park_lot_end', 'park_lot_length') if _arg(context, name)}
         if lot:
@@ -155,7 +159,8 @@ def _strategy_node(context):
                                  ["'1' if '", LaunchConfiguration('camera_wall_mask'), "'.lower() == 'true' else '0'"])},
              remappings=[('/scan', '/robotek/scan'), ('scan', '/robotek/scan'),
                          ('/imu', '/robotek/imu'), ('imu', '/robotek/imu'),
-                         ('/camera/image', _camera_topic(context))])]
+                         ('/camera/image', _camera_topic(context)),
+                         ('/camera/image/compressed', _camera_topic(context) + '/compressed')])]
 
 
 def _check_strategy(context):
@@ -220,7 +225,8 @@ def _drivers(context):
                                              'width': int(_picam_size(context)[0]),
                                              'height': int(_picam_size(context)[1]),
                                              'fps': float(_picam_size(context)[2]),
-                                             'jpeg_quality': int(_arg(context, 'picam_jpeg_quality')),
+                                             'jpeg_quality': (90 if _arg(context, 'strategy') == 'robotek_obstacle_v3' else 30)
+                                             if _arg(context, 'picam_jpeg_quality') == 'auto' else int(_arg(context, 'picam_jpeg_quality')),
                                              'active_states': _picam_states(context)}]))
         else:
             # robotek_hardware/camera_publisher: finds the camera by itself and keeps retrying if it is missing.
@@ -275,9 +281,10 @@ def generate_launch_description():
         DeclareLaunchArgument('picam_width', default_value='auto'),
         DeclareLaunchArgument('picam_height', default_value='auto'),
         DeclareLaunchArgument('picam_fps', default_value='auto'),
-        DeclareLaunchArgument('picam_jpeg_quality', default_value='30',
+        DeclareLaunchArgument('picam_jpeg_quality', default_value='auto',
                               description='picam: JPEG quality of <topic>/compressed, the copy RViz shows over Wi-Fi '
-                                          '(1-100; 70 was ~51 KB per 1280x720 frame). The strategy reads the raw image'),
+                                          '(1-100; 70 was ~51 KB per 1280x720 frame). auto = 90 for the Obstacle v3, which reads this JPEG '
+                                          '(82 KB at 640x360), 30 otherwise (the Open reads the raw image)'),
         DeclareLaunchArgument('camera_always', default_value='false',
                               description='picam: true keeps the camera on for the whole round (to watch or record '
                                           'it in RViz); false = the Open stops it once the direction is chosen'),

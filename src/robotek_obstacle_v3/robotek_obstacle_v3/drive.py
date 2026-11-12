@@ -25,6 +25,7 @@ import os
 import time
 
 import cv2
+import numpy as np
 from cv_bridge import CvBridge
 from geometry_msgs.msg import Twist
 import rclpy
@@ -109,7 +110,14 @@ class Drive(Node):
         self.debug_sent = -1e9
         self.create_subscription(LaserScan, '/scan', self.on_scan, qos_profile_sensor_data)
         self.create_subscription(Imu, '/imu', self.on_imu, qos_profile_sensor_data)
-        self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
+        # camera_compressed (car.launch with the picam): the JPEG of the frame, not the raw image. 12 nov 2026 on the Pi
+        # with 3 cores busy: of 27.6 raw frames/s (691 KB each) 0.2/s reached another process (best effort; 5/s
+        # reliable), of the JPEG at quality 90 (82 KB) all 30/s. In the 01:05 round the camera "stopped" at 14.5 s.
+        if self.declare_parameter('camera_compressed', False).value:
+            self.create_subscription(CompressedImage, '/camera/image/compressed', self.on_compressed,
+                                     qos_profile_sensor_data)
+        else:
+            self.create_subscription(Image, '/camera/image', self.on_image, qos_profile_sensor_data)
         self.create_subscription(Bool, 'start', self.on_start, 10)   # plain QoS: the referee and the car's button
         # The push button on the Pi's GPIO 16 (gpio_button node, True on each press) also starts the round (9 nov 2026).
         self.create_subscription(Bool, '/robotek/gpio_button', self.on_start, 10)
@@ -149,12 +157,16 @@ class Drive(Node):
     def on_imu(self, msg):
         self.strategy.on_imu(stamp_of(msg), msg.angular_velocity.z)
 
-    def on_image(self, msg):
+    def on_compressed(self, msg):
+        """The JPEG frame: decoded only when it pairs with a scan, then as on_image."""
+        self.on_image(msg, decode=lambda: cv2.imdecode(np.frombuffer(msg.data, np.uint8), cv2.IMREAD_COLOR))
+
+    def on_image(self, msg, decode=None):
         """Red and green blocks of the frame paired with the LiDAR clusters at the same bearing."""
         stamp = stamp_of(msg)
         observations = []
         if self.scan_msg is not None and abs(stamp - stamp_of(self.scan_msg)) <= IMAGE_PAIRING:
-            bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            bgr = decode() if decode else self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             blocks = color_blocks(bgr, **self.camera)
             observations = associate(blocks, scan_clusters(self.scan_msg))
             if self.debug_pub.get_subscription_count() and stamp - self.debug_sent >= DEBUG_PERIOD:
