@@ -27,7 +27,7 @@ DIRECTION_TIMEOUT = 15.0    # s without a direction from the camera: stop instea
 DIRECTION_FALLBACK_WAIT = 1.0   # s the camera gets before direction_fallback is taken
 CALIBRATE_SECONDS = 0.3     # s still after Start: gyro bias and the start's front range
 FINISH_STOP_WAIT = 0.9      # s at rest before DONE
-WALL_HEADING_MAX = math.radians(25.0)   # rad: a larger gyro-vs-walls difference is a bad fit, not drift
+WALL_HEADING_MAX = math.radians(25.0)   # rad: a larger gyro-vs-wall difference is a bad fit, not drift
 WRONG_SIDE_OPEN = 1.2       # m: before the first corner, the side away from the island wider than this (outer walls
 WRONG_SIDE_SCANS = 3        # are continuous) in this many scans while the island stays beside: the direction is wrong
 
@@ -49,7 +49,8 @@ class Params:
     inner_gap: float = 0.25               # m kept from the island wall
     turn_front_distance: float = 1.19     # m: front wall (along the track) at which a turn may start
     corner_lookahead: float = 0.35        # m: island end this close (or an open side) starts the turn
-    wall_heading_gain: float = 0.0        # share of the gyro-vs-walls heading difference corrected per scan (0 = off)
+    wall_heading_gain: float = 0.0        # share of the gyro-vs-island-wall heading difference corrected per scan
+                                          # (0 = off; the car needs it: its gyro reads ~6 % short, 0/320 without, lab)
     finish_speed: float = 0.15
     finish_lead: float = 0.08             # m: brake when the front range is this close to the start's
     direction: str = 'auto'               # ccw, cw or auto (camera)
@@ -210,7 +211,7 @@ class OpenMission:
             self.direction_flipped, self._wrong_side, self._hits = True, 0, 0
 
     def _correct_heading(self, scene):
-        """On a straight, pull the gyro yaw towards the heading the side walls show (once per scan).
+        """On a straight, pull the gyro yaw towards the heading the island wall shows (once per scan).
 
         4 nov 2026, real car: each corner turned 4-6 deg more than the gyro measured, and after two laps the car drove
         35-40 deg towards the island while the mission believed it was straight.
